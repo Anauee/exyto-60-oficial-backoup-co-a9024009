@@ -9,40 +9,14 @@ const getEnvVar = (key, defaultValue) => {
   return process.env[key] || defaultValue;
 };
 
-// Use service role key if available, otherwise fall back to the regular supabase client
-const supabaseUrl = getEnvVar("VITE_SUPABASE_URL", "http://127.0.0.1:54321");
-const supabaseServiceKey = getEnvVar("VITE_SUPABASE_SERVICE_ROLE_KEY", "");
-
-// Only create a separate admin client if we actually have a service role key
-// Without it, the admin client has no session and RLS blocks all queries
-let supabaseAdmin;
-if (supabaseServiceKey) {
-  supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
-    db: {
-      schema: "public",
-    },
-  });
-  console.log("Using service role key for admin operations");
-} else {
-  // Fall back to the regular supabase client which has the user's session
-  supabaseAdmin = supabase;
-  console.log("No service role key found - using regular client for all operations");
-}
-
 /**
  * Base Entity class that provides CRUD operations compatible with Base44 SDK
  */
 export class CustomEntity {
-  constructor(tableName, useServiceRole = false) {
+  constructor(tableName) {
     this.tableName = tableName;
-    // Only use supabaseAdmin if we actually have a service role key
-    // Otherwise, always use the regular client (which has the user's session for RLS)
-    this.supabase = (useServiceRole && supabaseServiceKey) ? supabaseAdmin : supabase;
-    this.useServiceRole = useServiceRole;
+    // Use the regular supabase client which has the user's session for RLS
+    this.supabase = supabase;
   }
 
   /**
@@ -337,7 +311,7 @@ export class CustomEntity {
  */
 export class UserEntity extends CustomEntity {
   constructor() {
-    super("users", true); // Use service role for user operations to bypass RLS when needed
+    super("users");
   }
 
   /**
