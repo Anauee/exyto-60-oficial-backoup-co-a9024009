@@ -100,7 +100,7 @@ export default function MembroViewModal({
                     <img src={membro.avatar_url} alt={membro.nome} className="w-full h-full object-cover" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-slate-400 font-bold text-xl">
-                      {membro.nome.substring(0, 2).toUpperCase()}
+                      {(membro.nome || "??").substring(0, 2).toUpperCase()}
                     </div>
                   )}
                 </div>

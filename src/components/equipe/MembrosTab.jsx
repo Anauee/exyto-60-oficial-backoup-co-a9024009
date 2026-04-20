@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit, Trash2, UserCheck } from "lucide-react";
+import { Plus, Edit, Trash2, UserCheck, Mail } from "lucide-react";
 import ConfirmDeleteModal from "../shared/ConfirmDeleteModal";
 import MembroModal from "./MembroModal";
 import MembroViewModal from "./MembroViewModal";
@@ -123,7 +123,7 @@ export default function MembrosTab({
                           <img src={membro.avatar_url} alt={membro.nome} className="w-full h-full object-cover" />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-slate-400 font-bold text-sm bg-gradient-to-br from-slate-100 to-slate-200">
-                            {membro.nome.substring(0, 2).toUpperCase()}
+                            {(membro.nome || "??").substring(0, 2).toUpperCase()}
                           </div>
                         )}
                       </div>

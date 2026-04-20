@@ -65,7 +65,7 @@ const createEntity = (tableName, options = {}) => {
       if (limit) query = query.limit(limit);
       const { data, error } = await query;
       if (error) throw error;
-      return data.map(unmapData);
+      return (data || []).map(unmapData);
     },
     filter: async (conditions = {}, orderBy = 'created_at', limit = null) => {
       let query = supabase.from(tableName).select('*');
@@ -85,12 +85,12 @@ const createEntity = (tableName, options = {}) => {
       if (limit) query = query.limit(limit);
       const { data, error } = await query;
       if (error) throw error;
-      return data.map(unmapData);
+      return (data || []).map(unmapData);
     },
     get: async (id) => {
       const { data, error } = await supabase.from(tableName).select('*').eq('id', id).maybeSingle();
       if (error) throw error;
-      return unmapData(data);
+      return data ? unmapData(data) : null;
     },
     create: async (data) => {
       const { data: result, error } = await supabase.from(tableName).insert(mapData(data)).select().single();
@@ -100,7 +100,7 @@ const createEntity = (tableName, options = {}) => {
     update: async (id, data) => {
       const { data: result, error } = await supabase.from(tableName).update(mapData(data)).eq('id', id).select().maybeSingle();
       if (error) throw error;
-      return unmapData(result);
+      return result ? unmapData(result) : null;
     },
     delete: async (id) => {
       const { error } = await supabase.from(tableName).delete().eq('id', id);
@@ -128,7 +128,7 @@ export const User = {
   list: async () => {
     const { data, error } = await supabase.from('users').select('*');
     if (error) throw error;
-    return data;
+    return data || [];
   },
   filter: async (conditions) => {
     let query = supabase.from('users').select('*');
@@ -138,7 +138,7 @@ export const User = {
     });
     const { data, error } = await query;
     if (error) throw error;
-    return data;
+    return data || [];
   }
 };
 

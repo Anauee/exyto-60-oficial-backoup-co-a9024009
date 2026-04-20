@@ -125,11 +125,11 @@ export default function Financeiro() {
       ]);
 
       // Filter data by empresa_id on client side for security
-      const filteredFaturas = faturasData.filter(item => item.empresa_id === empresaId);
-      const filteredDespesas = despesasData.filter(item => item.empresa_id === empresaId);
-      const filteredProdutos = produtosData.filter(item => item.empresa_id === empresaId);
-      const filteredFunis = funisData.filter(item => item.empresa_id === empresaId);
-      const filteredClientes = clientesData.filter(item => item.empresa_id === empresaId); // Filtrar clientes
+      const filteredFaturas = Array.isArray(faturasData) ? faturasData.filter(item => item.empresa_id === empresaId) : [];
+      const filteredDespesas = Array.isArray(despesasData) ? despesasData.filter(item => item.empresa_id === empresaId) : [];
+      const filteredProdutos = Array.isArray(produtosData) ? produtosData.filter(item => item.empresa_id === empresaId) : [];
+      const filteredFunis = Array.isArray(funisData) ? funisData.filter(item => item.empresa_id === empresaId) : [];
+      const filteredClientes = Array.isArray(clientesData) ? clientesData.filter(item => item.empresa_id === empresaId) : []; // Filtrar clientes
 
       setFaturas(filteredFaturas);
       setDespesas(filteredDespesas);
@@ -355,24 +355,24 @@ export default function Financeiro() {
 
     // Aplicar filtro de funil nas faturas se selecionado
     const faturasParaCalculos = selectedFunilId
-      ? faturas.filter(f => f.funil_id === selectedFunilId)
-      : faturas;
-
+      ? (faturas || []).filter(f => f.funil_id === selectedFunilId)
+      : (faturas || []);
+  
     // Filter paid items for the selected period based on updated_date (payment date)
     const faturasPaidInPeriod = faturasParaCalculos.filter(f => {
       if (f.status !== 'paga' || !f.updated_date) return false;
       const dataPagamento = parseISO(f.updated_date);
       // Ensure dataPagamento is a valid date before comparison
-      if (isNaN(dataPagamento.getTime())) return false;
-      return dataPagamento >= from && dataPagamento <= to;
+      if (!dataPagamento || isNaN(dataPagamento.getTime())) return false;
+      return from && to && dataPagamento >= from && dataPagamento <= to;
     });
-
-    const despesasPaidInPeriod = despesas.filter(d => {
+  
+    const despesasPaidInPeriod = (despesas || []).filter(d => {
       if (d.status !== 'paga' || !d.updated_date) return false;
       const dataPagamento = parseISO(d.updated_date);
       // Ensure dataPagamento is a valid date before comparison
-      if (isNaN(dataPagamento.getTime())) return false;
-      return dataPagamento >= from && dataPagamento <= to;
+      if (!dataPagamento || isNaN(dataPagamento.getTime())) return false;
+      return from && to && dataPagamento >= from && dataPagamento <= to;
     });
 
     const totalReceitas = faturasPaidInPeriod.reduce((sum, f) => sum + f.valor, 0);
@@ -392,10 +392,10 @@ export default function Financeiro() {
     const endChart = to || endOfMonth(new Date());
     const daysInterval = eachDayOfInterval({ start: startChart, end: endChart });
 
-    const chartData = daysInterval.map(day => {
+    const chartData = (daysInterval || []).map(day => {
         const dayStr = format(day, 'yyyy-MM-dd');
-        const receitasDia = faturasPaidInPeriod.filter(f => format(parseISO(f.updated_date), 'yyyy-MM-dd') === dayStr).reduce((sum, f) => sum + f.valor, 0);
-        const despesasDia = despesasPaidInPeriod.filter(d => format(parseISO(d.updated_date), 'yyyy-MM-dd') === dayStr).reduce((sum, d) => sum + d.valor, 0);
+        const receitasDia = faturasPaidInPeriod.filter(f => f.updated_date && format(parseISO(f.updated_date), 'yyyy-MM-dd') === dayStr).reduce((sum, f) => sum + f.valor, 0);
+        const despesasDia = despesasPaidInPeriod.filter(d => d.updated_date && format(parseISO(d.updated_date), 'yyyy-MM-dd') === dayStr).reduce((sum, d) => sum + d.valor, 0);
         return {
             name: format(day, 'dd/MM'),
             receitas: receitasDia,

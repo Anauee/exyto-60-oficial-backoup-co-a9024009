@@ -76,7 +76,8 @@ export default function Pastas() {
             return [];
         }
         
-        const filtered = folders.filter(pasta => {
+        const filtered = (folders || []).filter(pasta => {
+            if (!pasta) return false;
             // Admin vê todas as pastas
             if (user.role === 'admin') {
                 console.log(`Pasta ${pasta.nome} visível para Admin.`);
@@ -90,13 +91,13 @@ export default function Pastas() {
             }
             
             // Pasta compartilhada com o usuário
-            if (pasta.visibilidade_compartilhada_com && 
+            if (pasta.visibilidade_compartilhada_com && Array.isArray(pasta.visibilidade_compartilhada_com) &&
                 pasta.visibilidade_compartilhada_com.includes(user.email)) {
                 console.log(`Pasta ${pasta.nome} visível por compartilhamento para (${user.email}).`);
                 return true;
             }
             
-            console.log(`Pasta ${pasta.nome} não visível para ${user.email}.`);
+            console.log(`Pasta ${pasta.nome || 'sem nome'} não visível para ${user.email}.`);
             return false;
         });
         console.log("filterVisibleFolders: Pastas visíveis (após filtro):", filtered.length, filtered);
@@ -135,17 +136,17 @@ export default function Pastas() {
             if (folderId === '__ROOT_FOLDER__') {
                 // Na raiz, mostrar apenas pastas
                 setCurrentFolder(null);
-                setSubFolders(visibleFolders.filter(f => f.parent_folders_ids && f.parent_folders_ids.includes('__ROOT_FOLDER__')));
+                setSubFolders(visibleFolders.filter(f => f && f.parent_folders_ids && Array.isArray(f.parent_folders_ids) && f.parent_folders_ids.includes('__ROOT_FOLDER__')));
                 setDocuments([]);
                 setPosts([]);
             } else {
                 // Em pasta específica, mostrar tudo vinculado
-                const folder = visibleFolders.find(f => f.id === folderId);
+                const folder = visibleFolders.find(f => f && f.id === folderId);
                 setCurrentFolder(folder);
 
-                setSubFolders(visibleFolders.filter(f => f.parent_folders_ids && f.parent_folders_ids.includes(folderId)));
-                setDocuments(docs.filter(d => d.pastas_ids && d.pastas_ids.includes(folderId)));
-                setPosts(ps.filter(p => p.pastas_ids && p.pastas_ids.includes(folderId)));
+                setSubFolders(visibleFolders.filter(f => f && f.parent_folders_ids && Array.isArray(f.parent_folders_ids) && f.parent_folders_ids.includes(folderId)));
+                setDocuments((docs || []).filter(d => d && d.pastas_ids && Array.isArray(d.pastas_ids) && d.pastas_ids.includes(folderId)));
+                setPosts((ps || []).filter(p => p && p.pastas_ids && Array.isArray(p.pastas_ids) && p.pastas_ids.includes(folderId)));
             }
 
         } catch (error) {

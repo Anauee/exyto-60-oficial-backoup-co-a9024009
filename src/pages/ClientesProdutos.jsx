@@ -44,20 +44,22 @@ export default function ClientesProdutos() {
       ]);
       
       // Filter data by empresa_id on client side for security
-      const filteredClientes = clientesData.filter(item => item.empresa_id === empresaId);
-      const filteredProdutos = produtosData.filter(item => item.empresa_id === empresaId);
-      const filteredMembros = membrosData.filter(item => item.empresa_id === empresaId);
-      const filteredFunis = funisData.filter(item => item.empresa_id === empresaId);
+      const filteredClientes = Array.isArray(clientesData) ? clientesData.filter(item => item && item.empresa_id === empresaId) : [];
+      const filteredProdutos = Array.isArray(produtosData) ? produtosData.filter(item => item && item.empresa_id === empresaId) : [];
+      const filteredMembros = Array.isArray(membrosData) ? membrosData.filter(item => item && item.empresa_id === empresaId) : [];
+      const filteredFunis = Array.isArray(funisData) ? funisData.filter(item => item && item.empresa_id === empresaId) : [];
       
       setClientes(filteredClientes);
       setProdutos(filteredProdutos);
       setMembros(filteredMembros);
       setFunisDeVendas(filteredFunis);
 
-      if (usuariosEmpresaData.length > 0) {
-        const userEmails = usuariosEmpresaData.map(ue => ue.usuario_email);
-        const usersData = await User.filter({ email: { '$in': userEmails }}).catch(() => []);
-        setResponsaveis(usersData);
+      if (Array.isArray(usuariosEmpresaData) && usuariosEmpresaData.length > 0) {
+        const userEmails = usuariosEmpresaData.map(ue => ue.usuario_email).filter(Boolean);
+        if (userEmails.length > 0) {
+          const usersData = await User.filter({ email: { '$in': userEmails }}).catch(() => []);
+          setResponsaveis(Array.isArray(usersData) ? usersData : []);
+        }
       }
     } catch (error) {
       console.error("Erro ao carregar dados do CRM:", error);
@@ -317,11 +319,11 @@ export default function ClientesProdutos() {
         {/* Estatísticas rápidas */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-6 mt-12">
           {[
-            { label: "Total de Clientes", value: clientes.length, color: "text-primary" },
-            { label: "Vendas Concluídas", value: clientes.filter(c => c.status_funil === 'venda_concluida').length, color: "text-emerald-500" },
-            { label: "Produtos no Catálogo", value: produtos.length, color: "text-blue-500" },
-            { label: "Funis de Vendas", value: funisDeVendas.length, color: "text-purple-500" },
-            { label: "Estoque Baixo", value: produtos.filter(p => !p.is_infoproduto && p.estoque <= p.estoque_minimo).length, color: "text-rose-500" }
+            { label: "Total de Clientes", value: (clientes || []).length, color: "text-primary" },
+            { label: "Vendas Concluídas", value: (clientes || []).filter(c => c && c.status_funil === 'venda_concluida').length, color: "text-emerald-500" },
+            { label: "Produtos no Catálogo", value: (produtos || []).length, color: "text-blue-500" },
+            { label: "Funis de Vendas", value: (funisDeVendas || []).length, color: "text-purple-500" },
+            { label: "Estoque Baixo", value: (produtos || []).filter(p => p && !p.is_infoproduto && p.estoque <= p.estoque_minimo).length, color: "text-rose-500" }
           ].map((stat, i) => (
             <div key={i} className="bg-card/60 backdrop-blur-md rounded-[2rem] p-6 border border-border/40 shadow-lg hover:scale-105 transition-all duration-300">
               <div className="text-center">

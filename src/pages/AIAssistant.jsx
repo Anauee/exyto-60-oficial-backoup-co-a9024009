@@ -158,9 +158,9 @@ export default function AIAssistant() {
             model: aiSettings.model || 'deepseek-chat',
             messages: [
               { role: 'system', content: `Você é o Exyto Commander, a inteligência central do sistema. Você tem controle total sobre os dados da empresa. Seja eficiente, proativo e execute as ferramentas sempre que necessário para resolver os pedidos do usuário. Empresa: ${currentCompany?.nome}` },
-              ...currentMessages.map(({role, content, tool_calls, tool_call_id, name}) => ({role, content, tool_calls, tool_call_id, name}))
+              ...(Array.isArray(currentMessages) ? currentMessages.map(({role, content, tool_calls, tool_call_id, name}) => ({role, content, tool_calls, tool_call_id, name})) : [])
             ],
-            tools: AI_TOOLS.map(t => ({ type: 'function', function: t })),
+            tools: (AI_TOOLS || []).map(t => ({ type: 'function', function: t })),
             tool_choice: 'auto'
           })
         });
@@ -235,7 +235,7 @@ export default function AIAssistant() {
         <div className="flex-1 overflow-auto">
           <div className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-4 px-2">Recentes</div>
           <div className="space-y-1">
-            {conversas.map((c) => (
+            {(conversas || []).map((c) => (
               <div 
                 key={c.id}
                 onClick={() => loadMessages(c.id)}
@@ -285,7 +285,7 @@ export default function AIAssistant() {
       <div className="flex-1 flex flex-col relative max-w-5xl mx-auto">
         <ScrollArea className="flex-1 p-8" ref={scrollRef}>
           <div className="space-y-8 pb-32">
-            {messages.map((m, i) => (
+            {(messages || []).map((m, i) => (
               <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                 <div className="flex gap-4 max-w-[85%]">
                   {m.role === 'assistant' && (

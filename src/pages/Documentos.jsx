@@ -126,9 +126,9 @@ export default function Documentos() {
     // Filtro por termo de busca
     if (searchTerm) {
       filtered = filtered.filter(doc =>
-        doc.nome_documento.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        doc.descricao?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        doc.nome_entidade?.toLowerCase().includes(searchTerm.toLowerCase())
+        (doc.nome_documento || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (doc.descricao || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (doc.nome_entidade || "").toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
@@ -195,11 +195,11 @@ export default function Documentos() {
   };
 
   // Obter tipos únicos de arquivo para o filtro
-  const uniqueFileTypes = [...new Set(documentos.map(doc => {
+  const uniqueFileTypes = [...new Set((documentos || []).map(doc => {
       if (doc.tipo_arquivo === 'Anotação') return 'Anotação';
       // Normalize common file types for display and filtering
       if (!doc.tipo_arquivo) return null;
-      const typeLower = doc.tipo_arquivo.toLowerCase();
+      const typeLower = (doc.tipo_arquivo || "").toLowerCase();
       if (typeLower.includes('pdf')) return 'PDF';
       if (typeLower.includes('doc') || typeLower.includes('word')) return 'DOC';
       if (typeLower.includes('image') || typeLower.includes('jpg') || typeLower.includes('png') || typeLower.includes('gif')) return 'Image';
@@ -212,7 +212,7 @@ export default function Documentos() {
 
 
   // Obter entidades únicas para o filtro
-  const uniqueEntities = [...new Set(documentos.map(doc => doc.entidade_vinculada).filter(Boolean))].sort();
+  const uniqueEntities = [...new Set((documentos || []).map(doc => doc.entidade_vinculada).filter(Boolean))].sort();
 
   if (isLoading) {
     return (

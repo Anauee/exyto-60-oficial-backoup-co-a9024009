@@ -51,7 +51,7 @@ function MetaAdsAnalytics({ token }) {
       );
       const campsData = await campsRes.json();
 
-      const insights = insightsData.data || [];
+      const insights = Array.isArray(insightsData.data) ? insightsData.data : [];
       const totalSpend = insights.reduce((s, d) => s + parseFloat(d.spend || 0), 0);
       const totalClicks = insights.reduce((s, d) => s + parseInt(d.clicks || 0), 0);
       const totalImpressions = insights.reduce((s, d) => s + parseInt(d.impressions || 0), 0);
@@ -67,11 +67,11 @@ function MetaAdsAnalytics({ token }) {
         ctr: totalImpressions > 0 ? ((totalClicks / totalImpressions) * 100).toFixed(2) : '0',
         avgCpc: totalClicks > 0 ? (totalSpend / totalClicks).toFixed(2) : '0',
         chartData: insights.map(d => ({
-          name: new Date(d.date_start).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
+          name: d.date_start ? new Date(d.date_start).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }) : '?',
           gasto: parseFloat(d.spend || 0),
           cliques: parseInt(d.clicks || 0),
         })),
-        campaigns: campsData.data || [],
+        campaigns: Array.isArray(campsData.data) ? campsData.data : [],
       });
     } catch (err) {
       setError(err.message);
@@ -194,12 +194,12 @@ function MetaAdsAnalytics({ token }) {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border/20">
-                  {data.campaigns.map((camp) => {
+                  {(data.campaigns || []).map((camp) => {
                     const ins = camp.insights?.data?.[0] || {};
                     return (
                       <tr key={camp.id} className="hover:bg-primary/5 transition-colors">
-                        <td className="p-6 font-bold max-w-xs truncate">{camp.name}</td>
-                        <td className="p-6 text-sm text-muted-foreground">{camp.objective}</td>
+                        <td className="p-6 font-bold max-w-xs truncate">{camp.name || 'Sem nome'}</td>
+                        <td className="p-6 text-sm text-muted-foreground">{camp.objective || '-'}</td>
                         <td className="p-6 text-center font-black text-emerald-500">R$ {parseFloat(ins.spend || 0).toFixed(2)}</td>
                         <td className="p-6 text-center font-bold">{parseInt(ins.clicks || 0).toLocaleString('pt-BR')}</td>
                         <td className="p-6 text-center font-bold">R$ {parseFloat(ins.cpc || 0).toFixed(2)}</td>

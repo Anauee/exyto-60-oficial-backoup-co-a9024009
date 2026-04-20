@@ -109,10 +109,10 @@ export default function Agendas() {
       ]);
       
       // Filter data by empresa_id on client side for security
-      const filteredTarefas = tarefasData.filter(item => item.empresa_id === empresaId);
-      const filteredCompromissos = compromissosData.filter(item => item.empresa_id === empresaId);
-      const filteredProjetos = projetosData.filter(item => item.empresa_id === empresaId);
-      const filteredMembros = membrosData.filter(item => item.empresa_id === empresaId);
+      const filteredTarefas = Array.isArray(tarefasData) ? tarefasData.filter(item => item.empresa_id === empresaId) : [];
+      const filteredCompromissos = Array.isArray(compromissosData) ? compromissosData.filter(item => item.empresa_id === empresaId) : [];
+      const filteredProjetos = Array.isArray(projetosData) ? projetosData.filter(item => item.empresa_id === empresaId) : [];
+      const filteredMembros = Array.isArray(membrosData) ? membrosData.filter(item => item.empresa_id === empresaId) : [];
       
       setTarefas(filteredTarefas);
       setCompromissos(filteredCompromissos);
@@ -132,15 +132,15 @@ export default function Agendas() {
   }, [empresaId]);
 
   const getTasksForDay = (day) => {
-    return tarefas.filter(task => 
-      task.data_vencimento && 
+    return (tarefas || []).filter(task => 
+      task && task.data_vencimento && 
       isSameDay(parseDateLocal(task.data_vencimento), day)
     );
   };
 
   const getAppointmentsForDay = (day) => {
-    return compromissos.filter(appointment => 
-      appointment.data_inicio && 
+    return (compromissos || []).filter(appointment => 
+      appointment && appointment.data_inicio && 
       isSameDay(new Date(appointment.data_inicio), day)
     );
   };
@@ -196,8 +196,8 @@ export default function Agendas() {
       );
     }
 
-    setFilteredTarefas(tasksToFilter);
-    setFilteredCompromissos(appointmentsToFilter);
+    setFilteredTarefas(Array.isArray(tasksToFilter) ? tasksToFilter : []);
+    setFilteredCompromissos(Array.isArray(appointmentsToFilter) ? appointmentsToFilter : []);
   }, [tarefas, compromissos, viewMode, responsibleFilter, membros, date]);
 
   useEffect(() => {

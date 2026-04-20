@@ -133,13 +133,13 @@ export default function MidiaSocial() {
       ]);
       
       // Filter data by empresa_id on client side for security
-      const allPosts = postsDataRaw.filter(item => item.empresa_id === empresaId);
-      const filteredContas = contasDataRaw.filter(item => item.empresa_id === empresaId);
-      const filteredMarcas = marcasDataRaw.filter(item => item.empresa_id === empresaId);
-      const filteredPlataformas = plataformasDataRaw.filter(item => item.empresa_id === empresaId);
-      const filteredFormatos = formatosDataRaw.filter(item => item.empresa_id === empresaId);
-      const filteredFichasEditoriais = fichasEditoriaisDataRaw.filter(item => item.empresa_id === empresaId);
-      const filteredMembros = membrosData.filter(item => item.empresa_id === empresaId);
+      const allPosts = Array.isArray(postsDataRaw) ? postsDataRaw.filter(item => item.empresa_id === empresaId) : [];
+      const filteredContas = Array.isArray(contasDataRaw) ? contasDataRaw.filter(item => item.empresa_id === empresaId) : [];
+      const filteredMarcas = Array.isArray(marcasDataRaw) ? marcasDataRaw.filter(item => item.empresa_id === empresaId) : [];
+      const filteredPlataformas = Array.isArray(plataformasDataRaw) ? plataformasDataRaw.filter(item => item.empresa_id === empresaId) : [];
+      const filteredFormatos = Array.isArray(formatosDataRaw) ? formatosDataRaw.filter(item => item.empresa_id === empresaId) : [];
+      const filteredFichasEditoriais = Array.isArray(fichasEditoriaisDataRaw) ? fichasEditoriaisDataRaw.filter(item => item.empresa_id === empresaId) : [];
+      const filteredMembros = Array.isArray(membrosData) ? membrosData.filter(item => item.empresa_id === empresaId) : [];
 
       setPosts(allPosts);
       setContas(filteredContas);
@@ -150,11 +150,11 @@ export default function MidiaSocial() {
       setMembros(filteredMembros);
 
       // Load responsaveis (users from this company)
-      if (usuariosEmpresaData && usuariosEmpresaData.length > 0) {
-        const userEmails = usuariosEmpresaData.map(ue => ue.usuario_email);
+      if (usuariosEmpresaData && Array.isArray(usuariosEmpresaData) && usuariosEmpresaData.length > 0) {
+        const userEmails = usuariosEmpresaData.map(ue => ue.usuario_email).filter(Boolean);
         try {
           const usersData = await User.list();
-          const responsaveisFiltered = usersData.filter(user => userEmails.includes(user.email));
+          const responsaveisFiltered = Array.isArray(usersData) ? usersData.filter(user => user.email && userEmails.includes(user.email)) : [];
           setResponsaveis(responsaveisFiltered);
         } catch (error) {
           console.error("Erro ao buscar responsáveis:", error);
@@ -223,23 +223,23 @@ export default function MidiaSocial() {
     // Marca and Plataforma filters (indirect)
     let contaIdsFromMarca = null;
     if (filters.marca && filters.marca !== 'todos') {
-      contaIdsFromMarca = contas
+      contaIdsFromMarca = (contas || [])
         .filter(c => c.marca_id === filters.marca)
         .map(c => c.id);
     }
 
     let contaIdsFromPlataforma = null;
     if (filters.plataforma && filters.plataforma !== 'todos') {
-      contaIdsFromPlataforma = contas
+      contaIdsFromPlataforma = (contas || [])
         .filter(c => c.plataforma_id === filters.plataforma)
         .map(c => c.id);
     }
 
     if (contaIdsFromMarca !== null) {
-      tempPosts = tempPosts.filter(p => contaIdsFromMarca.includes(p.conta_social_id));
+      tempPosts = tempPosts.filter(p => (contaIdsFromMarca || []).includes(p.conta_social_id));
     }
     if (contaIdsFromPlataforma !== null) {
-      tempPosts = tempPosts.filter(p => contaIdsFromPlataforma.includes(p.conta_social_id));
+      tempPosts = tempPosts.filter(p => (contaIdsFromPlataforma || []).includes(p.conta_social_id));
     }
 
     setFilteredPosts(tempPosts);

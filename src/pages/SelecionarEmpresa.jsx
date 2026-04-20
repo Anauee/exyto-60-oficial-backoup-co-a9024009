@@ -110,8 +110,8 @@ export default function SelecionarEmpresa() {
       }
 
       // 3. Filtrar a lista completa para definir as empresas acessíveis
-      const empresasAcessiveis = (todasAsEmpresasDoSistema || []).filter(emp => empresaIds.includes(emp.id));
-      setMinhasEmpresas(empresasAcessiveis.filter(emp => emp.ativo));
+      const empresasAcessiveis = (todasAsEmpresasDoSistema || []).filter(emp => emp && empresaIds.includes(emp.id));
+      setMinhasEmpresas(empresasAcessiveis.filter(emp => emp && emp.ativo));
       
       // 4. Definir o contexto para RLS em outras páginas
       if (currentUser && empresaIds.length > 0) {
@@ -220,7 +220,7 @@ export default function SelecionarEmpresa() {
 
   const temAcessoEmpresa = (empresaId) => {
     // A lista `minhasEmpresas` já contém apenas as empresas que o usuário tem acesso
-    return minhasEmpresas.some(emp => emp.id === empresaId);
+    return Array.isArray(minhasEmpresas) && minhasEmpresas.some(emp => emp && emp.id === empresaId);
   };
 
   const isAdmin = () => {
@@ -302,7 +302,8 @@ export default function SelecionarEmpresa() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 px-4">
             {/* Lógica unificada para mostrar todas as empresas */}
-            {todasEmpresas.map((empresa) => {
+            {(todasEmpresas || []).map((empresa) => {
+              if (!empresa) return null;
               const temAcesso = temAcessoEmpresa(empresa.id);
               
               return (

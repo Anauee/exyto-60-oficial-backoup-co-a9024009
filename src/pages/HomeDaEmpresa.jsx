@@ -85,7 +85,7 @@ export default function HomeDaEmpresa() {
         Formato.list()
       ]);
       
-      const filterByEmpresa = (data) => data.filter(item => item.empresa_id === empresaData.id);
+      const filterByEmpresa = (data) => Array.isArray(data) ? data.filter(item => item && item.empresa_id === empresaData.id) : [];
 
       setSistemas(sistemasData);
       setMembros(filterByEmpresa(membrosData));
@@ -295,7 +295,7 @@ export default function HomeDaEmpresa() {
               </div>
               {sistemas.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {sistemas.map((sistema) => (
+                  {(sistemas || []).map((sistema) => (
                     <SistemaCard key={sistema.id} sistema={sistema} onEdit={openSistemaModal} />
                   ))}
                 </div>

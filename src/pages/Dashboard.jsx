@@ -101,15 +101,15 @@ export default function Dashboard({ session, user }) {
       if (!isMounted) return;
 
       // Filter data by empresa_id on client side for security
-      const filteredTasks = (tasksData || []).filter(item => item.empresa_id === empresa.id);
-      const filteredPosts = (postsData || []).filter(item => item.empresa_id === empresa.id);
-      const filteredFaturas = (faturasData || []).filter(item => item.empresa_id === empresa.id);
-      const filteredDespesas = (despesasData || []).filter(item => item.empresa_id === empresa.id);
-      const filteredClientes = (clientesData || []).filter(item => item.empresa_id === empresa.id);
-      const filteredProdutos = (produtosData || []).filter(item => item.empresa_id === empresa.id);
-      const filteredCompromissos = (compromissosData || []).filter(item => item.empresa_id === empresa.id);
-      const filteredProjetos = (projetosData || []).filter(item => item.empresa_id === empresa.id);
-      const filteredMembros = (membrosData || []).filter(item => item.empresa_id === empresa.id);
+      const filteredTasks = Array.isArray(tasksData) ? tasksData.filter(item => item && item.empresa_id === empresa.id) : [];
+      const filteredPosts = Array.isArray(postsData) ? postsData.filter(item => item && item.empresa_id === empresa.id) : [];
+      const filteredFaturas = Array.isArray(faturasData) ? faturasData.filter(item => item && item.empresa_id === empresa.id) : [];
+      const filteredDespesas = Array.isArray(despesasData) ? despesasData.filter(item => item && item.empresa_id === empresa.id) : [];
+      const filteredClientes = Array.isArray(clientesData) ? clientesData.filter(item => item && item.empresa_id === empresa.id) : [];
+      const filteredProdutos = Array.isArray(produtosData) ? produtosData.filter(item => item && item.empresa_id === empresa.id) : [];
+      const filteredCompromissos = Array.isArray(compromissosData) ? compromissosData.filter(item => item && item.empresa_id === empresa.id) : [];
+      const filteredProjetos = Array.isArray(projetosData) ? projetosData.filter(item => item && item.empresa_id === empresa.id) : [];
+      const filteredMembros = Array.isArray(membrosData) ? membrosData.filter(item => item && item.empresa_id === empresa.id) : [];
 
       setTasks(filteredTasks);
       setPosts(filteredPosts);
@@ -121,14 +121,16 @@ export default function Dashboard({ session, user }) {
       setProjetos(filteredProjetos);
       setMembros(filteredMembros);
 
-      if (usuariosEmpresaData && usuariosEmpresaData.length > 0) {
-        const userEmails = usuariosEmpresaData.map(ue => ue.usuario_email);
-        try {
-          const usersData = await User.filter({ email: { '$in': userEmails }}).catch(() => []);
-          if (isMounted) setResponsaveis(usersData || []);
-        } catch (error) {
-          console.error("Erro ao buscar usuários:", error);
-          if (isMounted) setResponsaveis([]);
+      if (Array.isArray(usuariosEmpresaData) && usuariosEmpresaData.length > 0) {
+        const userEmails = usuariosEmpresaData.map(ue => ue.usuario_email).filter(Boolean);
+        if (userEmails.length > 0) {
+          try {
+            const usersData = await User.filter({ email: { '$in': userEmails }}).catch(() => []);
+            if (isMounted) setResponsaveis(Array.isArray(usersData) ? usersData : []);
+          } catch (error) {
+            console.error("Erro ao buscar usuários:", error);
+            if (isMounted) setResponsaveis([]);
+          }
         }
       } else {
         if (isMounted) setResponsaveis([]);

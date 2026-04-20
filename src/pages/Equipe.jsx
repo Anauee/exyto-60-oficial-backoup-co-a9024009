@@ -44,11 +44,11 @@ export default function Equipe() {
       ]);
       
       // Filter data by empresa_id on client side for security
-      const filteredMembros = membrosData.filter(item => item.empresa_id === empresaId);
-      const filteredCargos = cargosData.filter(item => item.empresa_id === empresaId);
-      const filteredFuncoes = funcoesData.filter(item => item.empresa_id === empresaId);
-      const filteredSetores = setoresData.filter(item => item.empresa_id === empresaId);
-      const filteredAtividades = atividadesSalvasData.filter(item => item.empresa_id === empresaId);
+      const filteredMembros = Array.isArray(membrosData) ? membrosData.filter(item => item.empresa_id === empresaId) : [];
+      const filteredCargos = Array.isArray(cargosData) ? cargosData.filter(item => item.empresa_id === empresaId) : [];
+      const filteredFuncoes = Array.isArray(funcoesData) ? funcoesData.filter(item => item.empresa_id === empresaId) : [];
+      const filteredSetores = Array.isArray(setoresData) ? setoresData.filter(item => item.empresa_id === empresaId) : [];
+      const filteredAtividades = Array.isArray(atividadesSalvasData) ? atividadesSalvasData.filter(item => item.empresa_id === empresaId) : [];
 
       setMembros(filteredMembros);
       setCargos(filteredCargos);
@@ -60,7 +60,7 @@ export default function Equipe() {
         const userEmails = usuariosEmpresaData.map(ue => ue.usuario_email);
         try {
           const usersData = await User.list();
-          const responsaveisFiltered = usersData.filter(user => userEmails.includes(user.email));
+          const responsaveisFiltered = Array.isArray(usersData) ? usersData.filter(user => userEmails.includes(user.email)) : [];
           setResponsaveis(responsaveisFiltered);
 
           // Criar lista integrada de membros

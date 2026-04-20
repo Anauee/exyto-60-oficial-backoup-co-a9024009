@@ -25,9 +25,9 @@ export default function Automacoes() {
         CustomEventRule.list("-created_date").catch(() => [])
       ]);
 
-      const filteredWebhooks = webhooksData.filter(item => item.empresa_id === empresaId);
-      const filteredLogs = logsData.filter(item => item.empresa_id === empresaId);
-      const filteredRegras = regrasData.filter(item => item.empresa_id === empresaId);
+      const filteredWebhooks = Array.isArray(webhooksData) ? webhooksData.filter(item => item && item.empresa_id === empresaId) : [];
+      const filteredLogs = Array.isArray(logsData) ? logsData.filter(item => item && item.empresa_id === empresaId) : [];
+      const filteredRegras = Array.isArray(regrasData) ? regrasData.filter(item => item && item.empresa_id === empresaId) : [];
 
       setWebhooks(filteredWebhooks);
       setLogs(filteredLogs);
