@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CheckSquare, Calendar, Search, Filter, ArrowUpDown } from "lucide-react";
+import { CheckSquare, Calendar, Search, Filter, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { formatDateSafely } from "@/components/utils/dateUtils"; // Import the helper function from utils
 
 
@@ -91,6 +91,10 @@ export default function TabelaAtividades({
     const timeB = getDateValueForSort(b.data_vencimento || b.data_inicio);
 
     switch (sortBy) {
+      case 'type':
+        aValue = a.type || '';
+        bValue = b.type || '';
+        break;
       case 'titulo':
         aValue = a.titulo || '';
         bValue = b.titulo || '';
@@ -113,8 +117,17 @@ export default function TabelaAtividades({
           }
           return '';
         };
-        aValue = getResponsibleNameForSorting(a);
-        bValue = getResponsibleNameForSorting(b);
+        aValue = getResponsibleNameForSorting(a).toLowerCase();
+        bValue = getResponsibleNameForSorting(b).toLowerCase();
+        break;
+      case 'status':
+        aValue = (a.status || a.tipo || '').toLowerCase();
+        bValue = (b.status || b.tipo || '').toLowerCase();
+        break;
+      case 'prioridade':
+        const priorityOrder = { 'urgente': 0, 'alta': 1, 'media': 2, 'baixa': 3 };
+        aValue = priorityOrder[a.prioridade] ?? 4;
+        bValue = priorityOrder[b.prioridade] ?? 4;
         break;
       default:
         return 0;
@@ -134,6 +147,13 @@ export default function TabelaAtividades({
       setSortBy(column);
       setSortOrder('asc');
     }
+  };
+
+  const SortIcon = ({ columnKey }) => {
+    if (sortBy !== columnKey) return <ArrowUpDown className="ml-2 h-3 w-3 opacity-30 group-hover/head:opacity-100 transition-opacity" />;
+    return sortOrder === 'asc' 
+      ? <ArrowUp className="ml-2 h-3 w-3 text-blue-500" /> 
+      : <ArrowDown className="ml-2 h-3 w-3 text-blue-500" />;
   };
 
   const getStatusBadge = (activity) => {
@@ -253,39 +273,54 @@ export default function TabelaAtividades({
             <Table>
               <TableHeader>
                 <TableRow className="border-border/40 hover:bg-transparent">
-                  <TableHead className="w-12 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Tipo</TableHead>
+                  <TableHead className="w-20 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                    <div 
+                      className="flex items-center cursor-pointer hover:text-foreground transition-colors group/head"
+                      onClick={() => handleSort('type')}
+                    >
+                      Tipo <SortIcon columnKey="type" />
+                    </div>
+                  </TableHead>
                   <TableHead>
-                    <Button
-                      variant="ghost"
+                    <div 
+                      className="flex items-center cursor-pointer text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors group/head"
                       onClick={() => handleSort('titulo')}
-                      className="h-auto p-0 text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:bg-transparent hover:text-foreground"
                     >
-                      Título
-                      <ArrowUpDown className="ml-2 h-4 w-4" />
-                    </Button>
+                      Título <SortIcon columnKey="titulo" />
+                    </div>
                   </TableHead>
                   <TableHead>
-                    <Button
-                      variant="ghost"
+                    <div 
+                      className="flex items-center cursor-pointer text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors group/head"
                       onClick={() => handleSort('responsavel')}
-                      className="h-auto p-0 text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:bg-transparent hover:text-foreground"
                     >
-                      Responsável
-                      <ArrowUpDown className="ml-2 h-4 w-4" />
-                    </Button>
+                      Responsável <SortIcon columnKey="responsavel" />
+                    </div>
                   </TableHead>
                   <TableHead>
-                    <Button
-                      variant="ghost"
+                    <div 
+                      className="flex items-center cursor-pointer text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors group/head"
                       onClick={() => handleSort('data_vencimento')}
-                      className="h-auto p-0 text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:bg-transparent hover:text-foreground"
                     >
-                      Data
-                      <ArrowUpDown className="ml-2 h-4 w-4" />
-                    </Button>
+                      Data <SortIcon columnKey="data_vencimento" />
+                    </div>
                   </TableHead>
-                  <TableHead className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Status/Tipo</TableHead>
-                  <TableHead className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Prioridade</TableHead>
+                  <TableHead className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                    <div 
+                      className="flex items-center cursor-pointer hover:text-foreground transition-colors group/head"
+                      onClick={() => handleSort('status')}
+                    >
+                      Status/Tipo <SortIcon columnKey="status" />
+                    </div>
+                  </TableHead>
+                  <TableHead className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                    <div 
+                      className="flex items-center cursor-pointer hover:text-foreground transition-colors group/head"
+                      onClick={() => handleSort('prioridade')}
+                    >
+                      Prioridade <SortIcon columnKey="prioridade" />
+                    </div>
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

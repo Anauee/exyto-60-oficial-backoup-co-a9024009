@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit, Trash2, Building2 } from "lucide-react";
+import { Plus, Edit, Trash2, Building2, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import ConfirmDeleteModal from "../shared/ConfirmDeleteModal";
 import SetorModal from "./SetorModal";
 import SetorViewModal from "./SetorViewModal";
@@ -20,6 +20,53 @@ export default function SetoresTab({
   const [showViewModal, setShowViewModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedSetor, setSelectedSetor] = useState(null);
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
+
+  const handleSort = (key) => {
+    let direction = 'asc';
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const getSortedSetores = () => {
+    if (!sortConfig.key) return setores;
+
+    return [...setores].sort((a, b) => {
+      let aValue, bValue;
+
+      switch (sortConfig.key) {
+        case 'nome':
+          aValue = (a.nome || '').toLowerCase();
+          bValue = (b.nome || '').toLowerCase();
+          break;
+        case 'objetivo':
+          aValue = (a.objetivo || '').toLowerCase();
+          bValue = (b.objetivo || '').toLowerCase();
+          break;
+        case 'lideres':
+          aValue = getLideresNomes(a.lideres_ids).join(', ').toLowerCase();
+          bValue = getLideresNomes(b.lideres_ids).join(', ').toLowerCase();
+          break;
+        default:
+          return 0;
+      }
+
+      if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
+      if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
+      return 0;
+    });
+  };
+
+  const sortedSetores = getSortedSetores();
+
+  const SortIcon = ({ columnKey }) => {
+    if (sortConfig.key !== columnKey) return <ArrowUpDown className="ml-2 h-3 w-3 opacity-30 group-hover/head:opacity-100 transition-opacity" />;
+    return sortConfig.direction === 'asc' 
+      ? <ArrowUp className="ml-2 h-3 w-3 text-blue-600" /> 
+      : <ArrowDown className="ml-2 h-3 w-3 text-blue-600" />;
+  };
   
   const handleSave = async (data, id = null) => {
     await onSave(data, id);
@@ -101,15 +148,36 @@ export default function SetoresTab({
         <CardContent>
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead>Nome</TableHead>
-                <TableHead>Objetivo</TableHead>
-                <TableHead>Líderes</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
+              <TableRow className="border-b border-border/40 bg-muted/20">
+                <TableHead 
+                  onClick={() => handleSort('nome')}
+                  className="p-6 text-xs font-black uppercase tracking-widest text-muted-foreground cursor-pointer hover:text-blue-600 transition-colors group/head"
+                >
+                  <div className="flex items-center">
+                    Nome <SortIcon columnKey="nome" />
+                  </div>
+                </TableHead>
+                <TableHead 
+                  onClick={() => handleSort('objetivo')}
+                  className="p-6 text-xs font-black uppercase tracking-widest text-muted-foreground cursor-pointer hover:text-blue-600 transition-colors group/head"
+                >
+                  <div className="flex items-center">
+                    Objetivo <SortIcon columnKey="objetivo" />
+                  </div>
+                </TableHead>
+                <TableHead 
+                  onClick={() => handleSort('lideres')}
+                  className="p-6 text-xs font-black uppercase tracking-widest text-muted-foreground cursor-pointer hover:text-blue-600 transition-colors group/head"
+                >
+                  <div className="flex items-center">
+                    Líderes <SortIcon columnKey="lideres" />
+                  </div>
+                </TableHead>
+                <TableHead className="p-6 text-xs font-black uppercase tracking-widest text-muted-foreground text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {setores.map((setor) => (
+              {sortedSetores.map((setor) => (
                 <TableRow 
                   key={setor.id}
                   onClick={() => openViewModal(setor)}

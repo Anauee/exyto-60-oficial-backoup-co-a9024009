@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit, Trash2, UserCheck, Mail } from "lucide-react";
+import { Plus, Edit, Trash2, UserCheck, Mail, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import ConfirmDeleteModal from "../shared/ConfirmDeleteModal";
 import MembroModal from "./MembroModal";
 import MembroViewModal from "./MembroViewModal";
@@ -25,6 +25,57 @@ export default function MembrosTab({
   const [showViewModal, setShowViewModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedMembro, setSelectedMembro] = useState(null);
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
+
+  const handleSort = (key) => {
+    let direction = 'asc';
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const getSortedMembros = () => {
+    if (!sortConfig.key) return membros;
+
+    return [...membros].sort((a, b) => {
+      let aValue, bValue;
+
+      switch (sortConfig.key) {
+        case 'nome':
+          aValue = (a.nome || '').toLowerCase();
+          bValue = (b.nome || '').toLowerCase();
+          break;
+        case 'descricao':
+          aValue = (a.descricao || '').toLowerCase();
+          bValue = (b.descricao || '').toLowerCase();
+          break;
+        case 'cargos':
+          aValue = getCargosNomes(a.cargos_ids).join(', ').toLowerCase();
+          bValue = getCargosNomes(b.cargos_ids).join(', ').toLowerCase();
+          break;
+        case 'atribuicoes':
+          aValue = a.atribuicoes?.length || 0;
+          bValue = b.atribuicoes?.length || 0;
+          break;
+        default:
+          return 0;
+      }
+
+      if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
+      if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
+      return 0;
+    });
+  };
+
+  const sortedMembros = getSortedMembros();
+
+  const SortIcon = ({ columnKey }) => {
+    if (sortConfig.key !== columnKey) return <ArrowUpDown className="ml-2 h-3 w-3 opacity-30 group-hover/head:opacity-100 transition-opacity" />;
+    return sortConfig.direction === 'asc' 
+      ? <ArrowUp className="ml-2 h-3 w-3 text-blue-600" /> 
+      : <ArrowDown className="ml-2 h-3 w-3 text-blue-600" />;
+  };
   
   const handleSave = async (membroData, membroId = null) => {
     try {
@@ -101,15 +152,43 @@ export default function MembrosTab({
             <TableHeader>
               <TableRow className="border-b border-border/40 bg-muted/20">
                 <TableHead className="w-16 p-6"></TableHead>
-                <TableHead className="p-6 text-xs font-black uppercase tracking-widest text-muted-foreground">Nome</TableHead>
-                <TableHead className="p-6 text-xs font-black uppercase tracking-widest text-muted-foreground">Descrição</TableHead>
-                <TableHead className="p-6 text-xs font-black uppercase tracking-widest text-muted-foreground">Cargos</TableHead>
-                <TableHead className="p-6 text-xs font-black uppercase tracking-widest text-muted-foreground">Atribuições</TableHead>
+                <TableHead 
+                  onClick={() => handleSort('nome')}
+                  className="p-6 text-xs font-black uppercase tracking-widest text-muted-foreground cursor-pointer hover:text-blue-600 transition-colors group/head"
+                >
+                  <div className="flex items-center">
+                    Nome <SortIcon columnKey="nome" />
+                  </div>
+                </TableHead>
+                <TableHead 
+                  onClick={() => handleSort('descricao')}
+                  className="p-6 text-xs font-black uppercase tracking-widest text-muted-foreground cursor-pointer hover:text-blue-600 transition-colors group/head"
+                >
+                  <div className="flex items-center">
+                    Descrição <SortIcon columnKey="descricao" />
+                  </div>
+                </TableHead>
+                <TableHead 
+                  onClick={() => handleSort('cargos')}
+                  className="p-6 text-xs font-black uppercase tracking-widest text-muted-foreground cursor-pointer hover:text-blue-600 transition-colors group/head"
+                >
+                  <div className="flex items-center">
+                    Cargos <SortIcon columnKey="cargos" />
+                  </div>
+                </TableHead>
+                <TableHead 
+                  onClick={() => handleSort('atribuicoes')}
+                  className="p-6 text-xs font-black uppercase tracking-widest text-muted-foreground cursor-pointer hover:text-blue-600 transition-colors group/head"
+                >
+                  <div className="flex items-center">
+                    Atribuições <SortIcon columnKey="atribuicoes" />
+                  </div>
+                </TableHead>
                 <TableHead className="p-6 text-xs font-black uppercase tracking-widest text-muted-foreground text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody className="divide-y divide-border/20">
-              {membros.map((membro) => {
+              {sortedMembros.map((membro) => {
                 const cargosNomes = getCargosNomes(membro.cargos_ids);
                 return (
                   <TableRow 

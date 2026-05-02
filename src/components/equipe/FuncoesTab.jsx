@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit, Trash2, Users } from "lucide-react";
+import { Plus, Edit, Trash2, Users, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import ConfirmDeleteModal from "../shared/ConfirmDeleteModal";
 import FuncaoModal from "./FuncaoModal";
 import FuncaoViewModal from "./FuncaoViewModal";
@@ -21,6 +21,53 @@ export default function FuncoesTab({
   const [showViewModal, setShowViewModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedFuncao, setSelectedFuncao] = useState(null);
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
+
+  const handleSort = (key) => {
+    let direction = 'asc';
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const getSortedFuncoes = () => {
+    if (!sortConfig.key) return funcoes;
+
+    return [...funcoes].sort((a, b) => {
+      let aValue, bValue;
+
+      switch (sortConfig.key) {
+        case 'nome':
+          aValue = (a.nome || '').toLowerCase();
+          bValue = (b.nome || '').toLowerCase();
+          break;
+        case 'objetivo':
+          aValue = (a.objetivo_central || '').toLowerCase();
+          bValue = (b.objetivo_central || '').toLowerCase();
+          break;
+        case 'cargos':
+          aValue = getCargosCount(a.id);
+          bValue = getCargosCount(b.id);
+          break;
+        default:
+          return 0;
+      }
+
+      if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
+      if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
+      return 0;
+    });
+  };
+
+  const sortedFuncoes = getSortedFuncoes();
+
+  const SortIcon = ({ columnKey }) => {
+    if (sortConfig.key !== columnKey) return <ArrowUpDown className="ml-2 h-3 w-3 opacity-30 group-hover/head:opacity-100 transition-opacity" />;
+    return sortConfig.direction === 'asc' 
+      ? <ArrowUp className="ml-2 h-3 w-3 text-blue-600" /> 
+      : <ArrowDown className="ml-2 h-3 w-3 text-blue-600" />;
+  };
   
   const handleSave = async (data, id = null) => {
     await onSave(data, id);
@@ -95,15 +142,36 @@ export default function FuncoesTab({
         <CardContent>
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead>Nome</TableHead>
-                <TableHead>Objetivo</TableHead>
-                <TableHead>Cargos Vinculados</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
+              <TableRow className="border-b border-border/40 bg-muted/20">
+                <TableHead 
+                  onClick={() => handleSort('nome')}
+                  className="p-4 text-xs font-black uppercase tracking-widest text-muted-foreground cursor-pointer hover:text-blue-600 transition-colors group/head"
+                >
+                  <div className="flex items-center">
+                    Nome <SortIcon columnKey="nome" />
+                  </div>
+                </TableHead>
+                <TableHead 
+                  onClick={() => handleSort('objetivo')}
+                  className="p-4 text-xs font-black uppercase tracking-widest text-muted-foreground cursor-pointer hover:text-blue-600 transition-colors group/head"
+                >
+                  <div className="flex items-center">
+                    Objetivo <SortIcon columnKey="objetivo" />
+                  </div>
+                </TableHead>
+                <TableHead 
+                  onClick={() => handleSort('cargos')}
+                  className="p-4 text-xs font-black uppercase tracking-widest text-muted-foreground cursor-pointer hover:text-blue-600 transition-colors group/head"
+                >
+                  <div className="flex items-center">
+                    Cargos Vinculados <SortIcon columnKey="cargos" />
+                  </div>
+                </TableHead>
+                <TableHead className="p-4 text-xs font-black uppercase tracking-widest text-muted-foreground text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {funcoes.map((funcao) => (
+              {sortedFuncoes.map((funcao) => (
                 <TableRow 
                   key={funcao.id}
                   onClick={() => openViewModal(funcao)}

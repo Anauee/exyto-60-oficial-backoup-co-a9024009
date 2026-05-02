@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit, Trash2, Briefcase } from "lucide-react";
+import { Plus, Edit, Trash2, Briefcase, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import ConfirmDeleteModal from "../shared/ConfirmDeleteModal";
 // These will be created in subsequent steps, assuming they exist for now.
 import CargoModal from "./CargoModal";
@@ -23,6 +23,53 @@ export default function CargosTab({
   const [showViewModal, setShowViewModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedCargo, setSelectedCargo] = useState(null);
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
+
+  const handleSort = (key) => {
+    let direction = 'asc';
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const getSortedCargos = () => {
+    if (!sortConfig.key) return cargos;
+
+    return [...cargos].sort((a, b) => {
+      let aValue, bValue;
+
+      switch (sortConfig.key) {
+        case 'nome':
+          aValue = (a.nome || '').toLowerCase();
+          bValue = (b.nome || '').toLowerCase();
+          break;
+        case 'objetivo':
+          aValue = (a.objetivo_central || '').toLowerCase();
+          bValue = (b.objetivo_central || '').toLowerCase();
+          break;
+        case 'membros':
+          aValue = getMembrosCount(a.id);
+          bValue = getMembrosCount(b.id);
+          break;
+        default:
+          return 0;
+      }
+
+      if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
+      if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
+      return 0;
+    });
+  };
+
+  const sortedCargos = getSortedCargos();
+
+  const SortIcon = ({ columnKey }) => {
+    if (sortConfig.key !== columnKey) return <ArrowUpDown className="ml-2 h-3 w-3 opacity-30 group-hover/head:opacity-100 transition-opacity" />;
+    return sortConfig.direction === 'asc' 
+      ? <ArrowUp className="ml-2 h-3 w-3 text-blue-600" /> 
+      : <ArrowDown className="ml-2 h-3 w-3 text-blue-600" />;
+  };
   
   const handleSave = async (data, id = null) => {
     await onSave(data, id);
@@ -100,15 +147,36 @@ export default function CargosTab({
         <CardContent>
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead>Nome</TableHead>
-                <TableHead>Objetivo</TableHead>
-                <TableHead>Membros</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
+              <TableRow className="border-b border-border/40 bg-muted/20">
+                <TableHead 
+                  onClick={() => handleSort('nome')}
+                  className="p-4 text-xs font-black uppercase tracking-widest text-muted-foreground cursor-pointer hover:text-blue-600 transition-colors group/head"
+                >
+                  <div className="flex items-center">
+                    Nome <SortIcon columnKey="nome" />
+                  </div>
+                </TableHead>
+                <TableHead 
+                  onClick={() => handleSort('objetivo')}
+                  className="p-4 text-xs font-black uppercase tracking-widest text-muted-foreground cursor-pointer hover:text-blue-600 transition-colors group/head"
+                >
+                  <div className="flex items-center">
+                    Objetivo <SortIcon columnKey="objetivo" />
+                  </div>
+                </TableHead>
+                <TableHead 
+                  onClick={() => handleSort('membros')}
+                  className="p-4 text-xs font-black uppercase tracking-widest text-muted-foreground cursor-pointer hover:text-blue-600 transition-colors group/head"
+                >
+                  <div className="flex items-center">
+                    Membros <SortIcon columnKey="membros" />
+                  </div>
+                </TableHead>
+                <TableHead className="p-4 text-xs font-black uppercase tracking-widest text-muted-foreground text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {cargos.map((cargo) => (
+              {sortedCargos.map((cargo) => (
                 <TableRow 
                   key={cargo.id}
                   onClick={() => openViewModal(cargo)}

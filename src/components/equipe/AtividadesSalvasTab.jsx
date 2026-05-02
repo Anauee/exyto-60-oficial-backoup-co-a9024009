@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit, Trash2, ClipboardList } from "lucide-react";
+import { Plus, Edit, Trash2, ClipboardList, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import ConfirmDeleteModal from "../shared/ConfirmDeleteModal";
 import TarefaSalvaModal from "./TarefaSalvaModal";
 import TarefaSalvaViewModal from "./TarefaSalvaViewModal";
@@ -14,6 +14,54 @@ export default function AtividadesSalvasTab({ atividadesSalvas, onSave, onDelete
   const [showViewModal, setShowViewModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedAtividade, setSelectedAtividade] = useState(null);
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
+
+  const handleSort = (key) => {
+    let direction = 'asc';
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const getSortedAtividades = () => {
+    if (!sortConfig.key) return atividadesSalvas;
+
+    return [...atividadesSalvas].sort((a, b) => {
+      let aValue, bValue;
+
+      switch (sortConfig.key) {
+        case 'titulo':
+          aValue = (a.titulo || '').toLowerCase();
+          bValue = (b.titulo || '').toLowerCase();
+          break;
+        case 'categoria':
+          aValue = (a.categoria || 'Geral').toLowerCase();
+          bValue = (b.categoria || 'Geral').toLowerCase();
+          break;
+        case 'prioridade':
+          const priorityOrder = { 'urgente': 0, 'alta': 1, 'media': 2, 'baixa': 3 };
+          aValue = priorityOrder[a.prioridade] ?? 4;
+          bValue = priorityOrder[b.prioridade] ?? 4;
+          break;
+        default:
+          return 0;
+      }
+
+      if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
+      if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
+      return 0;
+    });
+  };
+
+  const sortedAtividades = getSortedAtividades();
+
+  const SortIcon = ({ columnKey }) => {
+    if (sortConfig.key !== columnKey) return <ArrowUpDown className="ml-2 h-3 w-3 opacity-30 group-hover/head:opacity-100 transition-opacity" />;
+    return sortConfig.direction === 'asc' 
+      ? <ArrowUp className="ml-2 h-3 w-3 text-blue-600" /> 
+      : <ArrowDown className="ml-2 h-3 w-3 text-blue-600" />;
+  };
   
   const handleSave = async (data, id = null) => {
     await onSave(data, id);
@@ -81,15 +129,36 @@ export default function AtividadesSalvasTab({ atividadesSalvas, onSave, onDelete
         <CardContent>
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead>Título</TableHead>
-                <TableHead>Categoria</TableHead>
-                <TableHead>Prioridade</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
+              <TableRow className="border-b border-border/40 bg-muted/20">
+                <TableHead 
+                  onClick={() => handleSort('titulo')}
+                  className="p-4 text-xs font-black uppercase tracking-widest text-muted-foreground cursor-pointer hover:text-blue-600 transition-colors group/head"
+                >
+                  <div className="flex items-center">
+                    Título <SortIcon columnKey="titulo" />
+                  </div>
+                </TableHead>
+                <TableHead 
+                  onClick={() => handleSort('categoria')}
+                  className="p-4 text-xs font-black uppercase tracking-widest text-muted-foreground cursor-pointer hover:text-blue-600 transition-colors group/head"
+                >
+                  <div className="flex items-center">
+                    Categoria <SortIcon columnKey="categoria" />
+                  </div>
+                </TableHead>
+                <TableHead 
+                  onClick={() => handleSort('prioridade')}
+                  className="p-4 text-xs font-black uppercase tracking-widest text-muted-foreground cursor-pointer hover:text-blue-600 transition-colors group/head"
+                >
+                  <div className="flex items-center">
+                    Prioridade <SortIcon columnKey="prioridade" />
+                  </div>
+                </TableHead>
+                <TableHead className="p-4 text-xs font-black uppercase tracking-widest text-muted-foreground text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {atividadesSalvas.map((atividade) => (
+              {sortedAtividades.map((atividade) => (
                 <TableRow 
                   key={atividade.id}
                   onClick={() => openViewModal(atividade)}

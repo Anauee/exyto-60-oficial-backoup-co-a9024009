@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { DollarSign, TrendingUp, TrendingDown, Plus, Receipt, CreditCard, Wallet } from "lucide-react";
+import { DollarSign, TrendingUp, TrendingDown, Plus, Receipt, CreditCard, Wallet, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { format, subDays, startOfMonth, endOfMonth, eachDayOfInterval, addDays, addMonths, addWeeks, getDay, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {
@@ -110,6 +110,29 @@ export default function Financeiro() {
     to: endOfMonth(new Date()),
   });
   const [selectedFunilId, setSelectedFunilId] = useState(''); // Novo filtro global
+  const [faturasSort, setFaturasSort] = useState({ key: null, direction: 'asc' });
+  const [despesasSort, setDespesasSort] = useState({ key: null, direction: 'asc' });
+
+  const handleFaturasSort = (key) => {
+    setFaturasSort(prev => ({
+      key,
+      direction: prev.key === key && prev.direction === 'asc' ? 'desc' : 'asc'
+    }));
+  };
+
+  const handleDespesasSort = (key) => {
+    setDespesasSort(prev => ({
+      key,
+      direction: prev.key === key && prev.direction === 'asc' ? 'desc' : 'asc'
+    }));
+  };
+
+  const SortIcon = ({ sortConfig, columnKey }) => {
+    if (sortConfig.key !== columnKey) return <ArrowUpDown className="ml-2 h-3 w-3 opacity-30 group-hover/head:opacity-100 transition-opacity" />;
+    return sortConfig.direction === 'asc' 
+      ? <ArrowUp className="ml-2 h-3 w-3 text-primary" /> 
+      : <ArrowDown className="ml-2 h-3 w-3 text-primary" />;
+  };
 
   const loadFinancialData = useCallback(async () => {
     if (!empresaId) return;
@@ -433,20 +456,100 @@ export default function Financeiro() {
       ? faturas.filter(f => f.funil_id === selectedFunilId)
       : faturas;
 
-    return faturasToFilter.filter(f => {
+    let result = faturasToFilter.filter(f => {
       if (!date?.from || !date?.to) return true;
       const vencimento = parseISO(f.data_vencimento);
       if (isNaN(vencimento.getTime())) return false; // Exclude if date is invalid
       return vencimento >= date.from && vencimento <= date.to;
     });
-  }, [faturas, date, selectedFunilId]);
 
-  const filteredDespesas = useMemo(() => despesas.filter(d => {
-    if (!date?.from || !date?.to) return true;
-    const vencimento = parseISO(d.data_vencimento);
-    if (isNaN(vencimento.getTime())) return false; // Exclude if date is invalid
-    return vencimento >= date.from && vencimento <= date.to;
-  }), [despesas, date]);
+    if (faturasSort.key) {
+      result.sort((a, b) => {
+        let aValue, bValue;
+        switch (faturasSort.key) {
+          case 'cliente':
+            aValue = (clientes.find(c => c.id === a.cliente_id)?.nome || a.cliente || '').toLowerCase();
+            bValue = (clientes.find(c => c.id === b.cliente_id)?.nome || b.cliente || '').toLowerCase();
+            break;
+          case 'produto':
+            aValue = (produtos.find(p => p.id === a.produto_id)?.nome || '').toLowerCase();
+            bValue = (produtos.find(p => p.id === b.produto_id)?.nome || '').toLowerCase();
+            break;
+          case 'numero':
+            aValue = (a.numero_fatura || '').toLowerCase();
+            bValue = (b.numero_fatura || '').toLowerCase();
+            break;
+          case 'funil':
+            aValue = (funisDeVendas.find(f => f.id === a.funil_id)?.nome || '').toLowerCase();
+            bValue = (funisDeVendas.find(f => f.id === b.funil_id)?.nome || '').toLowerCase();
+            break;
+          case 'valor':
+            aValue = a.valor || 0;
+            bValue = b.valor || 0;
+            break;
+          case 'vencimento':
+            aValue = a.data_vencimento ? new Date(a.data_vencimento).getTime() : 0;
+            bValue = b.data_vencimento ? new Date(b.data_vencimento).getTime() : 0;
+            break;
+          case 'status':
+            aValue = (a.status || '').toLowerCase();
+            bValue = (b.status || '').toLowerCase();
+            break;
+          default:
+            return 0;
+        }
+        if (aValue < bValue) return faturasSort.direction === 'asc' ? -1 : 1;
+        if (aValue > bValue) return faturasSort.direction === 'asc' ? 1 : -1;
+        return 0;
+      });
+    }
+
+    return result;
+  }, [faturas, date, selectedFunilId, faturasSort, clientes, produtos, funisDeVendas]);
+
+  const filteredDespesas = useMemo(() => {
+    let result = despesas.filter(d => {
+      if (!date?.from || !date?.to) return true;
+      const vencimento = parseISO(d.data_vencimento);
+      if (isNaN(vencimento.getTime())) return false; // Exclude if date is invalid
+      return vencimento >= date.from && vencimento <= date.to;
+    });
+
+    if (despesasSort.key) {
+      result.sort((a, b) => {
+        let aValue, bValue;
+        switch (despesasSort.key) {
+          case 'fornecedor':
+            aValue = (a.fornecedor || '').toLowerCase();
+            bValue = (b.fornecedor || '').toLowerCase();
+            break;
+          case 'valor':
+            aValue = a.valor || 0;
+            bValue = b.valor || 0;
+            break;
+          case 'categoria':
+            aValue = (a.categoria || '').toLowerCase();
+            bValue = (b.categoria || '').toLowerCase();
+            break;
+          case 'vencimento':
+            aValue = a.data_vencimento ? new Date(a.data_vencimento).getTime() : 0;
+            bValue = b.data_vencimento ? new Date(b.data_vencimento).getTime() : 0;
+            break;
+          case 'status':
+            aValue = (a.status || '').toLowerCase();
+            bValue = (b.status || '').toLowerCase();
+            break;
+          default:
+            return 0;
+        }
+        if (aValue < bValue) return despesasSort.direction === 'asc' ? -1 : 1;
+        if (aValue > bValue) return despesasSort.direction === 'asc' ? 1 : -1;
+        return 0;
+      });
+    }
+
+    return result;
+  }, [despesas, date, despesasSort]);
 
   if (isLoading) {
     return (
@@ -631,15 +734,64 @@ export default function Financeiro() {
             <Card className="border border-border shadow-sm bg-card rounded-2xl overflow-hidden">
               <Table>
                 <TableHeader>
-                  <TableRow>
-                    <TableHead>Cliente</TableHead>
-                    <TableHead>Produto</TableHead>
-                    <TableHead>Nº Fatura</TableHead>
-                    <TableHead>Funil</TableHead>
-                    <TableHead>Valor</TableHead>
-                    <TableHead>Vencimento</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Ações</TableHead>
+                  <TableRow className="border-b border-border/40 bg-muted/20">
+                    <TableHead 
+                      onClick={() => handleFaturasSort('cliente')}
+                      className="p-4 text-xs font-black uppercase tracking-widest text-muted-foreground cursor-pointer hover:text-primary transition-colors group/head"
+                    >
+                      <div className="flex items-center">
+                        Cliente <SortIcon sortConfig={faturasSort} columnKey="cliente" />
+                      </div>
+                    </TableHead>
+                    <TableHead 
+                      onClick={() => handleFaturasSort('produto')}
+                      className="p-4 text-xs font-black uppercase tracking-widest text-muted-foreground cursor-pointer hover:text-primary transition-colors group/head"
+                    >
+                      <div className="flex items-center">
+                        Produto <SortIcon sortConfig={faturasSort} columnKey="produto" />
+                      </div>
+                    </TableHead>
+                    <TableHead 
+                      onClick={() => handleFaturasSort('numero')}
+                      className="p-4 text-xs font-black uppercase tracking-widest text-muted-foreground cursor-pointer hover:text-primary transition-colors group/head"
+                    >
+                      <div className="flex items-center">
+                        Nº Fatura <SortIcon sortConfig={faturasSort} columnKey="numero" />
+                      </div>
+                    </TableHead>
+                    <TableHead 
+                      onClick={() => handleFaturasSort('funil')}
+                      className="p-4 text-xs font-black uppercase tracking-widest text-muted-foreground cursor-pointer hover:text-primary transition-colors group/head"
+                    >
+                      <div className="flex items-center">
+                        Funil <SortIcon sortConfig={faturasSort} columnKey="funil" />
+                      </div>
+                    </TableHead>
+                    <TableHead 
+                      onClick={() => handleFaturasSort('valor')}
+                      className="p-4 text-xs font-black uppercase tracking-widest text-muted-foreground cursor-pointer hover:text-primary transition-colors group/head"
+                    >
+                      <div className="flex items-center">
+                        Valor <SortIcon sortConfig={faturasSort} columnKey="valor" />
+                      </div>
+                    </TableHead>
+                    <TableHead 
+                      onClick={() => handleFaturasSort('vencimento')}
+                      className="p-4 text-xs font-black uppercase tracking-widest text-muted-foreground cursor-pointer hover:text-primary transition-colors group/head"
+                    >
+                      <div className="flex items-center">
+                        Vencimento <SortIcon sortConfig={faturasSort} columnKey="vencimento" />
+                      </div>
+                    </TableHead>
+                    <TableHead 
+                      onClick={() => handleFaturasSort('status')}
+                      className="p-4 text-xs font-black uppercase tracking-widest text-muted-foreground cursor-pointer hover:text-primary transition-colors group/head"
+                    >
+                      <div className="flex items-center">
+                        Status <SortIcon sortConfig={faturasSort} columnKey="status" />
+                      </div>
+                    </TableHead>
+                    <TableHead className="p-4 text-xs font-black uppercase tracking-widest text-muted-foreground text-right">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -694,13 +846,48 @@ export default function Financeiro() {
             <Card className="border border-border shadow-sm bg-card rounded-2xl overflow-hidden">
               <Table>
                 <TableHeader>
-                  <TableRow>
-                    <TableHead>Fornecedor</TableHead>
-                    <TableHead>Valor</TableHead>
-                    <TableHead>Categoria</TableHead>
-                    <TableHead>Vencimento</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Ações</TableHead>
+                  <TableRow className="border-b border-border/40 bg-muted/20">
+                    <TableHead 
+                      onClick={() => handleDespesasSort('fornecedor')}
+                      className="p-4 text-xs font-black uppercase tracking-widest text-muted-foreground cursor-pointer hover:text-primary transition-colors group/head"
+                    >
+                      <div className="flex items-center">
+                        Fornecedor <SortIcon sortConfig={despesasSort} columnKey="fornecedor" />
+                      </div>
+                    </TableHead>
+                    <TableHead 
+                      onClick={() => handleDespesasSort('valor')}
+                      className="p-4 text-xs font-black uppercase tracking-widest text-muted-foreground cursor-pointer hover:text-primary transition-colors group/head"
+                    >
+                      <div className="flex items-center">
+                        Valor <SortIcon sortConfig={despesasSort} columnKey="valor" />
+                      </div>
+                    </TableHead>
+                    <TableHead 
+                      onClick={() => handleDespesasSort('categoria')}
+                      className="p-4 text-xs font-black uppercase tracking-widest text-muted-foreground cursor-pointer hover:text-primary transition-colors group/head"
+                    >
+                      <div className="flex items-center">
+                        Categoria <SortIcon sortConfig={despesasSort} columnKey="categoria" />
+                      </div>
+                    </TableHead>
+                    <TableHead 
+                      onClick={() => handleDespesasSort('vencimento')}
+                      className="p-4 text-xs font-black uppercase tracking-widest text-muted-foreground cursor-pointer hover:text-primary transition-colors group/head"
+                    >
+                      <div className="flex items-center">
+                        Vencimento <SortIcon sortConfig={despesasSort} columnKey="vencimento" />
+                      </div>
+                    </TableHead>
+                    <TableHead 
+                      onClick={() => handleDespesasSort('status')}
+                      className="p-4 text-xs font-black uppercase tracking-widest text-muted-foreground cursor-pointer hover:text-primary transition-colors group/head"
+                    >
+                      <div className="flex items-center">
+                        Status <SortIcon sortConfig={despesasSort} columnKey="status" />
+                      </div>
+                    </TableHead>
+                    <TableHead className="p-4 text-xs font-black uppercase tracking-widest text-muted-foreground text-right">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>

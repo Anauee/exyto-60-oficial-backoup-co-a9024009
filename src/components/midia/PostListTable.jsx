@@ -4,7 +4,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { ptBR } from 'date-fns/locale';
-import { List } from 'lucide-react';
+import { List, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 
 const getStatusBadge = (status) => {
   const statusMap = {
@@ -37,6 +37,73 @@ export default function PostListTable({
   formatos = [],
   plataformas = [] 
 }) {
+  const [sortConfig, setSortConfig] = React.useState({ key: null, direction: 'asc' });
+
+  const handleSort = (key) => {
+    let direction = 'asc';
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const getSortedPosts = () => {
+    if (!sortConfig.key) return posts;
+
+    return [...posts].sort((a, b) => {
+      let aValue, bValue;
+
+      switch (sortConfig.key) {
+        case 'titulo':
+          aValue = (a.titulo || '').toLowerCase();
+          bValue = (b.titulo || '').toLowerCase();
+          break;
+        case 'status':
+          aValue = (a.status || '').toLowerCase();
+          bValue = (b.status || '').toLowerCase();
+          break;
+        case 'data_agendamento':
+          aValue = a.data_agendamento ? new Date(a.data_agendamento).getTime() : 0;
+          bValue = b.data_agendamento ? new Date(b.data_agendamento).getTime() : 0;
+          break;
+        case 'conta':
+          aValue = getLookupName(a.conta_social_id, contas, 'id', 'nome_usuario').toLowerCase();
+          bValue = getLookupName(b.conta_social_id, contas, 'id', 'nome_usuario').toLowerCase();
+          break;
+        case 'plataforma':
+          const aConta = contas.find(c => c.id === a.conta_social_id);
+          const aPlat = plataformas.find(p => p.id === aConta?.plataforma_id);
+          const bConta = contas.find(c => c.id === b.conta_social_id);
+          const bPlat = plataformas.find(p => p.id === bConta?.plataforma_id);
+          aValue = (aPlat?.nome || '').toLowerCase();
+          bValue = (bPlat?.nome || '').toLowerCase();
+          break;
+        case 'formato':
+          aValue = getLookupName(a.formato_id, formatos).toLowerCase();
+          bValue = getLookupName(b.formato_id, formatos).toLowerCase();
+          break;
+        case 'responsavel':
+          aValue = getLookupName(a.responsavel_id, membros).toLowerCase();
+          bValue = getLookupName(b.responsavel_id, membros).toLowerCase();
+          break;
+        default:
+          return 0;
+      }
+
+      if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
+      if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
+      return 0;
+    });
+  };
+
+  const sortedPosts = getSortedPosts();
+
+  const SortIcon = ({ columnKey }) => {
+    if (sortConfig.key !== columnKey) return <ArrowUpDown className="ml-2 h-4 w-4 opacity-30 group-hover/head:opacity-100 transition-opacity" />;
+    return sortConfig.direction === 'asc' 
+      ? <ArrowUp className="ml-2 h-4 w-4 text-primary" /> 
+      : <ArrowDown className="ml-2 h-4 w-4 text-primary" />;
+  };
   const getLookupName = (id, list, key = 'id', nameKey = 'nome') => {
     if (!id || !list) return '-';
     const item = list.find(i => i[key] === id);
@@ -58,17 +125,66 @@ export default function PostListTable({
           <Table>
             <TableHeader>
               <TableRow className="border-b border-border/20 bg-muted/30">
-                <TableHead className="p-6 font-bold text-muted-foreground text-xs uppercase tracking-widest">Título</TableHead>
-                <TableHead className="p-6 font-bold text-muted-foreground text-xs uppercase tracking-widest">Status</TableHead>
-                <TableHead className="p-6 font-bold text-muted-foreground text-xs uppercase tracking-widest">Agendamento</TableHead>
-                <TableHead className="p-6 font-bold text-muted-foreground text-xs uppercase tracking-widest">Conta</TableHead>
-                <TableHead className="p-6 font-bold text-muted-foreground text-xs uppercase tracking-widest">Plataforma</TableHead>
-                <TableHead className="p-6 font-bold text-muted-foreground text-xs uppercase tracking-widest">Formato</TableHead>
-                <TableHead className="p-6 font-bold text-muted-foreground text-xs uppercase tracking-widest text-right">Responsável</TableHead>
+                <TableHead 
+                  onClick={() => handleSort('titulo')}
+                  className="p-6 font-bold text-muted-foreground text-xs uppercase tracking-widest cursor-pointer hover:text-primary transition-colors group/head"
+                >
+                  <div className="flex items-center">
+                    Título <SortIcon columnKey="titulo" />
+                  </div>
+                </TableHead>
+                <TableHead 
+                  onClick={() => handleSort('status')}
+                  className="p-6 font-bold text-muted-foreground text-xs uppercase tracking-widest cursor-pointer hover:text-primary transition-colors group/head"
+                >
+                  <div className="flex items-center">
+                    Status <SortIcon columnKey="status" />
+                  </div>
+                </TableHead>
+                <TableHead 
+                  onClick={() => handleSort('data_agendamento')}
+                  className="p-6 font-bold text-muted-foreground text-xs uppercase tracking-widest cursor-pointer hover:text-primary transition-colors group/head"
+                >
+                  <div className="flex items-center">
+                    Agendamento <SortIcon columnKey="data_agendamento" />
+                  </div>
+                </TableHead>
+                <TableHead 
+                  onClick={() => handleSort('conta')}
+                  className="p-6 font-bold text-muted-foreground text-xs uppercase tracking-widest cursor-pointer hover:text-primary transition-colors group/head"
+                >
+                  <div className="flex items-center">
+                    Conta <SortIcon columnKey="conta" />
+                  </div>
+                </TableHead>
+                <TableHead 
+                  onClick={() => handleSort('plataforma')}
+                  className="p-6 font-bold text-muted-foreground text-xs uppercase tracking-widest cursor-pointer hover:text-primary transition-colors group/head"
+                >
+                  <div className="flex items-center">
+                    Plataforma <SortIcon columnKey="plataforma" />
+                  </div>
+                </TableHead>
+                <TableHead 
+                  onClick={() => handleSort('formato')}
+                  className="p-6 font-bold text-muted-foreground text-xs uppercase tracking-widest cursor-pointer hover:text-primary transition-colors group/head"
+                >
+                  <div className="flex items-center">
+                    Formato <SortIcon columnKey="formato" />
+                  </div>
+                </TableHead>
+                <TableHead 
+                  onClick={() => handleSort('responsavel')}
+                  className="p-6 font-bold text-muted-foreground text-xs uppercase tracking-widest cursor-pointer hover:text-primary transition-colors group/head text-right"
+                >
+                  <div className="flex items-center justify-end">
+                    Responsável <SortIcon columnKey="responsavel" />
+                  </div>
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {posts.map((post) => {
+              {sortedPosts.map((post) => {
                 const conta = contas.find(c => c.id === post.conta_social_id);
                 const plataforma = plataformas.find(p => p.id === conta?.plataforma_id);
                 return (
