@@ -42,16 +42,17 @@ export default function FilterBar({
       return false;
     });
 
+  console.log("DEBUG: FilterBar rendered", { filters, contas, formatos });
   return (
-    <div className="bg-card/60 border border-border/40 shadow-xl rounded-[2.5rem] p-8 mb-8 backdrop-blur-md transition-all">
+    <div className="bg-red-500 border border-border/40 shadow-xl rounded-[2.5rem] p-8 mb-8 backdrop-blur-md transition-all">
       <div className="flex flex-col xl:flex-row items-center justify-between gap-6">
         <div className="flex items-center gap-4 w-full xl:w-auto">
-          <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center border border-purple-500/20">
-            <Filter className="w-5 h-5 text-purple-500" />
+          <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center border border-white/40">
+            <Filter className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h3 className="font-bold text-foreground leading-tight">Filtros de Conteúdo</h3>
-            <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">Personalize sua visão</p>
+            <h3 className="font-bold text-white leading-tight">Filtros de Conteúdo (TESTE DE ATUALIZAÇÃO)</h3>
+            <p className="text-[10px] text-white/80 font-black uppercase tracking-widest">Se você vê isso em vermelho, o código está atualizando!</p>
           </div>
         </div>
 
