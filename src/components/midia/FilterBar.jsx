@@ -33,12 +33,12 @@ export default function FilterBar({
       if (key === 'search' && value !== '') return true;
 
       // Check for other filters if they are not 'todos'
-      if (['responsavel', 'marca', 'plataforma', 'conta', 'formato'].includes(key) && value !== 'todos') {
+      if (['responsavel', 'marca', 'plataforma', 'conta', 'formato', 'status'].includes(key) && value !== 'todos') {
         return true;
       }
 
       if (Array.isArray(value)) return value.length > 0;
-      if (typeof value === 'string' && !['responsavel', 'marca', 'plataforma', 'conta', 'formato', 'search'].includes(key)) return value !== '';
+      if (typeof value === 'string' && !['responsavel', 'marca', 'plataforma', 'conta', 'formato', 'status', 'search'].includes(key)) return value !== '';
       return false;
     });
 
@@ -101,6 +101,44 @@ export default function FilterBar({
                   {(plataformas || []).map(p => (
                       <SelectItem key={p.id} value={p.id} className="rounded-xl">{p.nome}</SelectItem>
                   ))}
+              </SelectContent>
+          </Select>
+
+          <Select value={filters?.conta || 'todos'} onValueChange={(value) => onSingleFilterChange('conta', value)}>
+              <SelectTrigger className="w-full sm:w-40 h-12 bg-background border-border/40 rounded-2xl focus:ring-primary/20 transition-all font-medium">
+                  <SelectValue placeholder="Conta Social" />
+              </SelectTrigger>
+              <SelectContent className="rounded-2xl border-border/40">
+                  <SelectItem value="todos" className="rounded-xl">Todas as Contas</SelectItem>
+                  {(contas || []).map(c => (
+                      <SelectItem key={c.id} value={c.id} className="rounded-xl">{c.nome_usuario}</SelectItem>
+                  ))}
+              </SelectContent>
+          </Select>
+
+          <Select value={filters?.formato || 'todos'} onValueChange={(value) => onSingleFilterChange('formato', value)}>
+              <SelectTrigger className="w-full sm:w-40 h-12 bg-background border-border/40 rounded-2xl focus:ring-primary/20 transition-all font-medium">
+                  <SelectValue placeholder="Formato" />
+              </SelectTrigger>
+              <SelectContent className="rounded-2xl border-border/40">
+                  <SelectItem value="todos" className="rounded-xl">Todos os Formatos</SelectItem>
+                  {(formatos || []).map(f => (
+                      <SelectItem key={f.id} value={f.id} className="rounded-xl">{f.nome}</SelectItem>
+                  ))}
+              </SelectContent>
+          </Select>
+
+          <Select value={filters?.status || 'todos'} onValueChange={(value) => onSingleFilterChange('status', value)}>
+              <SelectTrigger className="w-full sm:w-40 h-12 bg-background border-border/40 rounded-2xl focus:ring-primary/20 transition-all font-medium">
+                  <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent className="rounded-2xl border-border/40">
+                  <SelectItem value="todos" className="rounded-xl">Todos os Status</SelectItem>
+                  <SelectItem value="ideia" className="rounded-xl">Ideia</SelectItem>
+                  <SelectItem value="producao" className="rounded-xl">Produção</SelectItem>
+                  <SelectItem value="revisao" className="rounded-xl">Revisão</SelectItem>
+                  <SelectItem value="agendado" className="rounded-xl">Agendado</SelectItem>
+                  <SelectItem value="publicado" className="rounded-xl">Publicado</SelectItem>
               </SelectContent>
           </Select>
 

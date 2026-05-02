@@ -49,6 +49,7 @@ export default function MidiaSocial() {
     plataforma: 'todos',
     conta: 'todos',
     formato: 'todos',
+    status: 'todos',
     search: '',
     dateRange: { 
       from: startOfMonth(new Date()),
@@ -100,6 +101,7 @@ export default function MidiaSocial() {
       plataforma: 'todos',
       conta: 'todos',
       formato: 'todos',
+      status: 'todos',
       search: '',
       dateRange: { 
         from: startOfMonth(new Date()),
@@ -193,6 +195,11 @@ export default function MidiaSocial() {
         const postDate = new Date(p.data_agendamento);
         return postDate >= from && postDate <= to;
       });
+    }
+
+    // Status filter
+    if (filters.status && filters.status !== 'todos') {
+      tempPosts = tempPosts.filter(p => p.status === filters.status);
     }
 
     // Search filter
