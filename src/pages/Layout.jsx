@@ -43,7 +43,7 @@ import { useAuth } from "@/contexts/AuthContext";
 
 const navigationItems = [
   {
-    title: "Home",
+    title: "Inicio",
     url: createPageUrl("HomeDaEmpresa"),
     icon: Home,
     color: "text-red-600",
