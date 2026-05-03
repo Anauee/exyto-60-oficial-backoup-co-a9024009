@@ -58,7 +58,8 @@ export default function PostModal({
   selectedDay = null,
   fichaEditorialId = null,
   isTemplate = false,
-  prefilledData = {}
+  prefilledData = {},
+  etapas = []
 }) {
   const isEditing = !!initialPost;
 
@@ -105,6 +106,14 @@ export default function PostModal({
 
     return formatos.filter(formato => plataforma.formatos_vinculados.includes(formato.id));
   }, [post.conta_social_id, contas, plataformas, formatos]);
+
+  // Opções de status dinâmicas baseadas nas etapas do Kanban
+  const dynamicStatusOptions = useMemo(() => {
+    if (etapas && etapas.length > 0) {
+      return etapas.map(e => ({ value: e.id, label: e.nome }));
+    }
+    return statusOptions;
+  }, [etapas]);
 
   useEffect(() => {
     if(isOpen && empresaId) {
@@ -162,7 +171,7 @@ export default function PostModal({
       setPost({
         titulo: '',
         conteudo: '',
-        status: 'ideia',
+        status: (etapas && etapas.length > 0) ? etapas[0].id : 'ideia',
         formato_id: '',
         responsavel_id: '',
         data_agendamento: initialDate || '',
@@ -183,7 +192,7 @@ export default function PostModal({
       setSelectedTime('12:00');
       setRepeatUntilDate(null);
     }
-  }, [isOpen, initialPost, isEditing, initialDate, fichaEditorialId, selectedDay, isTemplate, prefilledData.pastas_ids, prefilledData.categoria]);
+  }, [isOpen, isEditing, initialPost, etapas, initialDate, selectedDay, isTemplate, fichaEditorialId, prefilledData]);
 
   // CORREÇÃO: O useEffect que limpava o campo de formato de forma agressiva foi removido.
   // A lógica de consistência agora é tratada pelo `formatosDisponiveis` e pelo `onValueChange` do Select de Conta Social.
@@ -410,7 +419,7 @@ export default function PostModal({
                   <SelectValue placeholder="Selecione o status" />
                 </SelectTrigger>
                 <SelectContent>
-                  {statusOptions.map((option) => (
+                  {dynamicStatusOptions.map((option) => (
                     <SelectItem key={option.value} value={option.value}>
                       {option.label}
                     </SelectItem>

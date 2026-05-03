@@ -827,6 +827,7 @@ export default function MidiaSocial() {
           plataformas={plataformas}
           membros={membros}
           empresaId={empresaId}
+          etapas={etapas}
         />
 
         {selectedPost && (
@@ -844,6 +845,7 @@ export default function MidiaSocial() {
             formatos={formatos}
             membros={membros}
             plataformas={plataformas}
+            etapas={etapas}
           />
         )}
       </div>

@@ -15,7 +15,13 @@ import DocumentosVinculados from '../documentos/DocumentosVinculados';
 import DocumentoModal from '../documentos/DocumentoModal';
 import { Post } from '@/api/entities';
 
-const getStatusBadge = (status) => {
+const getStatusBadge = (status, etapas = []) => {
+  // Se for uma etapa customizada, encontrar o nome
+  const etapa = etapas.find(e => e.id === status);
+  if (etapa) {
+    return <Badge className="bg-primary/10 text-primary border-primary/20">{etapa.nome}</Badge>;
+  }
+
   const statusMap = {
     'ideia': { color: 'bg-gray-100 text-gray-800', label: 'Ideia' },
     'producao': { color: 'bg-blue-100 text-blue-800', label: 'Produção' },
@@ -63,7 +69,8 @@ export default function PostViewModal({
   contas = [],
   formatos = [],
   plataformas = [],
-  membros = []
+  membros = [],
+  etapas = []
 }) {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -164,7 +171,7 @@ export default function PostViewModal({
                   {post.titulo}
                 </DialogTitle>
                 <div className="flex gap-3 flex-wrap">
-                  {getStatusBadge(post.status)}
+                  {getStatusBadge(post.status, etapas)}
                   <Badge variant="outline" className={`${getPlatformColor(contaSocial?.plataforma_id, plataformas)} font-black text-[10px] uppercase tracking-widest border-0 shadow-sm text-white`}>
                     {contaSocial?.nome_usuario || 'Conta desconhecida'}
                   </Badge>
@@ -348,6 +355,7 @@ export default function PostViewModal({
         plataformas={plataformas}
         membros={membros}
         empresaId={empresaId}
+        etapas={etapas}
       />
 
       <ConfirmDeleteModal
