@@ -238,7 +238,97 @@ export const FichaEditorial = createEntity('ficha_editorial');
 export const Setor = createEntity('setor');
 export const Funcao = createEntity('funcao');
 export const Cargo = createEntity('cargo');
-export const Membro = createEntity('membro');
+export const Membro = {
+  ...createEntity('membro'),
+  list: async () => {
+    try {
+      // 1. Busca vínculos ativos e dados dos usuários
+      const { data: links, error: linksError } = await supabase
+        .from('usuario_empresa')
+        .select(`
+          empresa_id,
+          usuario_id,
+          users:usuario_id (id, full_name, email)
+        `)
+        .eq('ativo', true);
+      
+      if (linksError) throw linksError;
+
+      // 2. Busca dados extras da tabela membro
+      const { data: extras } = await supabase.from('membro').select('*');
+      const extrasList = extras || [];
+
+      // 3. Mergia os dados
+      return links.map(link => {
+        const user = link.users;
+        // Tenta encontrar dados extras pelo usuario_id e empresa_id
+        const extra = extrasList.find(e => 
+          (e.id === link.usuario_id || e.user_email === user?.email) && 
+          e.empresa_id === link.empresa_id
+        ) || {};
+        
+        return {
+          ...extra,
+          id: user?.id || link.usuario_id,
+          nome: extra.nome || user?.full_name || user?.email || 'Sem Nome',
+          full_name: user?.full_name || extra.nome || user?.email || 'Sem Nome',
+          user_email: extra.user_email || user?.email,
+          empresa_id: link.empresa_id
+        };
+      });
+    } catch (error) {
+      console.error("Erro ao listar membros integrados:", error);
+      return [];
+    }
+  },
+  filter: async (conditions = {}) => {
+    try {
+      let query = supabase
+        .from('usuario_empresa')
+        .select(`
+          empresa_id,
+          usuario_id,
+          users:usuario_id (id, full_name, email)
+        `)
+        .eq('ativo', true);
+      
+      if (conditions.empresa_id) {
+        query = query.eq('empresa_id', conditions.empresa_id);
+      }
+      
+      const { data: links, error: linksError } = await query;
+      if (linksError) throw linksError;
+
+      // Busca dados extras
+      let extrasQuery = supabase.from('membro').select('*');
+      if (conditions.empresa_id) {
+        extrasQuery = extrasQuery.eq('empresa_id', conditions.empresa_id);
+      }
+      const { data: extras } = await extrasQuery;
+      const extrasList = extras || [];
+
+      return links.map(link => {
+        const user = link.users;
+        const extra = extrasList.find(e => 
+          (e.id === link.usuario_id || e.user_email === user?.email) && 
+          e.empresa_id === link.empresa_id
+        ) || {};
+        
+        return {
+          ...extra,
+          id: user?.id || link.usuario_id,
+          nome: extra.nome || user?.full_name || user?.email || 'Sem Nome',
+          full_name: user?.full_name || extra.nome || user?.email || 'Sem Nome',
+          user_email: extra.user_email || user?.email,
+          empresa_id: link.empresa_id
+        };
+      });
+    } catch (error) {
+      console.error("Erro ao filtrar membros integrados:", error);
+      return [];
+    }
+  }
+};
 export const FunilDeVendas = createEntity('funil_de_vendas');
 export const Recado = createEntity('recado');
 export const Movimento = createEntity('movimento');
