@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { DollarSign, TrendingUp, TrendingDown, CheckCircle, Share2, AlertTriangle, Package } from "lucide-react";
 import MetricCard from "./MetricCard";
 
-export default function DashboardGeral({ faturas, despesas, tasks, posts, clientes, produtos, responsaveis }) {
+export default function DashboardGeral({ faturas, despesas, tasks, posts, clientes, produtos, responsaveis, etapas }) {
   
   // Cálculos financeiros
   const { totalReceitas, totalDespesas, saldoAtual, contasVencidas } = useMemo(() => {

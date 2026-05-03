@@ -262,6 +262,7 @@ export default function Dashboard({ session, user }) {
               clientes={clientes}
               produtos={produtos}
               responsaveis={responsaveis}
+              etapas={etapas}
             />
           </TabsContent>
 
