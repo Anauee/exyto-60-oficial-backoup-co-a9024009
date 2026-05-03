@@ -368,12 +368,41 @@ export default function MidiaSocial() {
         empresa_id: empresaId 
       };
 
+      // Clean up fields that are only used in the frontend or for recurrence logic
+      // and might not exist in the database table 'post'
+      const cleanData = (data) => {
+        const cleaned = { ...data };
+        // Recurrence fields (frontend logic only)
+        const fieldsToRemove = ['frequencia_repeticao', 'dias_da_semana', 'repetir_ate'];
+        fieldsToRemove.forEach(field => delete cleaned[field]);
+        
+        // Remove empty arrays which might cause issues if columns don't exist or have wrong types
+        if (Array.isArray(cleaned.links)) {
+          cleaned.links = cleaned.links.filter(link => link.nome || link.url);
+          if (cleaned.links.length === 0) delete cleaned.links;
+        }
+        
+        if (Array.isArray(cleaned.imagens) && cleaned.imagens.length === 0) {
+          delete cleaned.imagens;
+        }
+
+        if (Array.isArray(cleaned.pastas_ids) && cleaned.pastas_ids.length === 0) {
+          delete cleaned.pastas_ids;
+        }
+
+        if (Array.isArray(cleaned.categoria) && cleaned.categoria.length === 0) {
+          delete cleaned.categoria;
+        }
+        
+        return cleaned;
+      };
+
       // Se for um novo post com repetição
       if (!postId && dataToSave.frequencia_repeticao && dataToSave.frequencia_repeticao !== 'nao_repetir') {
         const postsToCreate = [];
         const startDate = new Date(dataToSave.data_agendamento);
         const endDate = dataToSave.repetir_ate ? new Date(dataToSave.repetir_ate + 'T23:59:59') : addYears(startDate, 1);
-        const sourceId = generateUniqueId();
+        const sourceId = crypto.randomUUID(); // Use UUID for source id
 
         let currentDate = new Date(startDate);
         let loopCount = 0;
@@ -401,11 +430,11 @@ export default function MidiaSocial() {
             const scheduledDate = new Date(currentDate);
             scheduledDate.setHours(startDate.getHours(), startDate.getMinutes(), startDate.getSeconds(), startDate.getMilliseconds());
             
-            postsToCreate.push({
+            postsToCreate.push(cleanData({
               ...dataToSave,
               data_agendamento: scheduledDate.toISOString(),
               id_da_origem: sourceId,
-            });
+            }));
           }
 
           // Avança a data para a próxima checagem
@@ -422,16 +451,22 @@ export default function MidiaSocial() {
         }
         
         if (postsToCreate.length > 0) {
-          await Post.bulkCreate(postsToCreate);
+          if (typeof Post.bulkCreate === 'function') {
+            await Post.bulkCreate(postsToCreate);
+          } else {
+            // Fallback if bulkCreate is not available (though I just added it)
+            for (const p of postsToCreate) {
+              await Post.create(p);
+            }
+          }
         }
 
       } else { // Post único ou edição de post existente
+        const finalData = cleanData(dataToSave);
         if (postId) {
-          // Em edições, removemos os campos de repetição para não criar novos posts
-          const { frequencia_repeticao, dias_da_semana, repetir_ate, ...updateData } = dataToSave;
-          await Post.update(postId, updateData);
+          await Post.update(postId, finalData);
         } else {
-          await Post.create(dataToSave);
+          await Post.create(finalData);
         }
       }
 
@@ -441,12 +476,23 @@ export default function MidiaSocial() {
       setSelectedPost(null);
       loadData();
     } catch (error) {
-      console.error("Erro ao salvar post:", error);
-      if (error.response && error.response.status === 422) {
-          alert(`Erro de validação ao salvar o post. Verifique se todos os campos obrigatórios (título, data) foram preenchidos.\nDetalhes: ${error.response.data.message}`);
-      } else {
-          alert('Ocorreu um erro inesperado ao salvar o post.');
+      console.error("Erro detalhado ao salvar post:", error);
+      
+      let errorMsg = 'Ocorreu um erro inesperado ao salvar o post.';
+      
+      if (error.message) {
+        errorMsg += `\nDetalhes: ${error.message}`;
       }
+      
+      if (error.code) {
+        errorMsg += `\nCódigo: ${error.code}`;
+      }
+      
+      if (error.details) {
+        errorMsg += `\nInformação adicional: ${error.details}`;
+      }
+
+      alert(errorMsg);
     }
   };
   

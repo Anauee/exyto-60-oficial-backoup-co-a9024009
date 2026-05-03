@@ -105,6 +105,11 @@ const createEntity = (tableName, options = {}) => {
     delete: async (id) => {
       const { error } = await supabase.from(tableName).delete().eq('id', id);
       if (error) throw error;
+    },
+    bulkCreate: async (dataArray) => {
+      const { data: result, error } = await supabase.from(tableName).insert(dataArray.map(mapData)).select();
+      if (error) throw error;
+      return (result || []).map(unmapData);
     }
   };
 };
