@@ -343,9 +343,6 @@ export default function SelecionarEmpresa() {
                     <CardTitle className={`text-3xl font-black tracking-tight mb-2 ${temAcesso ? 'text-foreground' : 'text-muted-foreground'}`}>
                       {empresa.nome}
                     </CardTitle>
-                    <p className={`font-bold text-sm tracking-wide ${temAcesso ? 'text-muted-foreground' : 'text-muted-foreground/60'}`}>
-                      {empresa.email}
-                    </p>
                   </CardHeader>
                   <CardContent className="text-center pb-12">
                     <div className="flex justify-center items-center gap-4">
@@ -419,7 +416,7 @@ export default function SelecionarEmpresa() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="email">E-mail *</Label>
+                  <Label htmlFor="email">E-mail</Label>
                   <Input
                     id="email"
                     type="email"
@@ -484,7 +481,7 @@ export default function SelecionarEmpresa() {
                 <Button 
                   onClick={handleCriarEmpresa}
                   className="bg-green-600 hover:bg-green-700"
-                  disabled={!novaEmpresa.nome || !novaEmpresa.email || isCreating}
+                  disabled={!novaEmpresa.nome || isCreating}
                 >
                   {isCreating ? (
                     <>
