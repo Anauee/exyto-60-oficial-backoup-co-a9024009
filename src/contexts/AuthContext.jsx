@@ -9,7 +9,7 @@ export const DEFAULT_PERMISSIONS = {
   ],
   gestor: [
     'home-da-empresa', 'dashboard', 'midia-social', 'financeiro', 
-    'agendas-e-atividades', 'clientes-e-produtos', 'gestao-pastas', 
+    'agendas-e-atividades', 'clientes-e-produtos', 'gestao-equipe', 'gestao-pastas', 
     'documentos-e-anotacoes', 'inicio'
   ],
   operador: [
@@ -27,6 +27,7 @@ export const AuthProvider = ({ children }) => {
   const [currentCompany, setCurrentCompany] = useState(null);
 
   const [userPermissions, setUserPermissions] = useState([]);
+  const [userRole, setUserRole] = useState(null);
   const [availableCompanies, setAvailableCompanies] = useState([]);
 
   useEffect(() => {
@@ -109,6 +110,7 @@ export const AuthProvider = ({ children }) => {
             if (currentMembership) {
               setCurrentCompany(savedCompany);
               setUserPermissions(currentMembership.permissoes_adicionais || []);
+              setUserRole(currentMembership.perfil);
             }
           } catch (e) {
             console.error("Error parsing saved company:", e);
@@ -140,6 +142,7 @@ export const AuthProvider = ({ children }) => {
       currentCompany, 
       setCurrentCompany, 
       userPermissions, 
+      userRole,
       availableCompanies,
       logout,
       refreshAuth: () => session && loadUserData(session.user.id)

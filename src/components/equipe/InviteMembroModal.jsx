@@ -8,12 +8,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Loader2, Mail, UserPlus, ShieldCheck } from "lucide-react";
 import { supabase } from "@/lib/supabase-client";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function InviteMembroModal({ isOpen, onClose, empresaId }) {
   const [email, setEmail] = useState('');
   const [fullName, setFullName] = useState('');
   const [role, setRole] = useState('operador');
   const [loading, setLoading] = useState(false);
+  const { userRole: currentUserRole } = useAuth();
 
   const handleInvite = async (e) => {
     e.preventDefault();
@@ -99,8 +101,10 @@ export default function InviteMembroModal({ isOpen, onClose, empresaId }) {
               </SelectTrigger>
               <SelectContent className="rounded-2xl border-border/40 shadow-xl">
                 <SelectItem value="operador" className="rounded-xl">Operador (Padrão)</SelectItem>
-                <SelectItem value="gerente" className="rounded-xl">Gerente</SelectItem>
-                <SelectItem value="admin" className="rounded-xl">Administrador</SelectItem>
+                <SelectItem value="gestor" className="rounded-xl">Gestor</SelectItem>
+                {currentUserRole === 'admin' && (
+                  <SelectItem value="admin" className="rounded-xl">Administrador</SelectItem>
+                )}
               </SelectContent>
             </Select>
           </div>

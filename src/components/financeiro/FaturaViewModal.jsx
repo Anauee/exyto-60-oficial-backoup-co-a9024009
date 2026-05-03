@@ -205,6 +205,18 @@ export default function FaturaViewModal({
                   </CardContent>
                 </Card>
 
+                {/* Categoria */}
+                {fatura.categoria && (
+                  <Card>
+                    <CardContent className="p-4">
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className="capitalize">{fatura.categoria}</Badge>
+                        <h3 className="font-semibold text-slate-900">Categoria</h3>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
                 {/* Detalhes Financeiros */}
                 <Card>
                   <CardContent className="p-4">

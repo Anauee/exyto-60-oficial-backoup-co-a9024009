@@ -11,6 +11,9 @@ import CargosTab from "../components/equipe/CargosTab";
 import FuncoesTab from "../components/equipe/FuncoesTab";
 import SetoresTab from "../components/equipe/SetoresTab";
 import AtividadesSalvasTab from "../components/equipe/AtividadesSalvasTab";
+import PermissoesTab from "../components/equipe/PermissoesTab";
+import { useAuth } from "@/contexts/AuthContext";
+import { ShieldCheck } from "lucide-react";
 
 export default function Equipe() {
   const [membros, setMembros] = useState([]);
@@ -22,6 +25,7 @@ export default function Equipe() {
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("membros");
   const [empresaId, setEmpresaId] = useState(null);
+  const { userPermissions, userRole } = useAuth();
 
   const loadData = useCallback(async () => {
     if (!empresaId) return;
@@ -315,6 +319,13 @@ export default function Equipe() {
                 <ClipboardList className="w-5 h-5" />
                 <span className="font-bold tracking-tight">Atividades</span>
               </TabsTrigger>
+              <TabsTrigger 
+                value="acessos" 
+                className="flex items-center gap-3 px-8 py-3.5 rounded-2xl data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-xl data-[state=active]:shadow-primary/10 transition-all duration-300"
+              >
+                <ShieldCheck className="w-5 h-5" />
+                <span className="font-bold tracking-tight">Acessos</span>
+              </TabsTrigger>
             </TabsList>
           </div>
 
@@ -374,6 +385,13 @@ export default function Equipe() {
               onDelete={handleDeleteAtividadeSalva}
               empresaId={empresaId}
               membros={membros}
+            />
+          </TabsContent>
+
+          <TabsContent value="acessos" className="space-y-6">
+            <PermissoesTab 
+              empresaId={empresaId}
+              currentUserRole={userRole}
             />
           </TabsContent>
         </Tabs>

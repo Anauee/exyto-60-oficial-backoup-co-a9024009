@@ -495,6 +495,10 @@ export default function Financeiro() {
             aValue = (a.status || '').toLowerCase();
             bValue = (b.status || '').toLowerCase();
             break;
+          case 'categoria':
+            aValue = (a.categoria || '').toLowerCase();
+            bValue = (b.categoria || '').toLowerCase();
+            break;
           default:
             return 0;
         }
@@ -791,6 +795,14 @@ export default function Financeiro() {
                         Status <SortIcon sortConfig={faturasSort} columnKey="status" />
                       </div>
                     </TableHead>
+                    <TableHead 
+                      onClick={() => handleFaturasSort('categoria')}
+                      className="p-4 text-xs font-black uppercase tracking-widest text-muted-foreground cursor-pointer hover:text-primary transition-colors group/head"
+                    >
+                      <div className="flex items-center">
+                        Categoria <SortIcon sortConfig={faturasSort} columnKey="categoria" />
+                      </div>
+                    </TableHead>
                     <TableHead className="p-4 text-xs font-black uppercase tracking-widest text-muted-foreground text-right">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -813,6 +825,11 @@ export default function Financeiro() {
                             <Badge variant="outline" className="border-primary/20 bg-primary/10 text-primary">
                               {funil.nome}
                             </Badge>
+                          ) : '-'}
+                        </TableCell>
+                        <TableCell>
+                          {fatura.categoria ? (
+                            <Badge variant="outline" className="capitalize">{fatura.categoria}</Badge>
                           ) : '-'}
                         </TableCell>
                         <TableCell>R$ {fatura.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</TableCell>

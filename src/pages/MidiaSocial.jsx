@@ -622,13 +622,6 @@ export default function MidiaSocial() {
                 <span className="font-bold tracking-tight">Lista</span>
               </TabsTrigger>
 
-              <TabsTrigger 
-                value="esteira" 
-                className="flex items-center gap-3 px-6 py-3 rounded-2xl data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-xl data-[state=active]:shadow-primary/10 transition-all duration-300"
-              >
-                <Settings2 className="w-4 h-4" />
-                <span className="font-bold tracking-tight">Esteira</span>
-              </TabsTrigger>
             </TabsList>
           </div>
           
@@ -673,6 +666,14 @@ export default function MidiaSocial() {
               contas={contas || []}
               etapas={etapas}
             />
+            
+            <div className="pt-12 mt-12 border-t border-border/40">
+              <PostEtapasTab 
+                empresaId={empresaId}
+                membros={membros}
+                onUpdate={loadData}
+              />
+            </div>
           </TabsContent>
           
           <TabsContent value="fichas" className="space-y-6">
@@ -749,13 +750,6 @@ export default function MidiaSocial() {
             />
           </TabsContent>
 
-          <TabsContent value="esteira" className="space-y-6">
-            <PostEtapasTab 
-              empresaId={empresaId}
-              membros={membros}
-              onUpdate={loadData}
-            />
-          </TabsContent>
         </Tabs>
 
         {(activeTab === 'kanban' || activeTab === 'calendario' || activeTab === 'lista') && (

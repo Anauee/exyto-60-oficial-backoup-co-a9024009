@@ -194,10 +194,11 @@ export default function DespesaModal({ isOpen, onClose, onSave, despesa = null }
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <Label htmlFor="categoria">Categoria *</Label>
-              <Select value={formData.categoria} onValueChange={(value) => handleInputChange('categoria', value)} required>
+              <Label htmlFor="categoria">Categoria</Label>
+              <Select value={formData.categoria} onValueChange={(value) => handleInputChange('categoria', value === "none" ? "" : value)}>
                 <SelectTrigger><SelectValue placeholder="Selecione a categoria" /></SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="none" className="text-slate-400 italic">Nenhuma</SelectItem>
                   {categoriasDespesa.map(cat => (
                     <SelectItem key={cat} value={cat} className="capitalize">{cat}</SelectItem>
                   ))}

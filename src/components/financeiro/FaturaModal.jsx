@@ -24,6 +24,10 @@ const weekDays = [
   { id: '0', label: 'Dom' },
 ];
 
+const categoriasFatura = [
+  "venda", "servico", "recorrencia", "projeto", "outros"
+];
+
 export default function FaturaModal({ isOpen, onClose, onSave, fatura = null, produtos = [], funisDeVendas = [], clientes = [] }) {
   const isEditing = !!fatura;
   const [isUploading, setIsUploading] = useState(false);
@@ -42,6 +46,7 @@ export default function FaturaModal({ isOpen, onClose, onSave, fatura = null, pr
     repetir_ate: '',
     links: [],
     imagens: [],
+    categoria: '',
   }), []);
 
   const [formData, setFormData] = useState(getInitialState());
@@ -67,6 +72,7 @@ export default function FaturaModal({ isOpen, onClose, onSave, fatura = null, pr
           repetir_ate: fatura.repetir_ate || '',
           links: fatura.links || [],
           imagens: fatura.imagens || [],
+          categoria: fatura.categoria || '',
         });
         setSelectedDate(fatura.data_vencimento ? parseISO(fatura.data_vencimento) : null);
         setRepeatUntilDate(fatura.repetir_ate ? parseISO(fatura.repetir_ate) : null);
@@ -264,6 +270,18 @@ export default function FaturaModal({ isOpen, onClose, onSave, fatura = null, pr
                   <SelectItem value="placeholder" disabled>Selecione um cliente...</SelectItem>
                   {clientes.filter(c => c.nome && c.nome.trim()).map(c => (
                     <SelectItem key={c.id} value={c.nome}>{c.nome}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="categoria">Categoria</Label>
+              <Select value={formData.categoria} onValueChange={(value) => handleInputChange('categoria', value === "none" ? "" : value)}>
+                <SelectTrigger><SelectValue placeholder="Selecione a categoria" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none" className="text-slate-400 italic">Nenhuma</SelectItem>
+                  {categoriasFatura.map(cat => (
+                    <SelectItem key={cat} value={cat} className="capitalize">{cat}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
