@@ -24,3 +24,12 @@ dist-ssr
 *.sw?
 
 .env
+.env.*
+!.env.example
+
+# Scratch files
+scratch_*.js
+*.tmp
+.temp/
+.agents/
+.trae/
