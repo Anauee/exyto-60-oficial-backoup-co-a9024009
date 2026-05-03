@@ -162,17 +162,18 @@ export default function CalendarioView({ posts = [], onDateClick, onPostClick, p
                 <div className="space-y-1">
                   {dayPosts.slice(0, view === 'mensal' ? 3 : 2).map((post) => {
                     const conta = contas.find(c => c.id === post.conta_social_id);
+                    const isDelayed = post.status !== 'publicado' && post.data_agendamento && new Date(post.data_agendamento) < new Date();
                     return (
                       <div
                         key={post.id}
-                        className={`px-2 py-1 rounded text-xs cursor-pointer hover:shadow-sm transition-all ${getPlatformColor(conta?.plataforma_id)}`}
+                        className={`px-2 py-1 rounded text-xs cursor-pointer hover:shadow-sm transition-all ${getPlatformColor(conta?.plataforma_id)} ${isDelayed ? 'ring-1 ring-destructive/30 shadow-[0_0_8px_rgba(239,68,68,0.2)]' : ''}`}
                         onClick={(e) => {
                           e.stopPropagation();
                           onPostClick(post);
                         }}
-                        title={post.titulo}
+                        title={`${post.titulo}${isDelayed ? ' (ATRASADO)' : ''}`}
                       >
-                        <div className="truncate font-medium">
+                        <div className={`truncate font-medium ${isDelayed ? 'text-destructive font-black' : ''}`}>
                           {post.titulo}
                         </div>
                         <div className="text-xs opacity-75">

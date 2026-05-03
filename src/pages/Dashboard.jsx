@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useCallback } from "react";
-import { Post, Fatura, Despesa, Tarefa, User, UsuarioEmpresa, Cliente, Produto, Compromisso, Projeto, Membro } from "@/api/entities";
+import { Post, Fatura, Despesa, Tarefa, User, UsuarioEmpresa, Cliente, Produto, Compromisso, Projeto, Membro, PostEtapa } from "@/api/entities";
 import { LayoutDashboard, DollarSign, CheckSquare, TrendingUp, BarChart3, LogOut } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { createPageUrl } from "@/utils";
@@ -34,6 +34,7 @@ export default function Dashboard({ session, user }) {
   const [isLoading, setIsLoading] = useState(true);
   const [empresaId, setEmpresaId] = useState(null);
   const [responsaveis, setResponsaveis] = useState([]);
+  const [etapas, setEtapas] = useState([]);
 
   const loadData = useCallback(async () => {
     let isMounted = true;
@@ -84,7 +85,8 @@ export default function Dashboard({ session, user }) {
         compromissosData,
         projetosData,
         membrosData,
-        usuariosEmpresaData
+        usuariosEmpresaData,
+        etapasData
       ] = await Promise.all([
         Tarefa.list("-created_date").catch((e) => { console.error(e); return []; }),
         Post.list("-created_date").catch((e) => { console.error(e); return []; }),
@@ -95,7 +97,8 @@ export default function Dashboard({ session, user }) {
         Compromisso.list("-created_date").catch((e) => { console.error(e); return []; }),
         Projeto.list("-created_date").catch((e) => { console.error(e); return []; }),
         Membro.list().catch((e) => { console.error(e); return []; }),
-        UsuarioEmpresa.filter({ empresa_id: empresa.id, ativo: true }).catch((e) => { console.error(e); return []; })
+        UsuarioEmpresa.filter({ empresa_id: empresa.id, ativo: true }).catch((e) => { console.error(e); return []; }),
+        PostEtapa.filter({ empresa_id: empresa.id }, "ordem").catch((e) => { console.error(e); return []; })
       ]);
 
       if (!isMounted) return;
@@ -108,8 +111,9 @@ export default function Dashboard({ session, user }) {
       const filteredClientes = Array.isArray(clientesData) ? clientesData.filter(item => item && item.empresa_id === empresa.id) : [];
       const filteredProdutos = Array.isArray(produtosData) ? produtosData.filter(item => item && item.empresa_id === empresa.id) : [];
       const filteredCompromissos = Array.isArray(compromissosData) ? compromissosData.filter(item => item && item.empresa_id === empresa.id) : [];
-      const filteredProjetos = Array.isArray(projetosData) ? projetosData.filter(item => item && item.empresa_id === empresa.id) : [];
-      const filteredMembros = Array.isArray(membrosData) ? membrosData.filter(item => item && item.empresa_id === empresa.id) : [];
+      const filteredProjetos = (projetosData || []).filter(item => item.empresa_id === empresa.id);
+      const filteredMembros = (membrosData || []).filter(item => item.empresa_id === empresa.id);
+      const filteredEtapas = (etapasData || []).filter(item => item.empresa_id === empresa.id);
 
       setTasks(filteredTasks);
       setPosts(filteredPosts);
@@ -120,6 +124,7 @@ export default function Dashboard({ session, user }) {
       setCompromissos(filteredCompromissos);
       setProjetos(filteredProjetos);
       setMembros(filteredMembros);
+      setEtapas(filteredEtapas);
 
       if (Array.isArray(usuariosEmpresaData) && usuariosEmpresaData.length > 0) {
         const userEmails = usuariosEmpresaData.map(ue => ue.usuario_email).filter(Boolean);

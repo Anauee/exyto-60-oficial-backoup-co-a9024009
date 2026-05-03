@@ -26,28 +26,34 @@ const getPlatformColor = (plataformaId, plataformas = []) => {
   }
 };
 
-const columns = [
-  { id: 'ideia', title: 'Ideias/Pauta', icon: '💡', color: 'bg-slate-500' },
-  { id: 'producao', title: 'Em Produção', icon: '🎨', color: 'bg-blue-500' },
-  { id: 'revisao', title: 'Revisão/Aprovação', icon: '👀', color: 'bg-yellow-500' },
-  { id: 'agendado', title: 'Agendado', icon: '📅', color: 'bg-emerald-500' },
-  { id: 'publicado', title: 'Publicado', icon: '🚀', color: 'bg-purple-500' }
-];
-
-function PostCard({ post, onClick, plataformas = [], contas = [] }) {
+function PostCard({ post, onClick, plataformas = [], contas = [], etapas = [] }) {
   const conta = contas.find(c => c.id === post.conta_social_id);
   const plataforma = plataformas.find(p => p.id === conta?.plataforma_id);
+  
+  const isDelayed = React.useMemo(() => {
+    const etapaAtual = etapas.find(e => e.id === post.status);
+    // Não está atrasado se for a etapa final (legado 'publicado' ou flag is_final)
+    if (post.status === 'publicado' || etapaAtual?.is_final || !post.data_agendamento) return false;
+    return new Date(post.data_agendamento) < new Date();
+  }, [post.status, post.data_agendamento, etapas]);
 
   return (
     <Card
-      className="bg-card/80 backdrop-blur-md cursor-pointer hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-border/40 rounded-2xl group shadow-sm"
+      className={`bg-card/80 backdrop-blur-md cursor-pointer hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-border/40 rounded-2xl group shadow-sm ${isDelayed ? 'border-destructive/40 ring-1 ring-destructive/20' : ''}`}
       onClick={() => onClick(post)}
     >
       <CardContent className="p-5 space-y-4">
         <div className="flex justify-between items-start gap-3">
-          <p className="font-bold text-foreground text-sm line-clamp-2 leading-snug group-hover:text-primary transition-colors">
-            {post.titulo}
-          </p>
+          <div className="space-y-1 flex-1">
+            <p className="font-bold text-foreground text-sm line-clamp-2 leading-snug group-hover:text-primary transition-colors">
+              {post.titulo}
+            </p>
+            {isDelayed && (
+              <Badge variant="destructive" className="text-[8px] font-black uppercase px-1 py-0 h-4 animate-pulse">
+                Atrasado
+              </Badge>
+            )}
+          </div>
           {plataforma && (
             <Badge variant="outline" className={`rounded-lg font-bold text-[10px] uppercase tracking-wider px-2 py-0 ${getPlatformColor(plataforma.id, plataformas)}`}>
               {plataforma.nome}
@@ -73,7 +79,32 @@ function PostCard({ post, onClick, plataformas = [], contas = [] }) {
   );
 }
 
-export default function KanbanBoard({ posts = [], onPostMove, onPostClick, plataformas = [], contas = [] }) {
+export default function KanbanBoard({ 
+  posts = [], 
+  onPostMove, 
+  onPostClick, 
+  plataformas = [], 
+  contas = [],
+  etapas = [] 
+}) {
+  const defaultColumns = [
+    { id: 'ideia', title: 'Ideias/Pauta', icon: '💡', color: 'bg-slate-500' },
+    { id: 'producao', title: 'Em Produção', icon: '🎨', color: 'bg-blue-500' },
+    { id: 'revisao', title: 'Revisão/Aprovação', icon: '👀', color: 'bg-yellow-500' },
+    { id: 'agendado', title: 'Agendado', icon: '📅', color: 'bg-emerald-500' },
+    { id: 'publicado', title: 'Publicado', icon: '🚀', color: 'bg-purple-500' }
+  ];
+
+  const columns = etapas.length > 0 
+    ? etapas.map(e => ({ 
+        id: e.id, 
+        title: e.nome, 
+        icon: e.is_final ? '🚀' : '📋', 
+        color: e.cor,
+        isDynamic: true 
+      }))
+    : defaultColumns;
+
   const handleDragEnd = (result) => {
     const { destination, source, draggableId } = result;
 
@@ -92,24 +123,28 @@ export default function KanbanBoard({ posts = [], onPostMove, onPostClick, plata
 
   return (
     <DragDropContext onDragEnd={handleDragEnd}>
-      <div className="flex gap-6 overflow-x-auto pb-4">
+      <div className="flex gap-6 overflow-x-auto pb-6 custom-scrollbar">
         {columns.map((column) => {
           const columnPosts = getPostsByStatus(column.id);
 
           return (
-            <div key={column.id} className="min-w-80 flex-shrink-0">
+            <div key={column.id} className="min-w-[320px] max-w-[320px] flex-shrink-0">
               <div className="rounded-[2.5rem] bg-card/40 border border-border/40 overflow-hidden backdrop-blur-md shadow-lg flex flex-col h-[75vh]">
                 <div className="p-6 border-b border-border/20 bg-muted/30">
-                  <div className="flex items-center justify-between mb-1">
-                    <h3 className="font-black text-foreground tracking-tight flex items-center gap-2">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="font-black text-foreground tracking-tight flex items-center gap-2 truncate">
                       <span className="text-lg">{column.icon}</span>
                       {column.title}
                     </h3>
-                    <Badge variant="secondary" className="rounded-lg bg-background/50 text-[10px] font-black">
+                    <Badge variant="secondary" className="rounded-lg bg-background/50 text-[10px] font-black px-2">
                       {columnPosts.length}
                     </Badge>
                   </div>
-                  <div className={`h-1 w-12 rounded-full ${column.color}`} />
+                  <div 
+                    className="h-1.5 w-12 rounded-full" 
+                    style={{ backgroundColor: column.isDynamic ? column.color : undefined }}
+                    className={column.isDynamic ? "h-1.5 w-12 rounded-full" : `h-1.5 w-12 rounded-full ${column.color}`}
+                  />
                 </div>
 
                 <Droppable droppableId={column.id}>
@@ -134,7 +169,13 @@ export default function KanbanBoard({ posts = [], onPostMove, onPostClick, plata
                                   : ''
                               } transition-all duration-200`}
                             >
-                              <PostCard post={post} onClick={onPostClick} plataformas={plataformas} contas={contas} />
+                              <PostCard 
+                                post={post} 
+                                onClick={onPostClick} 
+                                plataformas={plataformas} 
+                                contas={contas} 
+                                etapas={etapas}
+                              />
                             </div>
                           )}
                         </Draggable>

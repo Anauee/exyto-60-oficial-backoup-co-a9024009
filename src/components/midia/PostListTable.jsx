@@ -187,14 +187,23 @@ export default function PostListTable({
               {sortedPosts.map((post) => {
                 const conta = contas.find(c => c.id === post.conta_social_id);
                 const plataforma = plataformas.find(p => p.id === conta?.plataforma_id);
+                const isDelayed = post.status !== 'publicado' && post.data_agendamento && new Date(post.data_agendamento) < new Date();
+                
                 return (
                   <TableRow
                     key={post.id}
-                    className="group hover:bg-muted/30 transition-all duration-300 cursor-pointer border-b border-border/10"
+                    className={`group hover:bg-muted/30 transition-all duration-300 cursor-pointer border-b border-border/10 ${isDelayed ? 'bg-destructive/5' : ''}`}
                     onClick={() => onPostClick(post)}
                   >
                     <TableCell className="font-medium max-w-xs truncate" title={post.titulo}>
-                      {post.titulo}
+                      <div className="flex flex-col gap-1">
+                        <span className={isDelayed ? 'text-destructive font-bold' : ''}>{post.titulo}</span>
+                        {isDelayed && (
+                          <Badge variant="destructive" className="w-fit text-[8px] h-4 font-black uppercase px-1 py-0 animate-pulse">
+                            Atrasado
+                          </Badge>
+                        )}
+                      </div>
                     </TableCell>
                     <TableCell>{getStatusBadge(post.status)}</TableCell>
                     <TableCell>{formatDateSafely(post.data_agendamento, "dd/MM/yyyy 'às' HH:mm")}</TableCell>

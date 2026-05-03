@@ -30,25 +30,31 @@ export default function DashboardGeral({ faturas, despesas, tasks, posts, client
   // Cálculos de produtividade
   const { tarefasAtrasadas, tarefasAFazer, tarefasEmAndamento } = useMemo(() => {
     const hoje = new Date();
-    const tarefasAtrasadas = tasks.filter(t => 
-      (t.status === 'a_fazer' || t.status === 'em_andamento') && 
-      t.data_vencimento && new Date(t.data_vencimento) < hoje
-    ).length;
-
-    const tarefasAFazer = tasks.filter(t => t.status === 'a_fazer').length;
-    const tarefasEmAndamento = tasks.filter(t => t.status === 'em_andamento').length;
+    const tarefasAtrasadas = tasks.filter(t => !t.concluida && t.vencimento && new Date(t.vencimento) < hoje).length;
+    const tarefasAFazer = tasks.filter(t => !t.concluida && t.status === 'a_fazer').length;
+    const tarefasEmAndamento = tasks.filter(t => !t.concluida && t.status === 'em_andamento').length;
 
     return { tarefasAtrasadas, tarefasAFazer, tarefasEmAndamento };
   }, [tasks]);
 
   // Cálculos de vendas e marketing
-  const { vendasFechadas, postsAgendados, estoquesBaixos } = useMemo(() => {
+  const { vendasFechadas, postsAgendados, postsAtrasados } = useMemo(() => {
+    const hoje = new Date();
     const vendasFechadas = clientes.filter(c => c.status_funil === 'venda_concluida').length;
     const postsAgendados = posts.filter(p => p.status === 'agendado').length;
-    const estoquesBaixos = produtos.filter(p => !p.is_infoproduto && p.estoque <= p.estoque_minimo).length;
+    
+    const postsAtrasados = posts.filter(p => {
+      const etapaAtual = etapas.find(e => e.id === p.status);
+      return (
+        p.status !== 'publicado' && 
+        !etapaAtual?.is_final &&
+        p.data_agendamento && 
+        new Date(p.data_agendamento) < hoje
+      );
+    });
 
-    return { vendasFechadas, postsAgendados, estoquesBaixos };
-  }, [clientes, posts, produtos]);
+    return { vendasFechadas, postsAgendados, postsAtrasados };
+  }, [clientes, posts, etapas]);
 
   return (
     <div className="space-y-8 pb-10">
@@ -139,17 +145,21 @@ export default function DashboardGeral({ faturas, despesas, tasks, posts, client
             color="orange"
           />
 
-          <div className="bg-card rounded-xl p-6 border border-border shadow-sm">
-            <h3 className="text-sm font-medium text-muted-foreground mb-4">Alertas de Tarefas</h3>
+          <div className="bg-card/60 backdrop-blur-md rounded-[2.5rem] p-8 border border-border/40 shadow-xl flex flex-col justify-center">
+            <h3 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-4">Alertas de Tarefas</h3>
             {tarefasAtrasadas > 0 ? (
-              <div className="flex items-center gap-2 text-destructive">
-                <AlertTriangle className="w-4 h-4" />
-                <span className="text-sm font-medium">{tarefasAtrasadas} tarefas atrasadas</span>
+              <div className="flex items-center gap-3 text-destructive bg-destructive/5 p-3 rounded-2xl border border-destructive/10">
+                <div className="p-2 rounded-xl bg-destructive/10">
+                  <AlertTriangle className="w-4 h-4" />
+                </div>
+                <span className="text-sm font-black">{tarefasAtrasadas} tarefas atrasadas</span>
               </div>
             ) : (
-              <div className="flex items-center gap-2 text-emerald-500">
-                <CheckCircle className="w-4 h-4" />
-                <span className="text-sm font-medium">Nenhuma tarefa atrasada</span>
+              <div className="flex items-center gap-3 text-emerald-500 bg-emerald-500/5 p-3 rounded-2xl border border-emerald-500/10">
+                <div className="p-2 rounded-xl bg-emerald-500/10">
+                  <CheckCircle className="w-4 h-4" />
+                </div>
+                <span className="text-sm font-black">Nenhuma tarefa atrasada</span>
               </div>
             )}
           </div>
@@ -177,17 +187,33 @@ export default function DashboardGeral({ faturas, despesas, tasks, posts, client
             color="purple"
           />
 
-          <div className="bg-card rounded-xl p-6 border border-border shadow-sm">
-            <h3 className="text-sm font-medium text-muted-foreground mb-4">Alerta de Estoque</h3>
-            {estoquesBaixos > 0 ? (
-              <div className="flex items-center gap-2 text-orange-500">
-                <Package className="w-4 h-4" />
-                <span className="text-sm font-medium">{estoquesBaixos} produtos com estoque baixo</span>
+          <div className="bg-card/60 backdrop-blur-md rounded-[2.5rem] p-8 border border-border/40 shadow-xl flex flex-col justify-center">
+            <h3 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-4">Alertas de Posts</h3>
+            {postsAtrasados.length > 0 ? (
+              <div className="space-y-3 overflow-y-auto max-h-[120px] pr-2 custom-scrollbar">
+                {postsAtrasados.map(post => (
+                  <div key={post.id} className="flex flex-col gap-1 p-2 rounded-xl bg-destructive/5 border border-destructive/10">
+                    <div className="flex items-center gap-2 text-destructive">
+                      <AlertTriangle className="w-3 h-3" />
+                      <span className="text-[10px] font-black truncate">{post.titulo}</span>
+                    </div>
+                    <div className="flex justify-between items-center px-1">
+                      <Badge variant="outline" className="text-[8px] h-4 font-black uppercase bg-destructive/10 text-destructive border-none">
+                        {post.status}
+                      </Badge>
+                      <span className="text-[8px] text-muted-foreground font-bold">
+                        {post.data_agendamento ? new Date(post.data_agendamento).toLocaleDateString('pt-BR') : ''}
+                      </span>
+                    </div>
+                  </div>
+                ))}
               </div>
             ) : (
-              <div className="flex items-center gap-2 text-emerald-500">
-                <CheckCircle className="w-4 h-4" />
-                <span className="text-sm font-medium">Estoque em níveis adequados</span>
+              <div className="flex items-center gap-3 text-emerald-500 bg-emerald-500/5 p-3 rounded-2xl border border-emerald-500/10">
+                <div className="p-2 rounded-xl bg-emerald-500/10">
+                  <CheckCircle className="w-4 h-4" />
+                </div>
+                <span className="text-sm font-black">Posts em dia</span>
               </div>
             )}
           </div>

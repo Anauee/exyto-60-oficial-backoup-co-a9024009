@@ -1,9 +1,9 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from "react";
-import { Post, ContaSocial, Marca, Plataforma, Formato, FichaEditorial, User, UsuarioEmpresa, Membro } from "@/api/entities";
+import { Post, ContaSocial, Marca, Plataforma, Formato, FichaEditorial, User, UsuarioEmpresa, Membro, PostEtapa, Tarefa } from "@/api/entities";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Share2, Plus, Calendar, Kanban, Users, Building2, Package, Layers, FileText, List } from "lucide-react";
+import { Share2, Plus, Calendar, Kanban, Users, Building2, Package, Layers, FileText, List, Settings2 } from "lucide-react";
 import { startOfMonth, endOfMonth } from "date-fns";
 import { debounce } from 'lodash';
 
@@ -19,6 +19,7 @@ import PostViewModal from "../components/midia/PostViewModal";
 import FichasEditoriaisTab from "../components/midia/FichasEditoriaisTab";
 import PostListTable from "../components/midia/PostListTable";
 import MetricsDashboard from "../components/midia/MetricsDashboard";
+import PostEtapasTab from "../components/midia/PostEtapasTab";
 import { createPageUrl } from "@/utils";
 import { addDays, addYears, addMonths } from "date-fns";
 
@@ -42,6 +43,7 @@ export default function MidiaSocial() {
   const [showViewModal, setShowViewModal] = useState(false);
   const [selectedPost, setSelectedPost] = useState(null);
   const [selectedDate, setSelectedDate] = useState(null);
+  const [etapas, setEtapas] = useState([]);
   
   const [filters, setFilters] = useState({
     responsavel: 'todos',
@@ -122,7 +124,8 @@ export default function MidiaSocial() {
         formatosDataRaw,
         fichasEditoriaisDataRaw,
         usuariosEmpresaData,
-        membrosData
+        membrosData,
+        etapasDataRaw
       ] = await Promise.all([
         Post.list("-created_date").catch(() => []),
         ContaSocial.list().catch(() => []),
@@ -131,7 +134,8 @@ export default function MidiaSocial() {
         Formato.list().catch(() => []),
         FichaEditorial.list("-created_date").catch(() => []),
         UsuarioEmpresa.filter({ empresa_id: empresaId, ativo: true }).catch(() => []),
-        Membro.list().catch(() => [])
+        Membro.list().catch(() => []),
+        PostEtapa.filter({ empresa_id: empresaId }, "ordem").catch(() => [])
       ]);
       
       // Filter data by empresa_id on client side for security
@@ -142,6 +146,7 @@ export default function MidiaSocial() {
       const filteredFormatos = Array.isArray(formatosDataRaw) ? formatosDataRaw.filter(item => item.empresa_id === empresaId) : [];
       const filteredFichasEditoriais = Array.isArray(fichasEditoriaisDataRaw) ? fichasEditoriaisDataRaw.filter(item => item.empresa_id === empresaId) : [];
       const filteredMembros = Array.isArray(membrosData) ? membrosData.filter(item => item.empresa_id === empresaId) : [];
+      const filteredEtapas = Array.isArray(etapasDataRaw) ? etapasDataRaw.filter(item => item.empresa_id === empresaId) : [];
 
       setPosts(allPosts);
       setContas(filteredContas);
@@ -150,6 +155,7 @@ export default function MidiaSocial() {
       setFormatos(filteredFormatos);
       setFichasEditoriais(filteredFichasEditoriais);
       setMembros(filteredMembros);
+      setEtapas(filteredEtapas);
 
       // Load responsaveis (users from this company)
       if (usuariosEmpresaData && Array.isArray(usuariosEmpresaData) && usuariosEmpresaData.length > 0) {
@@ -274,13 +280,34 @@ export default function MidiaSocial() {
 
   const handlePostMove = async (post, newStatus) => {
     try {
+      const etapaDestino = etapas.find(e => e.id === newStatus);
       const updateData = { status: newStatus };
       
-      if (newStatus === 'publicado' && !post.data_publicacao) {
+      // Se for uma etapa final ou o status antigo for 'agendado' e o novo 'publicado' (legado)
+      if ((etapaDestino?.is_final || newStatus === 'publicado') && !post.data_publicacao) {
         updateData.data_publicacao = new Date().toISOString();
+      }
+
+      // Automação: Troca de responsável se a etapa tiver um responsável padrão
+      if (etapaDestino?.responsavel_id && etapaDestino.responsavel_id !== 'none') {
+        updateData.responsavel_id = etapaDestino.responsavel_id;
       }
       
       await Post.update(post.id, updateData);
+
+      // Automação: Geração de atividade (Tarefa) para o responsável da etapa
+      if (etapaDestino && etapaDestino.responsavel_id && etapaDestino.responsavel_id !== 'none') {
+        await Tarefa.create({
+          titulo: `${etapaDestino.nome}: ${post.titulo}`,
+          descricao: `Atividade gerada automaticamente pela esteira de produção.\nPost: ${post.titulo}\nConteúdo: ${post.conteudo || 'Sem conteúdo'}`,
+          responsavel_id: etapaDestino.responsavel_id,
+          empresa_id: empresaId,
+          status: 'a_fazer',
+          prioridade: 'media',
+          vencimento: new Date().toISOString().split('T')[0] // Vence hoje por padrão
+        });
+      }
+
       loadData();
     } catch (error) {
       console.error("Erro ao atualizar status do post:", error);
@@ -594,6 +621,14 @@ export default function MidiaSocial() {
                 <List className="w-4 h-4" />
                 <span className="font-bold tracking-tight">Lista</span>
               </TabsTrigger>
+
+              <TabsTrigger 
+                value="esteira" 
+                className="flex items-center gap-3 px-6 py-3 rounded-2xl data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-xl data-[state=active]:shadow-primary/10 transition-all duration-300"
+              >
+                <Settings2 className="w-4 h-4" />
+                <span className="font-bold tracking-tight">Esteira</span>
+              </TabsTrigger>
             </TabsList>
           </div>
           
@@ -636,6 +671,7 @@ export default function MidiaSocial() {
               onPostClick={handlePostClick}
               plataformas={plataformas || []}
               contas={contas || []}
+              etapas={etapas}
             />
           </TabsContent>
           
@@ -703,13 +739,21 @@ export default function MidiaSocial() {
               contas={contas || []}
               formatos={formatos || []}
             />
-            <PostListTable
+            <PostListTable 
               posts={filteredPosts || []}
               onPostClick={handlePostClick}
-              membros={membros || []}
-              contas={contas || []}
-              formatos={formatos || []}
-              plataformas={plataformas || []}
+              membros={membros}
+              contas={contas}
+              formatos={formatos}
+              plataformas={plataformas}
+            />
+          </TabsContent>
+
+          <TabsContent value="esteira" className="space-y-6">
+            <PostEtapasTab 
+              empresaId={empresaId}
+              membros={membros}
+              onUpdate={loadData}
             />
           </TabsContent>
         </Tabs>

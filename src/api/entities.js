@@ -350,3 +350,4 @@ export const SocialAppConfig = createEntity('social_app_configs');
 export const SocialToken = createEntity('social_tokens');
 export const AIConversa = createEntity('ai_conversas');
 export const AIMensagem = createEntity('ai_mensagens');
+export const PostEtapa = createEntity('post_etapa');
