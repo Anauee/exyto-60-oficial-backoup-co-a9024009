@@ -40,9 +40,10 @@ export default function FormatoModal({ isOpen, onClose, onSave, formato }) {
 
     setUploading(true);
     try {
-      const result = await UploadFile(file);
-      if (result && result.url) {
-        setFormData(prev => ({ ...prev, imagem: result.url }));
+      const result = await UploadFile({ file });
+      if (result && (result.url || result.file_url)) {
+        const imageUrl = result.url || result.file_url;
+        setFormData(prev => ({ ...prev, imagem: imageUrl }));
         toast.success("Imagem enviada com sucesso!");
       }
     } catch (error) {

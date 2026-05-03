@@ -807,7 +807,10 @@ export function createCustomClient() {
           };
         },
 
-        UploadFile: async ({ file }) => {
+        UploadFile: async (arg) => {
+          // Aceita tanto { file: File } quanto o objeto File diretamente
+          const file = arg?.file || arg;
+          
           if (!file) throw new Error("Nenhum arquivo fornecido para upload");
           
           console.log(
