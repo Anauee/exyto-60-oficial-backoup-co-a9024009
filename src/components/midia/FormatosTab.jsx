@@ -85,7 +85,11 @@ export default function FormatosTab({ formatos, onUpdate, empresaId }) {
             </TableHeader>
             <TableBody>
               {formatos.map((formato) => (
-                <TableRow key={formato.id} className="group border-border/20 hover:bg-muted/30 transition-colors">
+                <TableRow 
+                  key={formato.id} 
+                  className="group border-border/20 hover:bg-muted/30 transition-colors cursor-pointer"
+                  onClick={() => openEditModal(formato)}
+                >
                   <TableCell className="py-6 px-8">
                     <span className="font-black text-foreground text-lg tracking-tight group-hover:text-primary transition-colors">
                       {formato.nome}
@@ -107,7 +111,10 @@ export default function FormatosTab({ formatos, onUpdate, empresaId }) {
                       <Button 
                         variant="outline" 
                         size="icon" 
-                        onClick={() => openEditModal(formato)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openEditModal(formato);
+                        }}
                         className="w-10 h-10 rounded-xl border-border/40 hover:bg-card hover:text-primary transition-all shadow-sm"
                       >
                         <Edit className="w-4 h-4" />
@@ -115,7 +122,10 @@ export default function FormatosTab({ formatos, onUpdate, empresaId }) {
                       <Button 
                         variant="outline" 
                         size="icon" 
-                        onClick={() => openDeleteModal(formato)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openDeleteModal(formato);
+                        }}
                         className="w-10 h-10 rounded-xl border-border/40 hover:bg-rose-500/10 hover:text-rose-500 hover:border-rose-500/20 transition-all shadow-sm"
                       >
                         <Trash2 className="w-4 h-4" />

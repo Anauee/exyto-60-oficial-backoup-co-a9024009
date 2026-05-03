@@ -808,36 +808,44 @@ export function createCustomClient() {
         },
 
         UploadFile: async ({ file }) => {
-          console.warn(
-            "UploadFile called with file:",
-            file?.name,
-            file?.size,
-            file?.type
+          if (!file) throw new Error("Nenhum arquivo fornecido para upload");
+          
+          console.log(
+            "UploadFile real chamando para:",
+            file.name,
+            file.size,
+            file.type
           );
 
-          // TODO: Replace with Supabase Storage upload
-          // Example implementation:
-          // const fileName = `${Date.now()}_${file.name}`;
-          // const { data, error } = await supabase.storage
-          //   .from('uploads')
-          //   .upload(fileName, file);
-          //
-          // if (error) throw error;
-          //
-          // const { data: { publicUrl } } = supabase.storage
-          //   .from('uploads')
-          //   .getPublicUrl(fileName);
-          //
-          // return { file_url: publicUrl };
+          // Criar nome único para o arquivo
+          const fileExt = file.name.split('.').pop();
+          const fileName = `${Math.random().toString(36).substring(2)}_${Date.now()}.${fileExt}`;
+          const filePath = `${fileName}`;
 
-          // Mock response for now
-          const mockUrl = `https://mock-storage.supabase.co/uploads/${Date.now()}_${
-            file?.name || "file"
-          }`;
-          return {
-            file_url: mockUrl,
-            note: "File upload integration not yet implemented - this is a mock URL",
-          };
+          try {
+            // Upload para o bucket 'uploads'
+            const { data, error } = await supabase.storage
+              .from('uploads')
+              .upload(filePath, file, {
+                cacheControl: '3600',
+                upsert: false
+              });
+
+            if (error) {
+              console.error("Erro no upload do Supabase Storage:", error);
+              throw error;
+            }
+
+            // Obter URL pública
+            const { data: { publicUrl } } = supabase.storage
+              .from('uploads')
+              .getPublicUrl(filePath);
+
+            return { url: publicUrl, file_url: publicUrl };
+          } catch (err) {
+            console.error("Erro catastrófico no upload:", err);
+            throw err;
+          }
         },
 
         GenerateImage: async ({ prompt }) => {
