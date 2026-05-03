@@ -21,6 +21,8 @@ import PostListTable from "../components/midia/PostListTable";
 import MetricsDashboard from "../components/midia/MetricsDashboard";
 import PostEtapasTab from "../components/midia/PostEtapasTab";
 import { createPageUrl } from "@/utils";
+import { useAuth } from "@/contexts/AuthContext";
+import AcessoNegado from "@/components/shared/AcessoNegado";
 import { addDays, addYears, addMonths } from "date-fns";
 
 const generateUniqueId = () => {
@@ -28,6 +30,11 @@ const generateUniqueId = () => {
 };
 
 export default function MidiaSocial() {
+  const { userPermissions, userRole } = useAuth();
+  
+  // MidiaSocial requires 'midia-social' permission
+  const hasAccess = userRole === 'admin' || (userPermissions || []).includes('midia-social');
+
   const [posts, setPosts] = useState([]);
   const [contas, setContas] = useState([]);
   const [marcas, setMarcas] = useState([]);
@@ -523,7 +530,11 @@ export default function MidiaSocial() {
     }
   };
   
-  if (isLoading || empresaId === null) {
+  if (!hasAccess && !isLoading) {
+    return <AcessoNegado />;
+  }
+
+  if (isLoading) {
     return (
       <div className="p-6 md:p-8 bg-background animate-pulse">
         <div className="max-w-7xl mx-auto space-y-8">

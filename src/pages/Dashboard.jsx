@@ -12,8 +12,15 @@ import DashboardFinanceiro from "../components/dashboard/DashboardFinanceiro";
 import DashboardProdutividade from "../components/dashboard/DashboardProdutividade";
 import DashboardVendasMarketing from "../components/dashboard/DashboardVendasMarketing";
 import DashboardRelatorios from "../components/dashboard/DashboardRelatorios"; // Import the new component
+import { useAuth } from "@/contexts/AuthContext";
+import AcessoNegado from "@/components/shared/AcessoNegado";
 
 export default function Dashboard({ session, user }) {
+  const { userPermissions, userRole } = useAuth();
+  
+  // Dashboard requires 'dashboard' permission
+  const hasAccess = userRole === 'admin' || (userPermissions || []).includes('dashboard');
+
   // Função para realizar o logout
   const handleLogout = async () => {
     try {
@@ -189,8 +196,12 @@ export default function Dashboard({ session, user }) {
     );
   }
 
+  if (!hasAccess && !isLoading) {
+    return <AcessoNegado />;
+  }
+
   return (
-    <div className="p-6 md:p-8 min-h-screen">
+    <div className="p-8 max-w-[1600px] mx-auto animate-in fade-in duration-700">
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-6">
           <div className="flex items-center gap-4">

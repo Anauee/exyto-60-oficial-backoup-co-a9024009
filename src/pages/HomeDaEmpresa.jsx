@@ -15,6 +15,8 @@ import SistemaModal from "../components/home_empresa/SistemaModal";
 import MembrosTab from "../components/home_empresa/MembrosTab";
 import CardBoard from "../components/card_board/CardBoard";
 import { createPageUrl } from "@/utils";
+import { useAuth } from "@/contexts/AuthContext";
+import AcessoNegado from "@/components/shared/AcessoNegado";
 
 // Import Modals for Quick Actions
 import FaturaModal from "../components/financeiro/FaturaModal";
@@ -24,6 +26,11 @@ import TaskModal from "../components/agendas/TaskModal";
 import PostModal from "../components/midia/PostModal";
 
 export default function HomeDaEmpresa() {
+  const { userPermissions, userRole } = useAuth();
+  
+  // HomeDaEmpresa requires 'home-da-empresa' permission
+  const hasAccess = userRole === 'admin' || (userPermissions || []).includes('home-da-empresa');
+
   const [sistemas, setSistemas] = useState([]);
   const [membros, setMembros] = useState([]);
   const [cargos, setCargos] = useState([]);
@@ -176,6 +183,10 @@ export default function HomeDaEmpresa() {
     }
   };
 
+
+  if (!hasAccess && !isLoading) {
+    return <AcessoNegado />;
+  }
 
   if (isLoading || !empresa) {
     return (

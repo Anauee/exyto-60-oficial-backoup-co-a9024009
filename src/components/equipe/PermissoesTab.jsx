@@ -60,7 +60,7 @@ export default function PermissoesTab({ empresaId, currentUserRole }) {
   const handleEdit = (usuario) => {
     setSelectedUsuario({
       ...usuario,
-      permissoes: usuario.permissoes || []
+      permissoes: usuario.permissoes_adicionais || []
     });
     setIsModalOpen(true);
   };

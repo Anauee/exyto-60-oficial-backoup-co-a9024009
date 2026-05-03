@@ -7,15 +7,8 @@ export const DEFAULT_PERMISSIONS = {
     'agendas-e-atividades', 'clientes-e-produtos', 'gestao-equipe', 
     'gestao-pastas', 'documentos-e-anotacoes', 'inicio', 'automacoes'
   ],
-  gestor: [
-    'home-da-empresa', 'dashboard', 'midia-social', 'financeiro', 
-    'agendas-e-atividades', 'clientes-e-produtos', 'gestao-equipe', 'gestao-pastas', 
-    'documentos-e-anotacoes', 'inicio'
-  ],
-  operador: [
-    'home-da-empresa', 'agendas-e-atividades', 'clientes-e-produtos', 
-    'gestao-pastas', 'documentos-e-anotacoes', 'inicio'
-  ]
+  gestor: [], // Zero access by default
+  operador: [] // Zero access by default
 };
 
 const AuthContext = createContext({});
@@ -109,7 +102,9 @@ export const AuthProvider = ({ children }) => {
             const currentMembership = memberships.find(m => m.empresa_id === savedCompany.id);
             if (currentMembership) {
               setCurrentCompany(savedCompany);
-              setUserPermissions(currentMembership.permissoes_adicionais || []);
+              const basePermissions = DEFAULT_PERMISSIONS[currentMembership.perfil] || [];
+              const additionalPermissions = currentMembership.permissoes_adicionais || [];
+              setUserPermissions([...new Set([...basePermissions, ...additionalPermissions])]);
               setUserRole(currentMembership.perfil);
             }
           } catch (e) {
