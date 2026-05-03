@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Edit, Trash2 } from "lucide-react";
+import { Plus, Edit, Trash2, Layers, Image as ImageIcon } from "lucide-react";
 import { Formato } from "@/api/entities";
 import ConfirmDeleteModal from "../shared/ConfirmDeleteModal";
 import FormatoModal from "./FormatoModal";
@@ -54,55 +54,98 @@ export default function FormatosTab({ formatos, onUpdate, empresaId }) {
 
   return (
     <>
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Formatos Cadastrados</CardTitle>
-          <Button onClick={openNewModal}>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between bg-card/40 backdrop-blur-xl p-8 rounded-[2.5rem] border border-border/40 shadow-2xl shadow-primary/5">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center border border-primary/20">
+              <Layers className="w-6 h-6 text-primary" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-black text-foreground tracking-tight">Formatos Cadastrados</h2>
+              <p className="text-muted-foreground font-medium text-sm">Gerencie os modelos de conteúdo da sua mídia social</p>
+            </div>
+          </div>
+          <Button 
+            onClick={openNewModal}
+            className="h-12 px-6 rounded-2xl bg-primary hover:bg-primary/90 font-bold shadow-lg shadow-primary/20 transition-all active:scale-95"
+          >
             <Plus className="w-4 h-4 mr-2" />
             Adicionar Formato
           </Button>
-        </CardHeader>
-        <CardContent>
+        </div>
+
+        <div className="bg-card/40 backdrop-blur-xl rounded-[2.5rem] border border-border/40 shadow-2xl overflow-hidden">
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead>Nome</TableHead>
-                <TableHead>Descrição</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
+              <TableRow className="hover:bg-transparent border-border/40">
+                <TableHead className="py-6 px-8 text-xs font-bold uppercase tracking-widest text-muted-foreground">Nome</TableHead>
+                <TableHead className="py-6 px-8 text-xs font-bold uppercase tracking-widest text-muted-foreground">Descrição</TableHead>
+                <TableHead className="py-6 px-8 text-xs font-bold uppercase tracking-widest text-muted-foreground text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {formatos.map((formato) => (
-                <TableRow key={formato.id}>
-                  <TableCell className="font-medium">{formato.nome}</TableCell>
-                  <TableCell className="max-w-md">
-                    {formato.descricao ? (
-                      <span className="text-slate-600">{formato.descricao}</span>
-                    ) : (
-                      <span className="text-slate-400 italic">Sem descrição</span>
-                    )}
+                <TableRow key={formato.id} className="group border-border/20 hover:bg-muted/30 transition-colors">
+                  <TableCell className="py-6 px-8">
+                    <span className="font-black text-foreground text-lg tracking-tight group-hover:text-primary transition-colors">
+                      {formato.nome}
+                    </span>
                   </TableCell>
-                  <TableCell className="text-right">
-                    <Button variant="ghost" size="icon" onClick={() => openEditModal(formato)}>
-                      <Edit className="w-4 h-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" onClick={() => openDeleteModal(formato)}>
-                      <Trash2 className="w-4 h-4 text-red-500" />
-                    </Button>
+                  <TableCell className="py-6 px-8">
+                    <div className="max-w-md">
+                      {formato.descricao ? (
+                        <p className="text-muted-foreground font-medium leading-relaxed line-clamp-2">
+                          {formato.descricao}
+                        </p>
+                      ) : (
+                        <span className="text-muted-foreground/40 italic font-medium">Sem descrição cadastrada</span>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell className="py-6 px-8 text-right">
+                    <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Button 
+                        variant="outline" 
+                        size="icon" 
+                        onClick={() => openEditModal(formato)}
+                        className="w-10 h-10 rounded-xl border-border/40 hover:bg-card hover:text-primary transition-all shadow-sm"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="icon" 
+                        onClick={() => openDeleteModal(formato)}
+                        className="w-10 h-10 rounded-xl border-border/40 hover:bg-rose-500/10 hover:text-rose-500 hover:border-rose-500/20 transition-all shadow-sm"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
               {formatos.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan="3" className="text-center text-slate-500 py-8">
-                    Nenhum formato cadastrado.
+                  <TableCell colSpan="3" className="py-24 text-center">
+                    <div className="flex flex-col items-center justify-center space-y-4">
+                      <div className="w-20 h-20 bg-muted/20 rounded-3xl flex items-center justify-center border border-border/20">
+                        <ImageIcon className="w-10 h-10 text-muted-foreground/30" />
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-xl font-bold text-foreground">Nenhum formato cadastrado</p>
+                        <p className="text-muted-foreground font-medium">Comece adicionando seu primeiro modelo de conteúdo</p>
+                      </div>
+                      <Button onClick={openNewModal} variant="outline" className="mt-4 rounded-xl">
+                        Criar primeiro formato
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               )}
             </TableBody>
           </Table>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       <FormatoModal 
         isOpen={showModal}
