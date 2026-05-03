@@ -8,6 +8,14 @@ const createEntity = (tableName, options = {}) => {
     if (!data) return data;
     const mapped = { ...data };
     
+    // Convert empty strings to null for all fields
+    // This prevents Postgres errors for UUID/Numeric/Date fields that are optional
+    Object.keys(mapped).forEach(key => {
+      if (mapped[key] === '') {
+        mapped[key] = null;
+      }
+    });
+
     // Map 'order' to 'order_val' if it exists in input
     if (data.order !== undefined) {
       mapped.order_val = data.order;
