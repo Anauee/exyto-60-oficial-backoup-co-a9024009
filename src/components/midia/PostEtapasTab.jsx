@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PostEtapa, Membro } from "@/api/entities";
-import { Plus, Trash2, GripVertical, Settings2, User, CheckCircle2, AlertTriangle, Save } from "lucide-react";
+import { Plus, Trash2, GripVertical, Settings2, User, CheckCircle2, AlertTriangle, Save, Edit } from "lucide-react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 
 export default function PostEtapasTab({ empresaId, membros = [], onUpdate }) {
@@ -19,6 +19,8 @@ export default function PostEtapasTab({ empresaId, membros = [], onUpdate }) {
     responsavel_id: '',
     is_final: false
   });
+  const [editingId, setEditingId] = useState(null);
+  const [editData, setEditData] = useState({});
 
   const loadEtapas = async () => {
     if (!empresaId) return;
@@ -96,6 +98,27 @@ export default function PostEtapasTab({ empresaId, membros = [], onUpdate }) {
       if (onUpdate) onUpdate();
     } catch (error) {
       console.error("Erro ao reordenar etapas:", error);
+    }
+  };
+
+  const startEditing = (etapa) => {
+    setEditingId(etapa.id);
+    setEditData({ ...etapa });
+  };
+
+  const cancelEditing = () => {
+    setEditingId(null);
+    setEditData({});
+  };
+
+  const saveEdit = async () => {
+    if (!editData.nome) return;
+    try {
+      await handleUpdateEtapa(editingId, editData);
+      setEditingId(null);
+      setEditData({});
+    } catch (error) {
+      console.error("Erro ao salvar edição:", error);
     }
   };
 
@@ -203,45 +226,124 @@ export default function PostEtapasTab({ empresaId, membros = [], onUpdate }) {
                         <div
                           ref={provided.innerRef}
                           {...provided.draggableProps}
-                          className={`flex items-center gap-4 p-4 rounded-2xl border transition-all ${snapshot.isDragging ? 'bg-card shadow-2xl border-primary/40' : 'bg-card/40 border-border/20'}`}
+                          className={`group flex flex-col p-2 rounded-3xl border transition-all ${snapshot.isDragging ? 'bg-card shadow-2xl border-primary/40' : 'bg-card/40 border-border/20 hover:border-primary/20'}`}
                         >
-                          <div {...provided.dragHandleProps} className="text-muted-foreground hover:text-foreground">
-                            <GripVertical className="w-5 h-5" />
-                          </div>
-                          
-                          <div className="w-4 h-4 rounded-full" style={{ backgroundColor: etapa.cor }} />
-                          
-                          <div className="flex-1 min-w-0">
-                            <h5 className="font-bold text-foreground truncate">{etapa.nome}</h5>
-                            <div className="flex items-center gap-4 mt-1">
-                              {etapa.responsavel_id ? (
-                                <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground font-bold uppercase tracking-widest">
-                                  <User className="w-3 h-3" />
-                                  {membros.find(m => m.id === etapa.responsavel_id)?.nome || 'Usuário removido'}
+                          {editingId === etapa.id ? (
+                            <div className="p-4 space-y-4">
+                              <div className="flex items-center gap-4">
+                                <div className="flex-1 space-y-2">
+                                  <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Nome da Etapa</Label>
+                                  <Input 
+                                    value={editData.nome} 
+                                    onChange={e => setEditData({...editData, nome: e.target.value})}
+                                    className="h-10 rounded-xl bg-background/50 border-border/40 font-bold"
+                                  />
                                 </div>
-                              ) : (
-                                <span className="text-[10px] text-muted-foreground italic">Sem responsável padrão</span>
-                              )}
+                                <div className="space-y-2">
+                                  <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Cor</Label>
+                                  <div className="flex gap-1.5 p-1.5 bg-background/40 rounded-xl border border-border/40">
+                                    {colors.map(c => (
+                                      <button
+                                        key={c.value}
+                                        className={`w-5 h-5 rounded-full border-2 transition-all ${editData.cor === c.value ? 'border-foreground scale-110 shadow-lg' : 'border-transparent hover:scale-105'}`}
+                                        style={{ backgroundColor: c.value }}
+                                        onClick={() => setEditData({...editData, cor: c.value})}
+                                      />
+                                    ))}
+                                  </div>
+                                </div>
+                              </div>
                               
-                              {etapa.is_final && (
-                                <Badge className="bg-emerald-500/10 text-emerald-500 border-none text-[8px] h-4 font-black uppercase">
-                                  <CheckCircle2 className="w-2 h-2 mr-1" />
-                                  Etapa de Conclusão
-                                </Badge>
-                              )}
+                              <div className="flex items-center gap-4">
+                                <div className="flex-1 space-y-2">
+                                  <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Responsável Padrão</Label>
+                                  <Select 
+                                    value={editData.responsavel_id || "none"} 
+                                    onValueChange={val => setEditData({...editData, responsavel_id: val === "none" ? null : val})}
+                                  >
+                                    <SelectTrigger className="h-10 rounded-xl bg-background/50 border-border/40 font-medium">
+                                      <SelectValue placeholder="Selecione..." />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="none">Sem responsável</SelectItem>
+                                      {membros.map(m => (
+                                        <SelectItem key={m.id} value={m.id}>{m.nome}</SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                                <div className="flex items-center gap-3 pt-6 px-2">
+                                  <div className="flex items-center gap-2">
+                                    <input 
+                                      type="checkbox" 
+                                      id={`edit_is_final_${etapa.id}`} 
+                                      checked={editData.is_final} 
+                                      onChange={e => setEditData({...editData, is_final: e.target.checked})}
+                                      className="w-4 h-4 rounded border-border"
+                                    />
+                                    <Label htmlFor={`edit_is_final_${etapa.id}`} className="text-xs font-bold cursor-pointer">Etapa Final</Label>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-2 pt-6">
+                                  <Button size="sm" variant="ghost" onClick={cancelEditing} className="rounded-xl font-bold">Cancelar</Button>
+                                  <Button size="sm" onClick={saveEdit} className="rounded-xl font-bold px-6 bg-primary shadow-lg shadow-primary/20">Salvar</Button>
+                                </div>
+                              </div>
                             </div>
-                          </div>
+                          ) : (
+                            <div className="flex items-center gap-4 p-2">
+                              <div {...provided.dragHandleProps} className="p-2 text-muted-foreground hover:text-foreground cursor-grab active:cursor-grabbing">
+                                <GripVertical className="w-5 h-5" />
+                              </div>
+                              
+                              <div 
+                                className="flex-1 flex items-center gap-4 cursor-pointer"
+                                onClick={() => startEditing(etapa)}
+                              >
+                                <div className="w-4 h-4 rounded-full shadow-sm" style={{ backgroundColor: etapa.cor }} />
+                                
+                                <div className="flex-1 min-w-0">
+                                  <h5 className="font-bold text-foreground truncate group-hover:text-primary transition-colors">{etapa.nome}</h5>
+                                  <div className="flex items-center gap-4 mt-1">
+                                    {etapa.responsavel_id ? (
+                                      <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground font-bold uppercase tracking-widest">
+                                        <User className="w-3 h-3" />
+                                        {membros.find(m => m.id === etapa.responsavel_id)?.nome || 'Usuário removido'}
+                                      </div>
+                                    ) : (
+                                      <span className="text-[10px] text-muted-foreground italic font-medium">Sem responsável padrão</span>
+                                    )}
+                                    
+                                    {etapa.is_final && (
+                                      <Badge className="bg-emerald-500/10 text-emerald-500 border-none text-[8px] h-4 font-black uppercase tracking-tighter">
+                                        <CheckCircle2 className="w-2 h-2 mr-1" />
+                                        Etapa de Conclusão
+                                      </Badge>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
 
-                          <div className="flex items-center gap-2">
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              className="text-muted-foreground hover:text-destructive rounded-xl"
-                              onClick={() => handleDeleteEtapa(etapa.id)}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </div>
+                              <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity pr-2">
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  className="text-muted-foreground hover:text-primary rounded-xl w-10 h-10"
+                                  onClick={() => startEditing(etapa)}
+                                >
+                                  <Edit className="w-4 h-4" />
+                                </Button>
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  className="text-muted-foreground hover:text-destructive rounded-xl w-10 h-10"
+                                  onClick={() => handleDeleteEtapa(etapa.id)}
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       )}
                     </Draggable>
