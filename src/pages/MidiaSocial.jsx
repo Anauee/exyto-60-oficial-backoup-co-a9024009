@@ -644,6 +644,28 @@ export default function MidiaSocial() {
               plataformas={plataformas || []}
               contas={contas || []}
             />
+            
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mt-8">
+              {['ideia', 'producao', 'revisao', 'agendado', 'publicado'].map((status) => {
+                const filteredCount = filteredPosts.filter(p => p.status === status).length;
+                
+                return (
+                  <div key={status} className="bg-card rounded-xl p-5 border border-border shadow-sm">
+                    <div className="text-center">
+                      <div className="text-3xl font-bold text-foreground mb-1 tracking-tight">
+                        {filteredCount}
+                      </div>
+                      <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                        {status === 'ideia' ? 'Ideias' : 
+                         status === 'producao' ? 'Produção' : 
+                         status === 'revisao' ? 'Revisão' :
+                         status}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </TabsContent>
 
           <TabsContent value="kanban" className="space-y-6">
@@ -667,6 +689,28 @@ export default function MidiaSocial() {
               etapas={etapas}
             />
             
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mt-8">
+              {['ideia', 'producao', 'revisao', 'agendado', 'publicado'].map((status) => {
+                const filteredCount = filteredPosts.filter(p => p.status === status).length;
+                
+                return (
+                  <div key={status} className="bg-card rounded-xl p-5 border border-border shadow-sm">
+                    <div className="text-center">
+                      <div className="text-3xl font-bold text-foreground mb-1 tracking-tight">
+                        {filteredCount}
+                      </div>
+                      <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                        {status === 'ideia' ? 'Ideias' : 
+                         status === 'producao' ? 'Produção' : 
+                         status === 'revisao' ? 'Revisão' :
+                         status}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
             <div className="pt-12 mt-12 border-t border-border/40">
               <PostEtapasTab 
                 empresaId={empresaId}
@@ -748,33 +792,30 @@ export default function MidiaSocial() {
               formatos={formatos}
               plataformas={plataformas}
             />
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mt-8">
+              {['ideia', 'producao', 'revisao', 'agendado', 'publicado'].map((status) => {
+                const filteredCount = filteredPosts.filter(p => p.status === status).length;
+                
+                return (
+                  <div key={status} className="bg-card rounded-xl p-5 border border-border shadow-sm">
+                    <div className="text-center">
+                      <div className="text-3xl font-bold text-foreground mb-1 tracking-tight">
+                        {filteredCount}
+                      </div>
+                      <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                        {status === 'ideia' ? 'Ideias' : 
+                         status === 'producao' ? 'Produção' : 
+                         status === 'revisao' ? 'Revisão' :
+                         status}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </TabsContent>
 
         </Tabs>
-
-        {(activeTab === 'kanban' || activeTab === 'calendario' || activeTab === 'lista') && (
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mt-8">
-            {['ideia', 'producao', 'revisao', 'agendado', 'publicado'].map((status) => {
-              const filteredCount = filteredPosts.filter(p => p.status === status).length;
-              
-              return (
-                <div key={status} className="bg-card rounded-xl p-5 border border-border shadow-sm">
-                  <div className="text-center">
-                    <div className="text-3xl font-bold text-foreground mb-1 tracking-tight">
-                      {filteredCount}
-                    </div>
-                    <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
-                      {status === 'ideia' ? 'Ideias' : 
-                       status === 'producao' ? 'Produção' : 
-                       status === 'revisao' ? 'Revisão' :
-                       status}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
 
         <PostModal
           isOpen={showModal}
