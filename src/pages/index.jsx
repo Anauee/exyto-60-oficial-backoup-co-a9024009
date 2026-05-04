@@ -27,7 +27,7 @@ import Analytics from "./Analytics";
 import CompleteProfile from "./CompleteProfile";
 import PainelPessoal from "./PainelPessoal";
 
-import { BrowserRouter as Router, Route, Routes, useLocation, Outlet, useNavigate } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
 
 const PAGES = {
     
@@ -71,29 +71,20 @@ function _getCurrentPage(url) {
     return pageName || Object.keys(PAGES)[0];
 }
 
-// Wrapper para injetar o nome da página atual no Layout
-function LayoutWrapper() {
+function PagesContent() {
     const location = useLocation();
-    const currentPage = React.useMemo(() => _getCurrentPage(location.pathname), [location.pathname]);
+    const currentPage = _getCurrentPage(location.pathname);
     
     return (
-        <Layout currentPageName={currentPage}>
-            <Outlet key={location.pathname} />
-        </Layout>
-    );
-}
-
-function PagesContent() {
-    return (
-        <Routes>            
-            {/* Páginas com Layout Padrão */}
-            <Route element={<LayoutWrapper />}>
+        <Layout key={location.pathname} currentPageName={currentPage}>
+            <Routes>            
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/midiasocial" element={<MidiaSocial />} />
                 <Route path="/financeiro" element={<Financeiro />} />
                 <Route path="/agendas" element={<Agendas />} />
                 <Route path="/clientesprodutos" element={<ClientesProdutos />} />
+                <Route path="/selecionarempresa" element={<SelecionarEmpresa />} />
                 <Route path="/documentos" element={<Documentos />} />
                 <Route path="/equipe" element={<Equipe />} />
                 <Route path="/homedaempresa" element={<HomeDaEmpresa />} />
@@ -101,14 +92,11 @@ function PagesContent() {
                 <Route path="/automacoes" element={<Automacoes />} />
                 <Route path="/ia-assistente" element={<AIAssistant />} />
                 <Route path="/analytics" element={<Analytics />} />
-            </Route>
-
-            {/* Páginas Globais (Sem Sidebar de Empresa) */}
-            <Route path="/selecionarempresa" element={<SelecionarEmpresa />} />
-            <Route path="/painelpessoal" element={<PainelPessoal />} />
-            <Route path="/completar-perfil" element={<CompleteProfile />} />
-            <Route path="/auth/callback/:provider" element={<AuthCallback />} />
-        </Routes>
+                <Route path="/completar-perfil" element={<CompleteProfile />} />
+                <Route path="/painelpessoal" element={<PainelPessoal />} />
+                <Route path="/auth/callback/:provider" element={<AuthCallback />} />
+            </Routes>
+        </Layout>
     );
 }
 
