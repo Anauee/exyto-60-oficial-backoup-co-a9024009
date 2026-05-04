@@ -26,7 +26,7 @@ const getPlatformColor = (plataformaId, plataformas = []) => {
   }
 };
 
-function PostCard({ post, onClick, plataformas = [], contas = [], etapas = [] }) {
+function PostCard({ post, onClick, plataformas = [], contas = [], etapas = [], membros = [] }) {
   const conta = contas.find(c => c.id === post.conta_social_id);
   const plataforma = plataformas.find(p => p.id === conta?.plataforma_id);
   
@@ -64,7 +64,11 @@ function PostCard({ post, onClick, plataformas = [], contas = [], etapas = [] })
         <div className="flex flex-col gap-2">
           <div className="flex items-center gap-2 text-[10px] text-muted-foreground font-bold uppercase tracking-widest">
             <User className="w-3 h-3 text-primary/60" />
-            <span>{post.responsavel || 'Não atribuído'}</span>
+            <span>
+              {membros.find(m => m.id === post.responsavel_id)?.nome || 
+               post.responsavel || 
+               'Não atribuído'}
+            </span>
           </div>
 
           {post.data_agendamento && (
@@ -85,7 +89,8 @@ export default function KanbanBoard({
   onPostClick, 
   plataformas = [], 
   contas = [],
-  etapas = [] 
+  etapas = [],
+  membros = [] 
 }) {
   const defaultColumns = [
     { id: 'ideia', title: 'Ideias/Pauta', icon: '💡', color: 'bg-slate-500' },
@@ -175,6 +180,7 @@ export default function KanbanBoard({
                                 plataformas={plataformas} 
                                 contas={contas} 
                                 etapas={etapas}
+                                membros={membros}
                               />
                             </div>
                           )}

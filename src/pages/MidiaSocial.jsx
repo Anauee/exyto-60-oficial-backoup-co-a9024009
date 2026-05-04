@@ -277,9 +277,11 @@ export default function MidiaSocial() {
     applyFilters();
   }, [posts, filters, applyFilters]);
 
-  const handlePostMove = async (post, newStatus) => {
+  const processPostAutomation = async (post, newStatus) => {
     try {
       const etapaDestino = etapas.find(e => e.id === newStatus);
+      if (!etapaDestino) return { status: newStatus };
+
       const updateData = { status: newStatus };
       
       // Se for uma etapa final ou o status antigo for 'agendado' e o novo 'publicado' (legado)
@@ -291,11 +293,9 @@ export default function MidiaSocial() {
       if (etapaDestino?.responsavel_id && etapaDestino.responsavel_id !== 'none') {
         updateData.responsavel_id = etapaDestino.responsavel_id;
       }
-      
-      await Post.update(post.id, updateData);
 
       // Automação: Geração de atividade (Tarefa) para o responsável da etapa
-      if (etapaDestino && etapaDestino.responsavel_id && etapaDestino.responsavel_id !== 'none') {
+      if (etapaDestino?.responsavel_id && etapaDestino.responsavel_id !== 'none') {
         await Tarefa.create({
           titulo: `${etapaDestino.nome}: ${post.titulo}`,
           descricao: `Atividade gerada automaticamente pela esteira de produção.\nPost: ${post.titulo}\nConteúdo: ${post.conteudo || 'Sem conteúdo'}`,
@@ -307,6 +307,17 @@ export default function MidiaSocial() {
         });
       }
 
+      return updateData;
+    } catch (error) {
+      console.error("Erro na automação de status:", error);
+      return { status: newStatus };
+    }
+  };
+
+  const handlePostMove = async (post, newStatus) => {
+    try {
+      const updateData = await processPostAutomation(post, newStatus);
+      await Post.update(post.id, updateData);
       loadData();
     } catch (error) {
       console.error("Erro ao atualizar status do post:", error);
@@ -488,10 +499,22 @@ export default function MidiaSocial() {
         }
 
       } else { // Post único ou edição de post existente
-        const finalData = cleanData(dataToSave);
+        let finalData = cleanData(dataToSave);
+        
+        // Se estivermos editando e o status mudou, ou se for novo e tiver status
         if (postId) {
+          const oldPost = posts.find(p => p.id === postId);
+          if (oldPost && oldPost.status !== finalData.status) {
+            const automationData = await processPostAutomation(oldPost, finalData.status);
+            finalData = { ...finalData, ...automationData };
+          }
           await Post.update(postId, finalData);
         } else {
+          // Para novo post, se tiver status, aplica automação inicial
+          if (finalData.status) {
+             const automationData = await processPostAutomation(finalData, finalData.status);
+             finalData = { ...finalData, ...automationData };
+          }
           await Post.create(finalData);
         }
       }
@@ -707,6 +730,7 @@ export default function MidiaSocial() {
               plataformas={plataformas || []}
               contas={contas || []}
               etapas={etapas}
+              membros={membros || []}
             />
             
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mt-8">
