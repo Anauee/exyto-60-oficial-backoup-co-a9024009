@@ -56,6 +56,7 @@ export default function HomeDaEmpresa() {
   const [plataformas, setPlataformas] = useState([]);
   const [formatos, setFormatos] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [uploading, setUploading] = useState(false);
   const [empresa, setEmpresa] = useState(null);
   const [showSistemaModal, setShowSistemaModal] = useState(false);
   const [selectedSistema, setSelectedSistema] = useState(null);
@@ -75,9 +76,16 @@ export default function HomeDaEmpresa() {
       return;
     }
     const empresaData = JSON.parse(empresaDataString);
-    setEmpresa(empresaData);
-
+    
     try {
+      // Re-fetch actual company data to get latest logo/banner
+      const freshEmpresa = await Empresa.getById(empresaData.id);
+      if (freshEmpresa) {
+        setEmpresa(freshEmpresa);
+      } else {
+        setEmpresa(empresaData);
+      }
+
       // Carregando todos os dados em paralelo
       const [
         sistemasData, 
@@ -122,7 +130,7 @@ export default function HomeDaEmpresa() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [navigate]);
 
   useEffect(() => {
     loadData();
@@ -204,7 +212,7 @@ export default function HomeDaEmpresa() {
         return;
       }
 
-      setIsLoading(true);
+      setUploading(true);
       const fileExt = file.name.split('.').pop();
       const fileName = `${type}_${Date.now()}.${fileExt}`;
       const filePath = `company-assets/${fileName}`;
@@ -243,13 +251,13 @@ export default function HomeDaEmpresa() {
       console.error("Erro no upload:", error);
       toast.error("Erro ao fazer upload da imagem.");
     } finally {
-      setIsLoading(false);
+      setUploading(false);
     }
   };
 
   const handleRemovePhoto = async (type) => {
     try {
-      setIsLoading(true);
+      setUploading(true);
       const field = type === 'logo' ? 'logo_url' : 'banner_url';
       
       // Update in DB
@@ -268,7 +276,7 @@ export default function HomeDaEmpresa() {
       console.error("Erro ao remover foto:", error);
       toast.error("Erro ao remover a imagem.");
     } finally {
-      setIsLoading(false);
+      setUploading(false);
     }
   };
 
@@ -279,11 +287,11 @@ export default function HomeDaEmpresa() {
 
   if (isLoading || !empresa) {
     return (
-      <div className="p-6 md:p-8 animate-pulse bg-background">
+      <div className="p-6 md:p-8 animate-pulse bg-background min-h-screen">
         <div className="max-w-7xl mx-auto">
           <div className="h-10 bg-muted rounded-lg w-64 mb-4"></div>
           <div className="h-5 bg-muted rounded-lg w-96 mb-8"></div>
-          <div className="h-12 bg-muted rounded-xl w-full mb-8"></div>
+          <div className="h-[300px] bg-muted rounded-[2.5rem] w-full mb-8"></div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="h-48 bg-muted rounded-xl"></div>
             <div className="h-48 bg-muted rounded-xl"></div>
@@ -319,12 +327,12 @@ export default function HomeDaEmpresa() {
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent className="w-56 rounded-2xl border-border/40 backdrop-blur-xl">
-                    <DropdownMenuItem className="py-3 rounded-xl cursor-pointer font-bold gap-3 focus:bg-primary/10 focus:text-primary">
-                      <label className="flex items-center gap-3 w-full cursor-pointer">
-                        <Upload className="w-4 h-4" />
-                        <span>Subir Nova Foto</span>
-                        <input type="file" className="hidden" accept="image/*" onChange={(e) => handleFileUpload(e, 'banner')} />
-                      </label>
+                    <DropdownMenuItem 
+                      onSelect={() => document.getElementById('banner-upload').click()}
+                      className="py-3 rounded-xl cursor-pointer font-bold gap-3 focus:bg-primary/10 focus:text-primary"
+                    >
+                      <Upload className="w-4 h-4" />
+                      <span>{uploading ? 'Enviando...' : 'Subir Nova Foto'}</span>
                     </DropdownMenuItem>
                     {empresa.banner_url && (
                       <DropdownMenuItem 
@@ -358,12 +366,12 @@ export default function HomeDaEmpresa() {
                         </button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent className="w-56 rounded-2xl border-border/40 backdrop-blur-xl">
-                        <DropdownMenuItem className="py-3 rounded-xl cursor-pointer font-bold gap-3 focus:bg-primary/10 focus:text-primary">
-                          <label className="flex items-center gap-3 w-full cursor-pointer">
-                            <Upload className="w-4 h-4" />
-                            <span>Subir Logo</span>
-                            <input type="file" className="hidden" accept="image/*" onChange={(e) => handleFileUpload(e, 'logo')} />
-                          </label>
+                        <DropdownMenuItem 
+                          onSelect={() => document.getElementById('logo-upload').click()}
+                          className="py-3 rounded-xl cursor-pointer font-bold gap-3 focus:bg-primary/10 focus:text-primary"
+                        >
+                          <Upload className="w-4 h-4" />
+                          <span>{uploading ? 'Enviando...' : 'Subir Logo'}</span>
                         </DropdownMenuItem>
                         {empresa.logo_url && (
                           <DropdownMenuItem 
@@ -468,6 +476,11 @@ export default function HomeDaEmpresa() {
           </Tabs>
         </div>
       </div>
+      
+      {/* Hidden inputs for uploads */}
+      <input id="logo-upload" type="file" className="hidden" accept="image/*" onChange={(e) => handleFileUpload(e, 'logo')} />
+      <input id="banner-upload" type="file" className="hidden" accept="image/*" onChange={(e) => handleFileUpload(e, 'banner')} />
+
       {showSistemaModal && (
         <SistemaModal
           isOpen={showSistemaModal}
