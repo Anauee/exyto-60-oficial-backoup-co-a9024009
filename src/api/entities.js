@@ -113,22 +113,35 @@ const createEntity = (tableName, options = {}) => {
     delete: async (id, permanent = false) => {
       if (!permanent && !options.skipTrash) {
         try {
-          const { data: current } = await supabase.from(tableName).select('*').eq('id', id).maybeSingle();
+          // 1. Busca os dados atuais antes de deletar
+          const { data: current, error: fetchError } = await supabase.from(tableName).select('*').eq('id', id).maybeSingle();
+          if (fetchError) throw fetchError;
+          
           if (current) {
             const { data: { session } } = await supabase.auth.getSession();
-            await supabase.from('lixeira').insert({
+            
+            // 2. Insere na lixeira
+            const { error: insertError } = await supabase.from('lixeira').insert({
               entity_type: tableName,
               entity_id: id,
               data: current,
               deleted_by: session?.user?.id,
               empresa_id: current.empresa_id,
-              original_name: current.titulo || current.nome || current.full_name || current.email || id
+              original_name: current.titulo || current.nome || current.full_name || current.email || current.razao_social || current.assunto || id
             });
+
+            if (insertError) {
+              console.error("Erro ao inserir na lixeira:", insertError);
+              throw new Error(`Falha ao mover para lixeira: ${insertError.message}`);
+            }
           }
         } catch (e) {
-          console.error("Erro ao enviar para lixeira:", e);
+          console.error("Erro crítico no processo de lixeira:", e);
+          throw e; // Interrompe a exclusão se não conseguir garantir a lixeira
         }
       }
+      
+      // 3. Só deleta do original se o passo da lixeira funcionou (ou foi pulado)
       const { error } = await supabase.from(tableName).delete().eq('id', id);
       if (error) throw error;
     },
