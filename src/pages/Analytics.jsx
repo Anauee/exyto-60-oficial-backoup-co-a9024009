@@ -250,7 +250,22 @@ function ConnectCard({ platform, onConnect }) {
 
 // ─── Main Analytics Page ───────────────────────────────────────────────────────
 export default function Analytics() {
-  const { currentCompany } = useAuth();
+  const { currentCompany, hasPermission } = useAuth();
+  
+  const canView = hasPermission('analytics:view');
+  
+  if (!canView) {
+    return (
+      <div className="flex h-[calc(100vh-65px)] items-center justify-center bg-background">
+        <div className="text-center space-y-4">
+          <TrendingUp className="w-16 h-16 text-muted-foreground/20 mx-auto" />
+          <h2 className="text-xl font-bold text-foreground">Acesso Restrito</h2>
+          <p className="text-muted-foreground max-w-sm">Você não tem permissão para visualizar os Analytics da empresa.</p>
+        </div>
+      </div>
+    );
+  }
+
   const [activeTab, setActiveTab] = useState('metaads');
   const [tokens, setTokens] = useState({});
   const [loading, setLoading] = useState(true);

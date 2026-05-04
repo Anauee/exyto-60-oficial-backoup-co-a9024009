@@ -25,6 +25,9 @@ import FluxoCaixaTab from "../components/financeiro/FluxoCaixaTab";
 import FaturaViewModal from "../components/financeiro/FaturaViewModal";
 import DespesaViewModal from "../components/financeiro/DespesaViewModal";
 import SimpleDateRangePicker from "../components/shared/SimpleDateRangePicker";
+import { useNavigate } from "react-router-dom";
+import AcessoNegado from "@/components/shared/AcessoNegado";
+import { toast } from "react-hot-toast";
 import { createPageUrl } from "@/utils";
 
 // Helper for eachMonthOfInterval, as it's not a standard date-fns export but needed for recurring dates
@@ -91,7 +94,13 @@ const formatDateSafely = (dateString, formatString, options = {}) => {
 };
 
 export default function Financeiro() {
+  const navigate = useNavigate();
   const { hasPermission } = useAuth();
+  
+  const canView = hasPermission('financeiro:view');
+  const canCreate = hasPermission('financeiro:create');
+  const canEdit = hasPermission('financeiro:edit');
+  const canDelete = hasPermission('financeiro:delete');
   const [faturas, setFaturas] = useState([]);
   const [despesas, setDespesas] = useState([]);
   const [produtos, setProdutos] = useState([]);
@@ -192,6 +201,10 @@ export default function Financeiro() {
   }, [empresaId, loadFinancialData]);
 
   const handleMarkAsPaid = async (type, id, statusAtual) => {
+    if (!canEdit) {
+      toast.error("Você não tem permissão para alterar status financeiro.");
+      return;
+    }
     // Para evitar múltiplos cliques
     if (statusAtual === 'paga') return;
 
@@ -570,6 +583,10 @@ export default function Financeiro() {
     return result;
   }, [despesas, date, despesasSort]);
 
+  if (!canView && !isLoading) {
+    return <AcessoNegado />;
+  }
+
   if (isLoading) {
     return (
       <div className="p-6 md:p-8 bg-background animate-pulse">
@@ -619,7 +636,7 @@ export default function Financeiro() {
             <SimpleDateRangePicker date={date} setDate={setDate} />
 
             <div className="flex gap-2 w-full sm:w-auto">
-                {hasPermission('financeiro:create') && (
+                {canCreate && (
                   <>
                     <Button
                     className="flex-1 sm:flex-none bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-500/20"
@@ -855,7 +872,7 @@ export default function Financeiro() {
                         <TableCell>{formatDateSafely(fatura.data_vencimento, "dd 'de' MMM 'de' yyyy")}</TableCell>
                         <TableCell>{getStatusBadge(fatura)}</TableCell>
                         <TableCell className="text-right">
-                          {fatura.status === 'pendente' && (
+                          {fatura.status === 'pendente' && canEdit && (
                             <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); handleMarkAsPaid('fatura', fatura.id, fatura.status); }}>Marcar como Paga</Button>
                           )}
                         </TableCell>
@@ -939,7 +956,7 @@ export default function Financeiro() {
                       <TableCell>{formatDateSafely(despesa.data_vencimento, "dd/MM/yyyy")}</TableCell>
                       <TableCell>{getStatusBadge(despesa)}</TableCell>
                       <TableCell className="text-right">
-                        {despesa.status === 'pendente' && (
+                        {despesa.status === 'pendente' && canEdit && (
                           <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); handleMarkAsPaid('despesa', despesa.id, despesa.status); }}>Marcar como Paga</Button>
                         )}
                       </TableCell>
@@ -969,9 +986,9 @@ export default function Financeiro() {
           setSelectedFatura(null);
         }}
         fatura={selectedFatura}
-        onSave={handleSaveFatura}
-        onMarkAsPaid={handleMarkAsPaid}
-        onDelete={handleDeleteFatura}
+        onSave={canEdit ? handleSaveFatura : null}
+        onMarkAsPaid={canEdit ? handleMarkAsPaid : null}
+        onDelete={canDelete ? handleDeleteFatura : null}
         empresaId={empresaId}
         produtos={produtos}
         funisDeVendas={funisDeVendas}
@@ -985,9 +1002,9 @@ export default function Financeiro() {
           setSelectedDespesa(null);
         }}
         despesa={selectedDespesa}
-        onSave={handleSaveDespesa}
-        onMarkAsPaid={handleMarkAsPaid}
-        onDelete={handleDeleteDespesa}
+        onSave={canEdit ? handleSaveDespesa : null}
+        onMarkAsPaid={canEdit ? handleMarkAsPaid : null}
+        onDelete={canDelete ? handleDeleteDespesa : null}
         empresaId={empresaId}
       />
     </div>

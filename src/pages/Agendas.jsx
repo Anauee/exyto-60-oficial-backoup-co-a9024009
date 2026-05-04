@@ -58,7 +58,20 @@ function generateRecurringDates(startDate, frequencia, endDate, diasDaSemana = [
   return allDates;
 }
 
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import AcessoNegado from "@/components/shared/AcessoNegado";
+import { toast } from "react-hot-toast";
+
 export default function Agendas() {
+  const navigate = useNavigate();
+  const { hasPermission } = useAuth();
+  
+  const canView = hasPermission('agendas-e-atividades:view');
+  const canCreate = hasPermission('agendas-e-atividades:create');
+  const canEdit = hasPermission('agendas-e-atividades:edit');
+  const canDelete = hasPermission('agendas-e-atividades:delete');
+
   const [tarefas, setTarefas] = useState([]);
   const [compromissos, setCompromissos] = useState([]);
   const [projetos, setProjetos] = useState([]);
@@ -244,6 +257,10 @@ export default function Agendas() {
   }, [applyFilters]);
 
   const handleTaskMove = async (task, newStatus) => {
+    if (!canEdit) {
+      toast.error("Você não tem permissão para editar tarefas.");
+      return;
+    }
     try {
       // Optimistic update
       setTarefas(prev => prev.map(t => t.id === task.id ? { ...t, status: newStatus } : t));
@@ -438,6 +455,10 @@ export default function Agendas() {
   };
 
 
+  if (!canView && !isLoading) {
+    return <AcessoNegado />;
+  }
+
   if (isLoading || empresaId === null) {
     return (
       <div className="p-6 md:p-8 bg-background animate-pulse">
@@ -468,21 +489,25 @@ export default function Agendas() {
           </div>
           
           <div className="flex flex-wrap gap-3 w-full sm:w-auto">
-            <Button 
-              variant="outline" 
-              onClick={handleNewAppointment}
-              className="flex-1 sm:flex-none h-12 rounded-2xl border-border bg-card hover:bg-muted text-foreground transition-all duration-300"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Compromisso
-            </Button>
-            <Button 
-              className="flex-1 sm:flex-none h-12 rounded-2xl bg-orange-600 hover:bg-orange-700 text-white shadow-lg shadow-orange-500/20 font-bold transition-all duration-300"
-              onClick={handleNewTask}
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Tarefa
-            </Button>
+            {canCreate && (
+              <>
+                <Button 
+                  variant="outline" 
+                  onClick={handleNewAppointment}
+                  className="flex-1 sm:flex-none h-12 rounded-2xl border-border bg-card hover:bg-muted text-foreground transition-all duration-300"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Compromisso
+                </Button>
+                <Button 
+                  className="flex-1 sm:flex-none h-12 rounded-2xl bg-orange-600 hover:bg-orange-700 text-white shadow-lg shadow-orange-500/20 font-bold transition-all duration-300"
+                  onClick={handleNewTask}
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Tarefa
+                </Button>
+              </>
+            )}
           </div>
         </div>
         
@@ -645,9 +670,9 @@ export default function Agendas() {
               setSelectedTask(null); // Clear selected task when closing
             }}
             task={selectedTask}
-            onSave={handleSaveTask}
-            onEdit={handleEditTask}
-            onDelete={() => {
+            onSave={canEdit ? handleSaveTask : null}
+            onEdit={canEdit ? handleEditTask : null}
+            onDelete={canDelete ? () => {
               // Lógica para abrir o modal de confirmação
               if (selectedTask.id_da_origem) {
                 setTaskToDelete(selectedTask); // Guarda a tarefa a ser deletada
@@ -655,7 +680,7 @@ export default function Agendas() {
               } else {
                 handleDeleteTask(selectedTask.id, 'single');
               }
-            }}
+            } : null}
             projetos={projetos}
             empresaId={empresaId}
             membros={membros}
@@ -671,9 +696,9 @@ export default function Agendas() {
               setSelectedAppointment(null);
             }}
             compromisso={selectedAppointment}
-            onSave={handleSaveAppointment}
-            onEdit={handleEditAppointmentFromView}
-            onDelete={() => handleDeleteAppointmentFromView(selectedAppointment.id)}
+            onSave={canEdit ? handleSaveAppointment : null}
+            onEdit={canEdit ? handleEditAppointmentFromView : null}
+            onDelete={canDelete ? () => handleDeleteAppointmentFromView(selectedAppointment.id) : null}
             empresaId={empresaId}
             membros={membros}
           />

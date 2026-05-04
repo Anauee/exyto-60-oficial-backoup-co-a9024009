@@ -16,11 +16,11 @@ import QuickActions from "@/components/shared/QuickActions";
 import { useAuth } from "@/contexts/AuthContext";
 import AcessoNegado from "@/components/shared/AcessoNegado";
 
-export default function Dashboard({ session, user }) {
-  const { userPermissions, userRole } = useAuth();
+export default function Dashboard() {
+  const { hasPermission } = useAuth();
   
-  // Dashboard requires 'dashboard' permission
-  const hasAccess = userRole === 'admin' || (userPermissions || []).includes('dashboard');
+  // Dashboard requires 'dashboard:view' permission
+  const hasAccess = hasPermission('dashboard:view');
 
   // Função para realizar o logout
   const handleLogout = async () => {

@@ -1,30 +1,3 @@
-
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
-import { User, Settings, Save } from "lucide-react";
-import { User as UserEntity, Empresa, UsuarioEmpresa } from "@/api/entities";
-import { DEFAULT_PERMISSIONS } from "@/contexts/AuthContext";
-import InviteUserAdminModal from './InviteUserAdminModal';
-
-const permissoesDisponiveis = [
-  { id: 'home-da-empresa', label: 'Home da Empresa' },
-  { id: 'dashboard', label: 'Dashboard' },
-  { id: 'midia-social', label: 'Mídia Social' },
-  { id: 'financeiro', label: 'Financeiro' },
-  { id: 'agendas-e-atividades', label: 'Agendas e Atividades' },
-  { id: 'clientes-e-produtos', label: 'Clientes e Produtos' },
-  { id: 'gestao-equipe', label: 'Gestão de Equipe' },
-  { id: 'gestao-pastas', label: 'Gestão de Pastas' },
-  { id: 'documentos-e-anotacoes', label: 'Documentos e Anotações' }
-];
-
 import React, { useState, useMemo } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -44,6 +17,18 @@ import {
   UserPlus
 } from "lucide-react";
 import InviteUserAdminModal from './InviteUserAdminModal';
+
+const permissoesDisponiveis = [
+  { id: 'home-da-empresa', label: 'Home da Empresa' },
+  { id: 'dashboard', label: 'Dashboard' },
+  { id: 'midia-social', label: 'Mídia Social' },
+  { id: 'financeiro', label: 'Financeiro' },
+  { id: 'agendas-e-atividades', label: 'Agendas e Atividades' },
+  { id: 'clientes-e-produtos', label: 'Clientes e Produtos' },
+  { id: 'gestao-equipe', label: 'Gestão de Equipe' },
+  { id: 'gestao-pastas', label: 'Gestão de Pastas' },
+  { id: 'documentos-e-anotacoes', label: 'Documentos e Anotações' }
+];
 
 export default function UsuariosTab({ users, isLoading, onManagePermissions, onUpdate }) {
   const [searchTerm, setSearchTerm] = useState("");

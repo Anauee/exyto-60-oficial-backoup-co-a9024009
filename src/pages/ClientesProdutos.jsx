@@ -14,7 +14,19 @@ import ListaClientes from "../components/crm/ListaClientes";
 import FunilVendasTab from "../components/crm/FunilVendasTab";
 import { createPageUrl } from "@/utils";
 
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import AcessoNegado from "@/components/shared/AcessoNegado";
+import { toast } from "react-hot-toast";
+
 export default function ClientesProdutos() {
+  const navigate = useNavigate();
+  const { hasPermission } = useAuth();
+  
+  const canView = hasPermission('clientes-e-produtos:view');
+  const canCreate = hasPermission('clientes-e-produtos:create');
+  const canEdit = hasPermission('clientes-e-produtos:edit');
+  const canDelete = hasPermission('clientes-e-produtos:delete');
   const [clientes, setClientes] = useState([]);
   const [produtos, setProdutos] = useState([]);
   const [responsaveis, setResponsaveis] = useState([]);
@@ -88,6 +100,10 @@ export default function ClientesProdutos() {
   }, [empresaId, loadData]);
 
   const handleClienteMove = async (cliente, newStatus) => {
+    if (!canEdit) {
+      toast.error("Você não tem permissão para mover clientes.");
+      return;
+    }
     try {
       // Optimistic update
       setClientes(prev => prev.map(c => c.id === cliente.id ? { ...c, status_funil: newStatus } : c));
@@ -181,6 +197,10 @@ export default function ClientesProdutos() {
     }
   };
 
+  if (!canView && !isLoading) {
+    return <AcessoNegado />;
+  }
+
   if (isLoading || !empresaId) { 
     return (
       <div className="p-6 md:p-8">
@@ -245,16 +265,18 @@ export default function ClientesProdutos() {
 
           <TabsContent value="crm" className="space-y-6">
             <div className="flex justify-end mb-6">
-              <Button 
-                className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-xl shadow-primary/20 h-14 px-8 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all duration-300 active:scale-95"
-                onClick={() => {
-                  setSelectedCliente(null);
-                  setShowClienteModal(true);
-                }}
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Novo Cliente
-              </Button>
+              {canCreate && (
+                <Button 
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-xl shadow-primary/20 h-14 px-8 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all duration-300 active:scale-95"
+                  onClick={() => {
+                    setSelectedCliente(null);
+                    setShowClienteModal(true);
+                  }}
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Novo Cliente
+                </Button>
+              )}
             </div>
             <FunilVendas 
               clientes={clientes}
@@ -278,16 +300,18 @@ export default function ClientesProdutos() {
           {/* Lista de Clientes Tab Content */}
           <TabsContent value="clientes" className="space-y-6">
             <div className="flex justify-end mb-4">
-              <Button 
-                className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-xl shadow-primary/20 h-12 rounded-2xl font-bold transition-all duration-300"
-                onClick={() => {
-                  setSelectedCliente(null);
-                  setShowClienteModal(true);
-                }}
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Novo Cliente
-              </Button>
+              {canCreate && (
+                <Button 
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-xl shadow-primary/20 h-12 rounded-2xl font-bold transition-all duration-300"
+                  onClick={() => {
+                    setSelectedCliente(null);
+                    setShowClienteModal(true);
+                  }}
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Novo Cliente
+                </Button>
+              )}
             </div>
             <ListaClientes
               clientes={clientes}
@@ -299,16 +323,18 @@ export default function ClientesProdutos() {
           <TabsContent value="produtos" className="space-y-6">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-bold text-foreground">Catálogo de Produtos</h2>
-              <Button 
-                className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-xl shadow-primary/20 h-12 rounded-2xl font-bold transition-all duration-300"
-                onClick={() => {
-                  setEditingProduto(null);
-                  setShowProdutoModal(true);
-                }}
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Novo Produto
-              </Button>
+              {canCreate && (
+                <Button 
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-xl shadow-primary/20 h-12 rounded-2xl font-bold transition-all duration-300"
+                  onClick={() => {
+                    setEditingProduto(null);
+                    setShowProdutoModal(true);
+                  }}
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Novo Produto
+                </Button>
+              )}
             </div>
             <CatalogoProdutos 
               produtos={produtos} 
@@ -372,8 +398,8 @@ export default function ClientesProdutos() {
           produtos={produtos}
           funisDeVendas={funisDeVendas}
           onUpdate={() => loadData(true)}
-          onEdit={handleEditCliente}
-          onDelete={handleDeleteCliente}
+          onEdit={canEdit ? handleEditCliente : null}
+          onDelete={canDelete ? handleDeleteCliente : null}
           responsaveis={responsaveis}
           membros={membros}
         />

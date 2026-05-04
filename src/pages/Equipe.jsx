@@ -25,7 +25,12 @@ export default function Equipe() {
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("membros");
   const [empresaId, setEmpresaId] = useState(null);
-  const { userPermissions, userRole } = useAuth();
+  const { hasPermission, userRole } = useAuth();
+
+  const canView = hasPermission('gestao-equipe:view');
+  const canCreate = hasPermission('gestao-equipe:create');
+  const canEdit = hasPermission('gestao-equipe:edit');
+  const canDelete = hasPermission('gestao-equipe:delete');
 
   const loadData = useCallback(async (silent = false) => {
     if (!empresaId) return;
@@ -254,6 +259,18 @@ export default function Equipe() {
   };
 
 
+  if (!canView && !isLoading) {
+    return (
+      <div className="flex h-[calc(100vh-65px)] items-center justify-center bg-background">
+        <div className="text-center space-y-4">
+          <ShieldCheck className="w-16 h-16 text-muted-foreground/20 mx-auto" />
+          <h2 className="text-xl font-bold text-foreground">Acesso Restrito</h2>
+          <p className="text-muted-foreground max-w-sm">Você não tem permissão para gerenciar a equipe desta empresa.</p>
+        </div>
+      </div>
+    );
+  }
+
   if (isLoading || empresaId === null) {
     return (
       <div className="p-6 md:p-8 bg-background animate-pulse">
@@ -336,8 +353,8 @@ export default function Equipe() {
               setores={setores}
               funcoes={funcoes}
               responsaveis={responsaveis}
-              onSave={handleSaveMembro}
-              onDelete={handleDeleteMembro}
+              onSave={canEdit ? handleSaveMembro : null}
+              onDelete={canDelete ? handleDeleteMembro : null}
               empresaId={empresaId}
             />
           </TabsContent>
@@ -348,8 +365,8 @@ export default function Equipe() {
               setores={setores}
               funcoes={funcoes}
               membros={membros}
-              onSave={handleSaveCargo}
-              onDelete={handleDeleteCargo}
+              onSave={canEdit ? handleSaveCargo : null}
+              onDelete={canDelete ? handleDeleteCargo : null}
               empresaId={empresaId}
             />
           </TabsContent>
@@ -360,8 +377,8 @@ export default function Equipe() {
               setores={setores}
               atividadesSalvas={atividadesSalvas}
               cargos={cargos}
-              onSave={handleSaveFuncao}
-              onDelete={handleDeleteFuncao}
+              onSave={canEdit ? handleSaveFuncao : null}
+              onDelete={canDelete ? handleDeleteFuncao : null}
               empresaId={empresaId}
             />
           </TabsContent>
@@ -372,8 +389,8 @@ export default function Equipe() {
               membros={membros}
               cargos={cargos}
               funcoes={funcoes}
-              onSave={handleSaveSetor}
-              onDelete={handleDeleteSetor}
+              onSave={canEdit ? handleSaveSetor : null}
+              onDelete={canDelete ? handleDeleteSetor : null}
               empresaId={empresaId}
             />
           </TabsContent>
@@ -381,8 +398,8 @@ export default function Equipe() {
           <TabsContent value="atividades" className="space-y-6">
             <AtividadesSalvasTab
               atividadesSalvas={atividadesSalvas}
-              onSave={handleSaveAtividadeSalva}
-              onDelete={handleDeleteAtividadeSalva}
+              onSave={canEdit ? handleSaveAtividadeSalva : null}
+              onDelete={canDelete ? handleDeleteAtividadeSalva : null}
               empresaId={empresaId}
               membros={membros}
             />

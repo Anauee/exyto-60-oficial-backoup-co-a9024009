@@ -18,7 +18,8 @@ import PostViewModal from '../components/midia/PostViewModal';
 
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from "@/components/ui/use-toast";
-import { Loader2, ArrowLeft } from "lucide-react";
+import { Loader2, ArrowLeft, ShieldAlert } from "lucide-react";
+import AcessoNegado from '@/components/shared/AcessoNegado';
 
 // Helper para obter o ícone e a cor do tipo de documento
 const getFileIcon = (tipo) => {
@@ -32,7 +33,12 @@ const getFileIcon = (tipo) => {
 
 export default function Pastas() {
   const navigate = useNavigate();
-    const { user: authUser, currentCompany } = useAuth();
+    const { user: authUser, currentCompany, hasPermission } = useAuth();
+    
+    const canView = hasPermission('gestao-pastas:view');
+    const canCreate = hasPermission('gestao-pastas:create');
+    const canEdit = hasPermission('gestao-pastas:edit');
+    const canDelete = hasPermission('gestao-pastas:delete');
     const { toast } = useToast();
     const location = useLocation();
     
@@ -379,6 +385,10 @@ export default function Pastas() {
         setShowPostViewModal(true);
     };
 
+    if (!canView && !isLoading) {
+        return <AcessoNegado />;
+    }
+
     if (isLoading) {
         return (
             <div className="p-6 md:p-8 bg-background animate-pulse space-y-8">
@@ -422,7 +432,7 @@ export default function Pastas() {
                         {!isRootFolder && (
                             <>
                                 <Button 
-                                    onClick={() => setShowPostModal(true)} 
+                                    onClick={() => canCreate ? setShowPostModal(true) : toast({ title: "Acesso Negado", description: "Você não tem permissão para criar posts.", variant: "destructive" })} 
                                     variant="outline" 
                                     className="flex-1 sm:flex-none h-11 rounded-xl border-border bg-card hover:bg-muted text-muted-foreground hover:text-foreground transition-all"
                                 >
@@ -430,7 +440,7 @@ export default function Pastas() {
                                     <span className="font-bold">Novo Post</span>
                                 </Button>
                                 <Button 
-                                    onClick={() => setShowDocumentoModal(true)} 
+                                    onClick={() => canCreate ? setShowDocumentoModal(true) : toast({ title: "Acesso Negado", description: "Você não tem permissão para criar documentos.", variant: "destructive" })} 
                                     variant="outline" 
                                     className="flex-1 sm:flex-none h-11 rounded-xl border-border bg-card hover:bg-muted text-muted-foreground hover:text-foreground transition-all"
                                 >
@@ -440,7 +450,7 @@ export default function Pastas() {
                             </>
                         )}
                         <Button 
-                            onClick={() => setShowPastaModal(true)} 
+                            onClick={() => canCreate ? setShowPastaModal(true) : toast({ title: "Acesso Negado", description: "Você não tem permissão para criar pastas.", variant: "destructive" })} 
                             className="flex-1 sm:flex-none h-11 rounded-xl bg-amber-500 hover:bg-amber-600 text-white shadow-lg shadow-amber-500/20 font-bold transition-all"
                         >
                             <Plus className="w-4 h-4 mr-2" />
@@ -547,7 +557,7 @@ export default function Pastas() {
                 <PastaModal 
                     isOpen={showPastaModal}
                     onClose={() => {setShowPastaModal(false); setEditingPasta(null);}}
-                    onSave={handleSavePasta}
+                    onSave={canEdit ? handleSavePasta : null}
                     pasta={editingPasta}
                     prefilledData={{ parent_folders_ids: currentFolderId !== '__ROOT_FOLDER__' ? [currentFolderId] : ['__ROOT_FOLDER__'] }}
                     allMembers={allMembers}
@@ -580,8 +590,8 @@ export default function Pastas() {
                         isOpen={showDocumentoViewModal}
                         onClose={() => {setShowDocumentoViewModal(false); setSelectedDocumento(null);}}
                         documento={selectedDocumento}
-                        onSave={handleSaveDocumento}
-                        onDelete={handleDeleteDocumento}
+                        onSave={canEdit ? handleSaveDocumento : null}
+                        onDelete={canDelete ? handleDeleteDocumento : null}
                     />
                 )}
 
@@ -590,8 +600,8 @@ export default function Pastas() {
                         isOpen={showPostViewModal}
                         onClose={() => {setShowPostViewModal(false); setSelectedPost(null);}}
                         post={selectedPost}
-                        onSave={handleSavePost}
-                        onDelete={handleDeletePost}
+                        onSave={canEdit ? handleSavePost : null}
+                        onDelete={canDelete ? handleDeletePost : null}
                         empresaId={empresaId}
                         contas={contas}
                         formatos={formatos}

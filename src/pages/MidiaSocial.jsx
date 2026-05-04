@@ -32,10 +32,12 @@ const generateUniqueId = () => {
 
 export default function MidiaSocial() {
   const navigate = useNavigate();
-  const { userPermissions, userRole } = useAuth();
+  const { hasPermission } = useAuth();
   
-  // MidiaSocial requires 'midia-social' permission
-  const hasAccess = userRole === 'admin' || (userPermissions || []).includes('midia-social');
+  const canView = hasPermission('midia-social:view');
+  const canCreate = hasPermission('midia-social:create');
+  const canEdit = hasPermission('midia-social:edit');
+  const canDelete = hasPermission('midia-social:delete');
 
   const [posts, setPosts] = useState([]);
   const [contas, setContas] = useState([]);
@@ -315,6 +317,10 @@ export default function MidiaSocial() {
   };
 
   const handlePostMove = async (post, newStatus) => {
+    if (!canEdit) {
+      toast.error("Você não tem permissão para mover posts.");
+      return;
+    }
     try {
       // Optimistic update
       setPosts(prev => prev.map(p => p.id === post.id ? { ...p, status: newStatus } : p));
@@ -548,7 +554,7 @@ export default function MidiaSocial() {
     }
   };
   
-  if (!hasAccess && !isLoading) {
+  if (!canView && !isLoading) {
     return <AcessoNegado />;
   }
 
@@ -581,13 +587,15 @@ export default function MidiaSocial() {
             </div>
           </div>
           
-          <Button 
-            className="bg-purple-600 hover:bg-purple-700 text-white shadow-lg shadow-purple-500/20 h-12 rounded-2xl px-6 font-bold transition-all duration-300"
-            onClick={handleNewPost}
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Novo Post
-          </Button>
+          {canCreate && (
+            <Button 
+              className="bg-purple-600 hover:bg-purple-700 text-white shadow-lg shadow-purple-500/20 h-12 rounded-2xl px-6 font-bold transition-all duration-300"
+              onClick={handleNewPost}
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Novo Post
+            </Button>
+          )}
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">

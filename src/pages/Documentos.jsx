@@ -74,7 +74,19 @@ const getEntityDisplayName = (entidade) => {
   return entityNames[entidade] || entidade;
 };
 
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import AcessoNegado from "@/components/shared/AcessoNegado";
+import { toast } from "react-hot-toast";
+
 export default function Documentos() {
+  const navigate = useNavigate();
+  const { hasPermission } = useAuth();
+  
+  const canView = hasPermission('documentos-e-anotacoes:view');
+  const canCreate = hasPermission('documentos-e-anotacoes:create');
+  const canEdit = hasPermission('documentos-e-anotacoes:edit');
+  const canDelete = hasPermission('documentos-e-anotacoes:delete');
   const [documentos, setDocumentos] = useState([]);
   const [filteredDocumentos, setFilteredDocumentos] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -223,6 +235,10 @@ export default function Documentos() {
   // Obter entidades únicas para o filtro
   const uniqueEntities = [...new Set((documentos || []).map(doc => doc.entidade_vinculada).filter(Boolean))].sort();
 
+  if (!canView && !isLoading) {
+    return <AcessoNegado />;
+  }
+
   if (isLoading) {
     return (
       <div className="p-6 md:p-8 animate-pulse bg-background/50">
@@ -248,13 +264,15 @@ export default function Documentos() {
             </div>
           </div>
 
-          <Button
-            className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20 h-12 rounded-2xl font-bold transition-all duration-300 px-6"
-            onClick={() => setShowModal(true)}
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Adicionar Documento
-          </Button>
+          {canCreate && (
+            <Button
+              className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20 h-12 rounded-2xl font-bold transition-all duration-300 px-6"
+              onClick={() => setShowModal(true)}
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Adicionar Documento
+            </Button>
+          )}
         </div>
 
         {/* Filtros e Busca - Integrated Bar Pattern */}
@@ -473,8 +491,8 @@ export default function Documentos() {
             setSelectedDocumento(null);
           }}
           documento={selectedDocumento}
-          onSave={handleSaveDocumento}
-          onDelete={handleDeleteDocumento}
+          onSave={canEdit ? handleSaveDocumento : null}
+          onDelete={canDelete ? handleDeleteDocumento : null}
         />
       </div>
     </div>

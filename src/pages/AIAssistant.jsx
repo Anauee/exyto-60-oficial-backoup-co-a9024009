@@ -31,7 +31,22 @@ export default function AIAssistant() {
   const [conversaAtiva, setConversaAtiva] = useState(null);
   const [userData, setUserData] = useState(null);
   const scrollRef = useRef(null);
-  const { currentCompany } = useAuth();
+  const { currentCompany, hasPermission } = useAuth();
+
+  const canView = hasPermission('ia-assistente:view');
+  const canEdit = hasPermission('ia-assistente:edit');
+
+  if (!canView && !isLoading) {
+    return (
+      <div className="flex h-[calc(100vh-65px)] items-center justify-center bg-background">
+        <div className="text-center space-y-4">
+          <Bot className="w-16 h-16 text-muted-foreground/20 mx-auto" />
+          <h2 className="text-xl font-bold text-foreground">Acesso Restrito</h2>
+          <p className="text-muted-foreground max-w-sm">Você não tem permissão para acessar o Centro de Comando IA.</p>
+        </div>
+      </div>
+    );
+  }
 
   // Carregar dados do usuário e histórico inicial
   useEffect(() => {
@@ -102,6 +117,11 @@ export default function AIAssistant() {
 
   const sendMessage = async () => {
     if (!input.trim() || isLoading) return;
+    
+    if (!canEdit) {
+      toast.error("Você não tem permissão para interagir com a IA.");
+      return;
+    }
 
     const userMessageContent = input;
     const userMessage = { role: 'user', content: userMessageContent };
