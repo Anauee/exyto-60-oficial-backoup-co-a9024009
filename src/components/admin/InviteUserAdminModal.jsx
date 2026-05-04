@@ -25,8 +25,13 @@ export default function InviteUserAdminModal({ isOpen, onClose, empresas, onInvi
 
     setLoading(true);
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+
       const { data, error } = await supabase.functions.invoke('invite-user-direct', {
-        body: { email, fullName, companyId, role }
+        body: { email, fullName, companyId, role },
+        headers: {
+          Authorization: `Bearer ${session?.access_token}`
+        }
       });
 
       if (error) throw error;

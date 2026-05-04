@@ -26,8 +26,13 @@ export default function InviteMembroModal({ isOpen, onClose, empresaId }) {
 
     setLoading(true);
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
       const { data, error } = await supabase.functions.invoke('invite-user-direct', {
-        body: { email, fullName, companyId: empresaId, role }
+        body: { email, fullName, companyId: empresaId, role },
+        headers: {
+          Authorization: `Bearer ${session?.access_token}`
+        }
       });
 
       if (error) throw error;
