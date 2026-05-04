@@ -197,9 +197,9 @@ export default function PostModal({
   // CORREÇÃO: O useEffect que limpava o campo de formato de forma agressiva foi removido.
   // A lógica de consistência agora é tratada pelo `formatosDisponiveis` e pelo `onValueChange` do Select de Conta Social.
   
-  const handleInputChange = useCallback((field, value) => {
+  const handleInputChange = (field, value) => {
     setPost(prev => ({ ...prev, [field]: value }));
-  }, []);
+  };
 
   const handleAddCategoria = () => {
     if (newCategoria.trim() && !post.categoria.includes(newCategoria.trim())) {
@@ -385,12 +385,14 @@ export default function PostModal({
             </div>
           )}
           
-          <div>
+          <div className="space-y-2">
             <Label htmlFor="conteudo">Conteúdo</Label>
             <Textarea 
               id="conteudo" 
               value={post.conteudo} 
               onChange={(e) => handleInputChange('conteudo', e.target.value)} 
+              placeholder="Digite o conteúdo do seu post aqui..."
+              className="min-h-[120px] bg-background border-border"
             />
           </div>
           
