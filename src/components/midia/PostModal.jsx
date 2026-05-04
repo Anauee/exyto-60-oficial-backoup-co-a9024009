@@ -133,66 +133,59 @@ export default function PostModal({
     }
   }, [isOpen, empresaId]);
 
+  // Sincroniza o estado apenas quando o modal abre ou o post inicial muda
   useEffect(() => {
-    if (!isOpen) return;
+    if (isOpen) {
+      if (isEditing && initialPost) {
+        setPost({
+          titulo: initialPost.titulo || '',
+          conteudo: initialPost.conteudo || '',
+          status: initialPost.status || 'ideia',
+          formato_id: initialPost.formato_id || '',
+          responsavel_id: initialPost.responsavel_id || '',
+          data_agendamento: initialPost.data_agendamento || '',
+          imagens: initialPost.imagens || [],
+          conta_social_id: initialPost.conta_social_id || '',
+          linha_editorial_id: initialPost.linha_editorial_id || fichaEditorialId || '',
+          dia_da_semana: initialPost.dia_da_semana !== undefined ? initialPost.dia_da_semana : (selectedDay !== null ? selectedDay : null),
+          is_template: initialPost.is_template !== undefined ? initialPost.is_template : isTemplate,
+          frequencia_repeticao: initialPost.frequencia_repeticao || 'nao_repetir',
+          dias_da_semana: initialPost.dias_da_semana || [],
+          repetir_ate: initialPost.repetir_ate || '',
+          id_da_origem: initialPost.id_da_origem || null,
+          links: initialPost.links || [],
+          pastas_ids: initialPost.pastas_ids || [],
+          categoria: initialPost.categoria || []
+        });
 
-    if (isEditing && initialPost) {
-      setPost({
-        titulo: initialPost.titulo || '',
-        conteudo: initialPost.conteudo || '',
-        status: initialPost.status || 'ideia',
-        formato_id: initialPost.formato_id || '',
-        responsavel_id: initialPost.responsavel_id || '',
-        data_agendamento: initialPost.data_agendamento || '',
-        imagens: initialPost.imagens || [],
-        conta_social_id: initialPost.conta_social_id || '',
-        linha_editorial_id: initialPost.linha_editorial_id || fichaEditorialId || '',
-        dia_da_semana: initialPost.dia_da_semana !== undefined ? initialPost.dia_da_semana : (selectedDay !== null ? selectedDay : null),
-        is_template: initialPost.is_template !== undefined ? initialPost.is_template : isTemplate,
-        frequencia_repeticao: initialPost.frequencia_repeticao || 'nao_repetir',
-        dias_da_semana: initialPost.dias_da_semana || [],
-        repetir_ate: initialPost.repetir_ate || '',
-        id_da_origem: initialPost.id_da_origem || null,
-        links: initialPost.links || [],
-        pastas_ids: initialPost.pastas_ids || [],
-        categoria: initialPost.categoria || []
-      });
-
-      if (initialPost.data_agendamento) {
-        const date = parseISO(initialPost.data_agendamento);
-        setSelectedDate(date);
-        setSelectedTime(format(date, 'HH:mm'));
+        if (initialPost.data_agendamento) {
+          const date = parseISO(initialPost.data_agendamento);
+          setSelectedDate(date);
+          setSelectedTime(format(date, 'HH:mm'));
+        } else {
+          setSelectedDate(null);
+          setSelectedTime('12:00');
+        }
+        setRepeatUntilDate(initialPost.repetir_ate ? parseISO(initialPost.repetir_ate) : null);
       } else {
-        setSelectedDate(null);
-        setSelectedTime('12:00');
+        // Inicialização para novo post - só deve rodar uma vez ao abrir
+        setPost(prev => ({
+          ...prev,
+          titulo: prev.titulo || '', // Mantém se já houver algo (segurança)
+          status: (etapas && etapas.length > 0) ? etapas[0].id : 'ideia',
+          data_agendamento: initialDate || '',
+          linha_editorial_id: fichaEditorialId || '',
+          dia_da_semana: selectedDay !== null ? selectedDay : null,
+          is_template: isTemplate,
+        }));
+        
+        if (!selectedDate) {
+          setSelectedDate(initialDate ? parseISO(initialDate) : null);
+          setSelectedTime('12:00');
+        }
       }
-      setRepeatUntilDate(initialPost.repetir_ate ? parseISO(initialPost.repetir_ate) : null);
-    } else {
-      setPost({
-        titulo: '',
-        conteudo: '',
-        status: (etapas && etapas.length > 0) ? etapas[0].id : 'ideia',
-        formato_id: '',
-        responsavel_id: '',
-        data_agendamento: initialDate || '',
-        imagens: [],
-        conta_social_id: '',
-        linha_editorial_id: fichaEditorialId || '',
-        dia_da_semana: selectedDay !== null ? selectedDay : null,
-        is_template: isTemplate,
-        frequencia_repeticao: 'nao_repetir',
-        dias_da_semana: [],
-        repetir_ate: '',
-        links: [],
-        pastas_ids: prefilledData.pastas_ids || [],
-        categoria: prefilledData.categoria || [],
-      });
-      
-      setSelectedDate(initialDate ? parseISO(initialDate) : null);
-      setSelectedTime('12:00');
-      setRepeatUntilDate(null);
     }
-  }, [isOpen, isEditing, initialPost, etapas, initialDate, selectedDay, isTemplate, fichaEditorialId, prefilledData]);
+  }, [isOpen, initialPost?.id]); // Dependência restrita para evitar resets indesejados
 
   // CORREÇÃO: O useEffect que limpava o campo de formato de forma agressiva foi removido.
   // A lógica de consistência agora é tratada pelo `formatosDisponiveis` e pelo `onValueChange` do Select de Conta Social.
