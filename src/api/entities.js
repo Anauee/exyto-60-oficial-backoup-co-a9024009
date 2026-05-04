@@ -110,7 +110,25 @@ const createEntity = (tableName, options = {}) => {
       if (error) throw error;
       return result ? unmapData(result) : null;
     },
-    delete: async (id) => {
+    delete: async (id, permanent = false) => {
+      if (!permanent && !options.skipTrash) {
+        try {
+          const { data: current } = await supabase.from(tableName).select('*').eq('id', id).maybeSingle();
+          if (current) {
+            const { data: { session } } = await supabase.auth.getSession();
+            await supabase.from('lixeira').insert({
+              entity_type: tableName,
+              entity_id: id,
+              data: current,
+              deleted_by: session?.user?.id,
+              empresa_id: current.empresa_id,
+              original_name: current.titulo || current.nome || current.full_name || current.email || id
+            });
+          }
+        } catch (e) {
+          console.error("Erro ao enviar para lixeira:", e);
+        }
+      }
       const { error } = await supabase.from(tableName).delete().eq('id', id);
       if (error) throw error;
     },
@@ -351,3 +369,26 @@ export const SocialToken = createEntity('social_tokens');
 export const AIConversa = createEntity('ai_conversas');
 export const AIMensagem = createEntity('ai_mensagens');
 export const PostEtapa = createEntity('post_etapa');
+
+export const Trash = {
+  ...createEntity('lixeira', { skipTrash: true }),
+  restore: async (trashId) => {
+    const { data: trashItem, error: fetchError } = await supabase.from('lixeira').select('*').eq('id', trashId).single();
+    if (fetchError) throw fetchError;
+    
+    const { entity_type, data } = trashItem;
+    // Tenta restaurar na tabela original
+    const { error: restoreError } = await supabase.from(entity_type).insert(data);
+    if (restoreError) throw restoreError;
+    
+    // Se restaurou, remove da lixeira
+    const { error: deleteError } = await supabase.from('lixeira').delete().eq('id', trashId);
+    if (deleteError) throw deleteError;
+    
+    return data;
+  },
+  cleanup: async () => {
+    const { error } = await supabase.rpc('limpar_lixeira_antiga');
+    if (error) throw error;
+  }
+};

@@ -9,17 +9,19 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { User as UserIcon, Settings, LogOut, ChevronDown, Building2 } from "lucide-react";
+import { User as UserIcon, Settings, LogOut, ChevronDown, Building2, Trash2 } from "lucide-react";
 import { User } from "@/api/entities";
 import { createPageUrl } from "@/utils";
 
 import ProfileModal from "./ProfileModal";
 import SettingsModal from "./SettingsModal";
+import TrashModal from "./TrashModal";
 
 export default function ProfileDropdown() {
   const [user, setUser] = useState(null);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [showTrashModal, setShowTrashModal] = useState(false);
 
   useEffect(() => {
     loadUser();
@@ -100,6 +102,11 @@ export default function ProfileDropdown() {
             <Settings className="h-4 w-4" />
             <span className="font-bold text-sm tracking-tight">Configurações</span>
           </DropdownMenuItem>
+
+          <DropdownMenuItem onClick={() => setShowTrashModal(true)} className="flex items-center gap-3 px-4 py-3 cursor-pointer rounded-xl hover:bg-rose-500/10 hover:text-rose-500 transition-colors focus:bg-rose-500/10 focus:text-rose-500 mb-1">
+            <Trash2 className="h-4 w-4" />
+            <span className="font-bold text-sm tracking-tight">Lixeira Global</span>
+          </DropdownMenuItem>
  
           <DropdownMenuItem onClick={handleTrocarEmpresa} className="flex items-center gap-3 px-4 py-3 cursor-pointer rounded-xl hover:bg-primary/10 hover:text-primary transition-colors focus:bg-primary/10 focus:text-primary mb-1">
             <Building2 className="h-4 w-4" />
@@ -126,6 +133,11 @@ export default function ProfileDropdown() {
         isOpen={showSettingsModal}
         onClose={() => setShowSettingsModal(false)}
         user={user}
+      />
+
+      <TrashModal
+        isOpen={showTrashModal}
+        onClose={() => setShowTrashModal(false)}
       />
     </>
   );
