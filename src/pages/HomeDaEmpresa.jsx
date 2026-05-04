@@ -17,6 +17,7 @@ import MembrosTab from "../components/home_empresa/MembrosTab";
 import CardBoard from "../components/card_board/CardBoard";
 import { createPageUrl } from "@/utils";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/lib/supabase-client";
 import { toast } from "sonner";
 import AcessoNegado from "@/components/shared/AcessoNegado";
 
@@ -261,16 +262,16 @@ export default function HomeDaEmpresa() {
             )}
             
             {userRole === 'admin' && (
-              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4 backdrop-blur-sm">
-                <label className="cursor-pointer bg-white/20 hover:bg-white/30 backdrop-blur-md text-white px-6 py-3 rounded-2xl font-bold flex items-center gap-2 transition-all border border-white/20">
+              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4 backdrop-blur-sm z-30">
+                <label className="cursor-pointer bg-white/20 hover:bg-white/30 backdrop-blur-md text-white px-8 py-4 rounded-2xl font-black flex items-center gap-3 transition-all border border-white/20 shadow-2xl hover:scale-105 active:scale-95 block">
                   <Camera className="w-5 h-5" />
-                  Alterar Banner
+                  <span>Alterar Banner</span>
                   <input type="file" className="hidden" accept="image/*" onChange={(e) => handleFileUpload(e, 'banner')} />
                 </label>
               </div>
             )}
             
-            <div className="absolute bottom-0 left-0 w-full p-8 bg-gradient-to-t from-black/80 to-transparent flex items-end gap-6">
+            <div className="absolute bottom-0 left-0 w-full p-8 bg-gradient-to-t from-black/90 to-transparent flex items-end gap-6 z-20">
               <div className="relative group/logo">
                 <div className="w-24 h-24 md:w-32 md:h-32 rounded-[2rem] bg-card border-4 border-background shadow-2xl flex items-center justify-center overflow-hidden">
                   {empresa.logo_url ? (
@@ -280,7 +281,7 @@ export default function HomeDaEmpresa() {
                   )}
                 </div>
                 {userRole === 'admin' && (
-                  <label className="absolute inset-0 bg-black/40 opacity-0 group-hover/logo:opacity-100 transition-opacity flex items-center justify-center cursor-pointer rounded-[2rem]">
+                  <label className="absolute inset-0 bg-black/40 opacity-0 group-hover/logo:opacity-100 transition-opacity flex items-center justify-center cursor-pointer rounded-[2rem] z-40 transition-all">
                     <Upload className="w-8 h-8 text-white" />
                     <input type="file" className="hidden" accept="image/*" onChange={(e) => handleFileUpload(e, 'logo')} />
                   </label>
