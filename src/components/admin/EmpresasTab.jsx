@@ -24,7 +24,7 @@ import {
 } from "lucide-react";
 import { Empresa } from "@/api/entities";
 
-export default function EmpresasTab({ empresas, isLoading, onUpdate }) {
+export default function EmpresasTab({ empresas, users, associations, isLoading, onUpdate }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingEmpresa, setEditingEmpresa] = useState(null);
@@ -190,17 +190,62 @@ export default function EmpresasTab({ empresas, isLoading, onUpdate }) {
                   </div>
                 </div>
 
+                <div className="space-y-4 pt-6 border-t border-white/5">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-white/30">
+                      <Users className="w-3 h-3" />
+                      Membros da Equipe
+                    </div>
+                    <Badge variant="outline" className="bg-white/5 border-white/10 text-white/40 font-bold text-[10px] rounded-lg">
+                      {associations?.filter(a => a.empresa_id === empresa.id).length || 0}
+                    </Badge>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 gap-2 max-h-32 overflow-y-auto pr-2 custom-scrollbar">
+                    {associations?.filter(a => a.empresa_id === empresa.id).map(assoc => {
+                      const user = users?.find(u => u.id === assoc.usuario_id);
+                      if (!user) return null;
+                      return (
+                        <div key={assoc.id} className="flex items-center justify-between p-2 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <div className="w-6 h-6 rounded-lg bg-primary/20 flex items-center justify-center text-[10px] font-bold text-primary shrink-0">
+                              {user.full_name?.charAt(0) || user.email?.charAt(0)}
+                            </div>
+                            <div className="truncate text-[11px] font-bold text-white/70">
+                              {user.full_name || user.email}
+                            </div>
+                          </div>
+                          <div className={`text-[9px] font-black uppercase tracking-widest ${assoc.perfil === 'admin' ? 'text-rose-500' : 'text-primary'}`}>
+                            {assoc.perfil}
+                          </div>
+                        </div>
+                      );
+                    })}
+                    {associations?.filter(a => a.empresa_id === empresa.id).length === 0 && (
+                      <div className="text-center py-4 text-[10px] font-bold text-white/20 italic">
+                        Nenhum membro vinculado
+                      </div>
+                    )}
+                  </div>
+                </div>
+
                 <div className="space-y-3 pt-6 border-t border-white/5">
-                  <div className="flex items-center gap-3 text-white/40 text-xs font-medium">
-                    <Mail className="w-3.5 h-3.5" />
+                  <div className="flex items-center gap-3 text-white/40 text-[11px] font-bold">
+                    <div className="w-7 h-7 rounded-lg bg-white/5 flex items-center justify-center border border-white/5">
+                      <Mail className="w-3.5 h-3.5" />
+                    </div>
                     {empresa.email || 'Sem e-mail cadastrado'}
                   </div>
-                  <div className="flex items-center gap-3 text-white/40 text-xs font-medium">
-                    <Phone className="w-3.5 h-3.5" />
+                  <div className="flex items-center gap-3 text-white/40 text-[11px] font-bold">
+                    <div className="w-7 h-7 rounded-lg bg-white/5 flex items-center justify-center border border-white/5">
+                      <Phone className="w-3.5 h-3.5" />
+                    </div>
                     {empresa.telefone || 'Sem telefone'}
                   </div>
-                  <div className="flex items-center gap-3 text-white/40 text-xs font-medium">
-                    <Globe className="w-3.5 h-3.5" />
+                  <div className="flex items-center gap-3 text-white/40 text-[11px] font-bold">
+                    <div className="w-7 h-7 rounded-lg bg-white/5 flex items-center justify-center border border-white/5">
+                      <Globe className="w-3.5 h-3.5" />
+                    </div>
                     {empresa.cnpj || 'CNPJ não informado'}
                   </div>
                 </div>

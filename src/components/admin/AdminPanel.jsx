@@ -13,6 +13,7 @@ import PermissionsModal from './PermissionsModal';
 export default function AdminPanel({ isOpen, onClose, onEmpresasUpdate }) {
   const [users, setUsers] = useState([]);
   const [empresas, setEmpresas] = useState([]);
+  const [associations, setAssociations] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedUserForPermissions, setSelectedUserForPermissions] = useState(null);
   const [initialUserPermissions, setInitialUserPermissions] = useState({});
@@ -21,12 +22,14 @@ export default function AdminPanel({ isOpen, onClose, onEmpresasUpdate }) {
     if (!isOpen) return;
     setIsLoading(true);
     try {
-      const [usersData, empresasData] = await Promise.all([
+      const [usersData, empresasData, associationsData] = await Promise.all([
         User.list(),
-        Empresa.list()
+        Empresa.list(),
+        UsuarioEmpresa.list()
       ]);
       setUsers(usersData);
       setEmpresas(empresasData);
+      setAssociations(associationsData);
     } catch (error) {
       console.error("Erro ao carregar dados do admin:", error);
     } finally {
@@ -167,6 +170,8 @@ export default function AdminPanel({ isOpen, onClose, onEmpresasUpdate }) {
               <TabsContent value="empresas" className="mt-0 focus-visible:outline-none">
                 <EmpresasTab
                   empresas={empresas}
+                  users={users}
+                  associations={associations}
                   isLoading={isLoading}
                   onUpdate={loadAdminData}
                 />

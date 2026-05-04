@@ -124,13 +124,6 @@ const navigationItems = [
     color: "text-slate-600",
     permission: "documentos-e-anotacoes"
   },
-  {
-    title: "Painel Admin",
-    url: "/admin",
-    icon: Shield,
-    color: "text-rose-600",
-    isAdminOnly: true
-  },
 ];
 
 export default function Layout({ children, currentPageName }) {
