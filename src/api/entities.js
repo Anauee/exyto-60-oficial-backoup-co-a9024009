@@ -162,7 +162,7 @@ export const UsuarioEmpresa = {
     mapFields: { permissoes: 'permissoes_adicionais' }
   }),
   list: async (orderBy = 'created_at', limit = null) => {
-    let query = supabase.from('usuario_empresa').select('*, users(email)');
+    let query = supabase.from('usuario_empresa').select('*, users:usuario_id(email)');
     if (orderBy) {
       const isDesc = orderBy.startsWith('-');
       const field = isDesc ? orderBy.substring(1) : orderBy;
@@ -171,14 +171,14 @@ export const UsuarioEmpresa = {
     if (limit) query = query.limit(limit);
     const { data, error } = await query;
     if (error) throw error;
-    return data.map(ue => ({
+    return (data || []).map(ue => ({
       ...ue,
       usuario_email: ue.users?.email,
       created_date: ue.created_at
     }));
   },
   filter: async (conditions = {}, orderBy = 'created_at', limit = null) => {
-    let query = supabase.from('usuario_empresa').select('*, users(email)');
+    let query = supabase.from('usuario_empresa').select('*, users:usuario_id(email)');
     Object.entries(conditions).forEach(([key, value]) => {
       const finalKey = key === 'permissoes' ? 'permissoes_adicionais' : (key === 'created_date' ? 'created_at' : key);
       if (Array.isArray(value)) query = query.in(finalKey, value);
@@ -192,7 +192,7 @@ export const UsuarioEmpresa = {
     if (limit) query = query.limit(limit);
     const { data, error } = await query;
     if (error) throw error;
-    return data.map(ue => ({
+    return (data || []).map(ue => ({
       ...ue,
       usuario_email: ue.users?.email,
       created_date: ue.created_at

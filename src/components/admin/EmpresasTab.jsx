@@ -20,7 +20,8 @@ import {
   Loader2,
   AlertCircle,
   TrendingUp,
-  Layout
+  Layout,
+  Users
 } from "lucide-react";
 import { Empresa } from "@/api/entities";
 

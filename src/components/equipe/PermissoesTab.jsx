@@ -15,7 +15,8 @@ import {
   XCircle,
   Loader2,
   Lock,
-  ChevronRight
+  ChevronRight,
+  Crown
 } from "lucide-react";
 import { UsuarioEmpresa, User as UserEntity } from "@/api/entities";
 import { toast } from "sonner";
