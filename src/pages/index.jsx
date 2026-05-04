@@ -80,7 +80,7 @@ function PagesContent() {
         <Layout currentPageName={currentPage}>
             <Routes>            
                 
-                    <Route path="/" element={<Dashboard />} />
+                    <Route path="/" element={<HomeDaEmpresa />} />
                 
                 
                 <Route path="/dashboard" element={<Dashboard />} />

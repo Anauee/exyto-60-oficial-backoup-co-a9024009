@@ -60,8 +60,8 @@ export default function SelecionarEmpresa() {
       // Atualizar o contexto global
       setCurrentCompany(empresa);
       
-      // Redirecionar para o dashboard
-      navigate('/dashboard');
+      // Redirecionar para o home
+      navigate('/homedaempresa');
     } catch (error) {
       console.error("Falha ao selecionar empresa:", error);
       toast({

@@ -39,10 +39,10 @@ import PostModal from "../components/midia/PostModal";
 
 export default function HomeDaEmpresa() {
   const navigate = useNavigate();
-  const { userPermissions, userRole } = useAuth();
+  const { userPermissions, userRole, refreshAuth } = useAuth();
   
-  // HomeDaEmpresa requires 'home-da-empresa' permission
-  const hasAccess = userRole === 'admin' || (userPermissions || []).includes('home-da-empresa');
+  // HomeDaEmpresa is now accessible to all members of the company
+  const hasAccess = true; 
 
   const [sistemas, setSistemas] = useState([]);
   const [membros, setMembros] = useState([]);
@@ -195,18 +195,26 @@ export default function HomeDaEmpresa() {
   };
 
   const handleFileUpload = async (e, type) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
     try {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      if (file.size > 2 * 1024 * 1024) {
+        toast.error("O arquivo deve ter no máximo 2MB");
+        return;
+      }
+
       setIsLoading(true);
       const fileExt = file.name.split('.').pop();
-      const fileName = `${empresa.id}-${type}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+      const fileName = `${type}_${Date.now()}.${fileExt}`;
       const filePath = `company-assets/${fileName}`;
 
-      const { data: uploadData, error: uploadError } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from('images')
-        .upload(filePath, file);
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: true
+        });
 
       if (uploadError) throw uploadError;
 
@@ -214,17 +222,21 @@ export default function HomeDaEmpresa() {
         .from('images')
         .getPublicUrl(filePath);
 
-      // Update empresa in DB
       const field = type === 'logo' ? 'logo_url' : 'banner_url';
       await Empresa.update(empresa.id, { [field]: publicUrl });
 
-      // Update local state and localStorage
-      const updatedEmpresa = { ...empresa, [field]: publicUrl };
-      setEmpresa(updatedEmpresa);
-      localStorage.setItem('empresa_selecionada', JSON.stringify(updatedEmpresa));
-      
-      // Refresh Auth Context to sync logo across the system (Sidebar, etc)
+      // Atualizar o localStorage para que o Layout/Sidebar reflita a mudança
+      const savedCompanyStr = localStorage.getItem('empresa_selecionada');
+      if (savedCompanyStr) {
+        const savedCompany = JSON.parse(savedCompanyStr);
+        if (savedCompany.id === empresa.id) {
+          const newCompanyData = { ...savedCompany, [field]: publicUrl };
+          localStorage.setItem('empresa_selecionada', JSON.stringify(newCompanyData));
+        }
+      }
+
       if (refreshAuth) await refreshAuth();
+      await loadData();
       
       toast.success(`${type === 'logo' ? 'Logo' : 'Banner'} atualizado com sucesso!`);
     } catch (error) {
@@ -297,7 +309,7 @@ export default function HomeDaEmpresa() {
               </div>
             )}
             
-            {userRole === 'admin' && (
+            {(userRole === 'admin' || userRole === 'gestor') && (
               <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center z-30 pointer-events-none">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -337,7 +349,7 @@ export default function HomeDaEmpresa() {
                     <Building2 className="w-10 h-10 text-muted-foreground" />
                   )}
                 </div>
-                {userRole === 'admin' && (
+                {(userRole === 'admin' || userRole === 'gestor') && (
                   <div className="absolute inset-0 opacity-0 group-hover/logo:opacity-100 transition-all flex items-center justify-center z-40 transition-all">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>

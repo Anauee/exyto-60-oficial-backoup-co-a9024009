@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { createPageUrl } from "@/utils";
@@ -46,7 +44,7 @@ const navigationItems = [
     title: "Home",
     url: createPageUrl("HomeDaEmpresa"),
     icon: Home,
-    permission: "home-da-empresa"
+    permission: null
   },
   {
     title: "Dashboard",
@@ -130,7 +128,6 @@ const navigationItems = [
 export default function Layout({ children, currentPageName }) {
   const navigate = useNavigate();
   const location = useLocation();
-  // Usando o novo AuthContext para obter dados de autenticação e permissões
   const [theme, setTheme] = useState(() => {
     if (typeof window !== "undefined") {
       return localStorage.getItem("exyto-theme") || "light";
@@ -171,7 +168,6 @@ export default function Layout({ children, currentPageName }) {
       </div>
     );
   }
-
 
   // Verificar se está em páginas "globais" (sem empresa selecionada)
   const isGlobalPage = [
@@ -263,14 +259,14 @@ export default function Layout({ children, currentPageName }) {
                           asChild
                           className={`
                             transition-all duration-300 rounded-xl h-12 px-4 group
-                            ${location.pathname === item.url
+                            \${location.pathname === item.url
                               ? 'bg-primary/10 text-primary shadow-[0_0_20px_rgba(var(--primary),0.05)] border-l-4 border-primary'
                               : 'hover:bg-muted text-muted-foreground hover:text-foreground border-l-4 border-transparent'
                             }
                           `}
                         >
                           <Link to={item.url} className="flex items-center gap-4 w-full">
-                            <item.icon className={`w-5 h-5 transition-all duration-300 ${
+                            <item.icon className={`w-5 h-5 transition-all duration-300 \${
                               location.pathname === item.url
                                 ? 'scale-110 text-primary'
                                 : 'text-muted-foreground group-hover:text-foreground group-hover:scale-110'
