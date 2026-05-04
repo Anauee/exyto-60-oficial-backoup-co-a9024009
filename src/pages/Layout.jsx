@@ -172,22 +172,8 @@ export default function Layout({ children, currentPageName }) {
   }
 
 
-  // Verificar se está em páginas "globais" (sem empresa selecionada)
-  const isGlobalPage = [
-    createPageUrl("SelecionarEmpresa"),
-    createPageUrl("PainelPessoal"),
-    "/selecionarempresa",
-    "/painelpessoal"
-  ].some(path => {
-    const currentPath = location.pathname.toLowerCase();
-    const targetPath = path.toLowerCase();
-    return currentPath === targetPath || currentPath === targetPath + '/';
-  });
-
-  // Se está em uma página global, renderizar apenas o conteúdo sem layout de sidebar de empresa
-  if (isGlobalPage) {
-    return children;
-  }
+  // O Layout agora só é renderizado para páginas que PRECISAM dele (via LayoutWrapper)
+  // Não precisamos mais de isGlobalPage aqui.
 
   const hasPermission = (permission, item) => {
     // Se o usuário for admin global (do banco de dados), tem acesso total
@@ -264,10 +250,10 @@ export default function Layout({ children, currentPageName }) {
                       <SidebarMenuItem key={item.title}>
                         <SidebarMenuButton
                           asChild
-                          isActive={location.pathname === item.url || (item.url === '/dashboard' && location.pathname === '/')}
+                          isActive={location.pathname.toLowerCase() === item.url.toLowerCase() || (item.url === '/dashboard' && location.pathname === '/')}
                           className={`
                             transition-all duration-300 rounded-xl h-12 px-4 group
-                            ${(location.pathname === item.url || (item.url === '/dashboard' && location.pathname === '/'))
+                            ${(location.pathname.toLowerCase() === item.url.toLowerCase() || (item.url === '/dashboard' && location.pathname === '/'))
                               ? 'bg-primary/10 text-primary shadow-[0_0_20px_rgba(var(--primary),0.05)] border-l-4 border-primary'
                               : 'hover:bg-muted text-muted-foreground hover:text-foreground border-l-4 border-transparent'
                             }
@@ -275,7 +261,7 @@ export default function Layout({ children, currentPageName }) {
                         >
                           <Link to={item.url}>
                             <item.icon className={`w-5 h-5 transition-all duration-300 ${
-                              (location.pathname === item.url || (item.url === '/dashboard' && location.pathname === '/'))
+                              (location.pathname.toLowerCase() === item.url.toLowerCase() || (item.url === '/dashboard' && location.pathname === '/'))
                                 ? 'scale-110 text-primary'
                                 : 'text-muted-foreground group-hover:text-foreground group-hover:scale-110'
                             }`} />
