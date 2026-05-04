@@ -128,14 +128,6 @@ export default function AdminPanel({ isOpen, onClose, onEmpresasUpdate }) {
               </DialogDescription>
             </div>
             
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={onClose} 
-              className="rounded-full hover:bg-white/10 text-white/50 hover:text-white"
-            >
-              <X className="w-6 h-6" />
-            </Button>
           </div>
         </DialogHeader>
 

@@ -197,13 +197,13 @@ export default function EmpresasTab({ empresas, users, associations, isLoading, 
                       Membros da Equipe
                     </div>
                     <Badge variant="outline" className="bg-white/5 border-white/10 text-white/40 font-bold text-[10px] rounded-lg">
-                      {associations?.filter(a => a.empresa_id === empresa.id).length || 0}
+                      {(associations || []).filter(a => a.empresa_id === empresa.id).length}
                     </Badge>
                   </div>
                   
                   <div className="grid grid-cols-1 gap-2 max-h-32 overflow-y-auto pr-2 custom-scrollbar">
-                    {associations?.filter(a => a.empresa_id === empresa.id).map(assoc => {
-                      const user = users?.find(u => u.id === assoc.usuario_id);
+                    {(associations || []).filter(a => a.empresa_id === empresa.id).map(assoc => {
+                      const user = (users || []).find(u => u.id === assoc.usuario_id);
                       if (!user) return null;
                       return (
                         <div key={assoc.id} className="flex items-center justify-between p-2 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
@@ -221,7 +221,7 @@ export default function EmpresasTab({ empresas, users, associations, isLoading, 
                         </div>
                       );
                     })}
-                    {associations?.filter(a => a.empresa_id === empresa.id).length === 0 && (
+                    {(associations || []).filter(a => a.empresa_id === empresa.id).length === 0 && (
                       <div className="text-center py-4 text-[10px] font-bold text-white/20 italic">
                         Nenhum membro vinculado
                       </div>
