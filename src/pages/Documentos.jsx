@@ -88,9 +88,9 @@ export default function Documentos() {
   const [filterType, setFilterType] = useState('todos');
   const [filterEntity, setFilterEntity] = useState('todas');
 
-  const loadDocumentos = useCallback(async () => {
+  const loadDocumentos = useCallback(async (silent = false) => {
     if (!empresaId) return;
-    setIsLoading(true);
+    if (!silent) setIsLoading(true);
     try {
       // Use .list() as fallback due to RLS issues, then filter client-side
       const documentosData = await Documento.list("-created_date").catch(() => []);
@@ -184,7 +184,7 @@ export default function Documentos() {
           data_upload: new Date().toISOString()
         });
       }
-      loadDocumentos();
+      loadDocumentos(true);
     } catch (error) {
       console.error("Erro ao salvar documento:", error);
     }

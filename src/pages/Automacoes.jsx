@@ -15,9 +15,9 @@ export default function Automacoes() {
   const [isLoading, setIsLoading] = useState(true);
   const [empresaId, setEmpresaId] = useState(null);
 
-  const loadData = useCallback(async () => {
+  const loadData = useCallback(async (silent = false) => {
     if (!empresaId) return;
-    setIsLoading(true);
+    if (!silent) setIsLoading(true);
     try {
       const [webhooksData, logsData, regrasData] = await Promise.all([
         WebhookConfig.list("-created_date").catch(() => []),
@@ -117,7 +117,7 @@ export default function Automacoes() {
             <WebhooksTab
               webhooks={webhooks}
               logs={logs}
-              onUpdate={loadData}
+              onUpdate={() => loadData(true)}
               empresaId={empresaId}
             />
           </TabsContent>
@@ -125,7 +125,7 @@ export default function Automacoes() {
           <TabsContent value="regras">
             <RegrasTab
               regras={regras}
-              onUpdate={loadData}
+              onUpdate={() => loadData(true)}
               empresaId={empresaId}
             />
           </TabsContent>

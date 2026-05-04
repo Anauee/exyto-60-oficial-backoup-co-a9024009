@@ -97,9 +97,9 @@ export default function Agendas() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [taskToDelete, setTaskToDelete] = useState(null);
 
-  const loadScheduleData = useCallback(async () => {
+  const loadScheduleData = useCallback(async (silent = false) => {
     if (!empresaId) return;
-    setIsLoading(true);
+    if (!silent) setIsLoading(true);
     try {
       const [tarefasData, compromissosData, projetosData, membrosData] = await Promise.all([
         Tarefa.list("-created_date").catch(() => []),
@@ -245,8 +245,11 @@ export default function Agendas() {
 
   const handleTaskMove = async (task, newStatus) => {
     try {
+      // Optimistic update
+      setTarefas(prev => prev.map(t => t.id === task.id ? { ...t, status: newStatus } : t));
+
       await Tarefa.update(task.id, { status: newStatus });
-      loadScheduleData();
+      loadScheduleData(true);
     } catch (error) {
       console.error("Erro ao atualizar status da tarefa:", error);
     }
@@ -307,7 +310,7 @@ export default function Agendas() {
           await Tarefa.create({ ...taskData, empresa_id: empresaId, status: 'a_fazer' });
         }
       }
-      loadScheduleData();
+      loadScheduleData(true);
     } catch (error) {
       console.error("Erro ao salvar tarefa:", error);
     }
@@ -320,7 +323,7 @@ export default function Agendas() {
       } else {
         await Compromisso.create({ ...appointmentData, empresa_id: empresaId });
       }
-      loadScheduleData();
+      loadScheduleData(true);
     } catch (error) {
       console.error("Erro ao salvar compromisso:", error);
     }
@@ -328,8 +331,11 @@ export default function Agendas() {
 
   const handleMarkTaskAsDone = async (task) => {
     try {
+        // Optimistic update
+        setTarefas(prev => prev.map(t => t.id === task.id ? { ...t, status: 'concluido' } : t));
+
         await Tarefa.update(task.id, { status: 'concluido' });
-        loadScheduleData();
+        loadScheduleData(true);
     } catch (error) {
         console.error("Erro ao marcar tarefa como concluída:", error);
     }
@@ -344,7 +350,7 @@ export default function Agendas() {
       if (!taskToDelete) {
         setShowTaskViewModal(false);
         setSelectedTask(null);
-        await loadScheduleData();
+        await loadScheduleData(true);
         return;
       }
 
@@ -368,14 +374,14 @@ export default function Agendas() {
       
       setShowTaskViewModal(false);
       setSelectedTask(null);
-      await loadScheduleData();
+      await loadScheduleData(true);
       
     } catch (error) {
       console.error("Error during task deletion:", error);
       alert('Ocorreu um erro ao excluir a(s) tarefa(s).');
       setShowTaskViewModal(false);
       setSelectedTask(null);
-      await loadScheduleData();
+      await loadScheduleData(true);
     }
   };
 
@@ -384,7 +390,7 @@ export default function Agendas() {
       await Compromisso.delete(appointmentId);
       setShowAppointmentViewModal(false);
       setSelectedAppointment(null);
-      loadScheduleData(); // Recarregar dados após exclusão
+      loadScheduleData(true); // Recarregar dados após exclusão
     } catch (error) {
       console.error("Erro ao excluir compromisso:", error);
       
@@ -394,13 +400,13 @@ export default function Agendas() {
         console.warn(`Compromisso ${appointmentId} já foi excluído`);
         setShowAppointmentViewModal(false);
         setSelectedAppointment(null);
-        loadScheduleData(); // Ainda assim recarregar para atualizar a lista
+        loadScheduleData(true); // Ainda assim recarregar para atualizar a lista
       } else {
         // Outro tipo de erro
         alert('Erro ao excluir compromisso. Verifique sua conexão e tente novamente.');
         setShowAppointmentViewModal(false);
         setSelectedAppointment(null);
-        loadScheduleData(); // Recarregar para verificar o estado atual
+        loadScheduleData(true); // Recarregar para verificar o estado atual
       }
     }
   };
@@ -552,7 +558,7 @@ export default function Agendas() {
             <ProjetosTab 
               projetos={projetos}
               tarefas={tarefas}
-              onUpdate={loadScheduleData}
+              onUpdate={() => loadScheduleData(true)}
               empresaId={empresaId}
               membros={membros}
               onOpenDetails={(projeto) => { setSelectedProject(projeto); setShowProjectDetails(true); }}

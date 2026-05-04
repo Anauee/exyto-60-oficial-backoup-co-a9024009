@@ -134,9 +134,9 @@ export default function Financeiro() {
       : <ArrowDown className="ml-2 h-3 w-3 text-primary" />;
   };
 
-  const loadFinancialData = useCallback(async () => {
+  const loadFinancialData = useCallback(async (silent = false) => {
     if (!empresaId) return;
-    setIsLoading(true);
+    if (!silent) setIsLoading(true);
     try {
       // Use .list() as fallback due to RLS issues, then filter client-side
       const [faturasData, despesasData, produtosData, funisData, clientesData] = await Promise.all([
@@ -194,12 +194,19 @@ export default function Financeiro() {
     if (statusAtual === 'paga') return;
 
     try {
+      // Optimistic update
+      if (type === 'fatura') {
+        setFaturas(prev => prev.map(f => f.id === id ? { ...f, status: 'paga', updated_date: new Date().toISOString() } : f));
+      } else {
+        setDespesas(prev => prev.map(d => d.id === id ? { ...d, status: 'paga', updated_date: new Date().toISOString() } : d));
+      }
+
       if (type === 'fatura') {
         await Fatura.update(id, { status: 'paga' });
       } else {
         await Despesa.update(id, { status: 'paga' });
       }
-      loadFinancialData();
+      loadFinancialData(true);
     } catch (error) {
       console.error("Erro ao atualizar status:", error);
     }
@@ -252,7 +259,7 @@ export default function Financeiro() {
             await Fatura.create(dataToSave);
         }
     }
-    loadFinancialData();
+    loadFinancialData(true);
   };
 
   const handleSaveDespesa = async (despesaData, despesaId = null) => {
@@ -288,7 +295,7 @@ export default function Financeiro() {
             await Despesa.create(dataToSave);
         }
     }
-    loadFinancialData();
+    loadFinancialData(true);
   };
 
   const handleDeleteFatura = async (faturaId, deleteType) => {
@@ -324,7 +331,7 @@ export default function Financeiro() {
             break;
         }
       }
-      loadFinancialData();
+      loadFinancialData(true);
       setShowFaturaViewModal(false); // Close modal after delete
     } catch (error) {
       console.error("Erro ao excluir fatura:", error);
@@ -364,7 +371,7 @@ export default function Financeiro() {
             break;
         }
       }
-      loadFinancialData();
+      loadFinancialData(true);
       setShowDespesaViewModal(false); // Close modal after delete
     } catch (error) {
       console.error("Erro ao excluir despesa:", error);

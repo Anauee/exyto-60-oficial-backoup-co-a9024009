@@ -105,13 +105,13 @@ export default function Pastas() {
         return filtered;
     }, []);
 
-    const loadData = useCallback(async (folderId, allFoldersList) => {
+    const loadData = useCallback(async (folderId, allFoldersList, silent = false) => {
         if (!empresaId || !currentUser) {
             console.log("loadData: empresaId ou currentUser não carregado. Retornando.");
             setIsLoading(false);
             return;
         }
-        setIsLoading(true);
+        if (!silent) setIsLoading(true);
         console.log("loadData: Carregando dados para folderId:", folderId);
 
         try {
@@ -231,7 +231,7 @@ export default function Pastas() {
             const pastasData = await Pasta.list();
             const empresaPastas = pastasData.filter(p => p.empresa_id === empresaId);
             setAllFolders(empresaPastas);
-            await loadData(currentFolderId, empresaPastas);
+            await loadData(currentFolderId, empresaPastas, true);
             buildBreadcrumbs(currentFolderId, empresaPastas);
         } catch (error) {
             console.error("Erro ao recarregar dados:", error);

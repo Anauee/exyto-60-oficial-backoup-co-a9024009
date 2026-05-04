@@ -27,9 +27,9 @@ export default function Equipe() {
   const [empresaId, setEmpresaId] = useState(null);
   const { userPermissions, userRole } = useAuth();
 
-  const loadData = useCallback(async () => {
+  const loadData = useCallback(async (silent = false) => {
     if (!empresaId) return;
-    setIsLoading(true);
+    if (!silent) setIsLoading(true);
     try {
       const [
         membrosData,
@@ -137,7 +137,7 @@ export default function Equipe() {
         delete dataToSave.id;
         await Membro.create(dataToSave);
       }
-      loadData();
+      loadData(true);
     } catch (error) {
       console.error("Erro ao salvar membro:", error);
     }
@@ -147,7 +147,7 @@ export default function Equipe() {
   const handleDeleteMembro = async (membroId) => {
     try {
       await Membro.delete(membroId);
-      loadData();
+      loadData(true);
     } catch (error) {
       console.error("Erro ao excluir membro:", error);
     }
@@ -162,7 +162,7 @@ export default function Equipe() {
       } else {
         await Cargo.create(dataToSave);
       }
-      loadData();
+      loadData(true);
     } catch (error) {
       console.error("Erro ao salvar cargo:", error);
     }
@@ -172,7 +172,7 @@ export default function Equipe() {
   const handleDeleteCargo = async (cargoId) => {
     try {
       await Cargo.delete(cargoId);
-      loadData();
+      loadData(true);
     } catch (error) {
       console.error("Erro ao excluir cargo:", error);
     }
@@ -187,7 +187,7 @@ export default function Equipe() {
       } else {
         await Funcao.create(dataToSave);
       }
-      loadData();
+      loadData(true);
     } catch (error) {
       console.error("Erro ao salvar função:", error);
     }
@@ -197,7 +197,7 @@ export default function Equipe() {
   const handleDeleteFuncao = async (funcaoId) => {
     try {
       await Funcao.delete(funcaoId);
-      loadData();
+      loadData(true);
     } catch (error) {
       console.error("Erro ao excluir função:", error);
     }
@@ -212,7 +212,7 @@ export default function Equipe() {
       } else {
         await Setor.create(dataToSave);
       }
-      loadData();
+      loadData(true);
     } catch (error) {
       console.error("Erro ao salvar setor:", error);
     }
@@ -222,7 +222,7 @@ export default function Equipe() {
   const handleDeleteSetor = async (setorId) => {
     try {
       await Setor.delete(setorId);
-      loadData();
+      loadData(true);
     } catch (error) {
       console.error("Erro ao excluir setor:", error);
     }
@@ -237,7 +237,7 @@ export default function Equipe() {
       } else {
         await TarefaSalva.create(dataToSave);
       }
-      loadData();
+      loadData(true);
     } catch (error) {
       console.error("Erro ao salvar atividade salva:", error);
     }
@@ -247,7 +247,7 @@ export default function Equipe() {
   const handleDeleteAtividadeSalva = async (id) => {
     try {
       await TarefaSalva.delete(id);
-      loadData();
+      loadData(true);
     } catch (error) {
       console.error("Erro ao excluir atividade salva:", error);
     }

@@ -121,9 +121,9 @@ export default function MidiaSocial() {
     });
   };
 
-  const loadData = useCallback(async () => {
+  const loadData = useCallback(async (silent = false) => {
     if (!empresaId) return;
-    setIsLoading(true);
+    if (!silent) setIsLoading(true);
     try {
       const [
         postsData, 
@@ -316,9 +316,12 @@ export default function MidiaSocial() {
 
   const handlePostMove = async (post, newStatus) => {
     try {
+      // Optimistic update
+      setPosts(prev => prev.map(p => p.id === post.id ? { ...p, status: newStatus } : p));
+
       const updateData = await processPostAutomation(post, newStatus);
       await Post.update(post.id, updateData);
-      loadData();
+      loadData(true);
     } catch (error) {
       console.error("Erro ao atualizar status do post:", error);
     }
@@ -371,7 +374,7 @@ export default function MidiaSocial() {
         await Post.delete(postToDelete.id);
       }
       
-      await loadData();
+      await loadData(true);
       setShowViewModal(false);
       setSelectedPost(null);
       console.log('Deletion successful, data reloaded.');
@@ -523,7 +526,7 @@ export default function MidiaSocial() {
       setShowModal(false);
       setShowViewModal(false);
       setSelectedPost(null);
-      loadData();
+      loadData(true);
     } catch (error) {
       console.error("Erro detalhado ao salvar post:", error);
       
@@ -759,7 +762,7 @@ export default function MidiaSocial() {
               <PostEtapasTab 
                 empresaId={empresaId}
                 membros={membros}
-                onUpdate={loadData}
+                onUpdate={() => loadData(true)}
               />
             </div>
           </TabsContent>
@@ -768,7 +771,7 @@ export default function MidiaSocial() {
             <FichasEditoriaisTab 
               fichasEditoriais={fichasEditoriais}
               posts={posts}
-              onUpdate={loadData}
+              onUpdate={() => loadData(true)}
               onSavePost={handleSavePost}
               empresaId={empresaId}
               responsaveis={responsaveis}
@@ -784,7 +787,7 @@ export default function MidiaSocial() {
             <MarcasTab 
               marcas={marcas}
               contas={contas}
-              onUpdate={loadData}
+              onUpdate={() => loadData(true)}
               empresaId={empresaId}
             />
           </TabsContent>
@@ -794,7 +797,7 @@ export default function MidiaSocial() {
               contas={contas}
               marcas={marcas}
               plataformas={plataformas}
-              onUpdate={loadData}
+              onUpdate={() => loadData(true)}
               empresaId={empresaId}
             />
           </TabsContent>
@@ -803,7 +806,7 @@ export default function MidiaSocial() {
             <PlataformasTab 
               plataformas={plataformas}
               formatos={formatos}
-              onUpdate={loadData}
+              onUpdate={() => loadData(true)}
               empresaId={empresaId}
             />
           </TabsContent>
@@ -811,7 +814,7 @@ export default function MidiaSocial() {
           <TabsContent value="formatos" className="space-y-6">
             <FormatosTab 
               formatos={formatos}
-              onUpdate={loadData}
+              onUpdate={() => loadData(true)}
               empresaId={empresaId}
             />
           </TabsContent>

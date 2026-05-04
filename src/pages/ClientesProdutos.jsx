@@ -30,9 +30,9 @@ export default function ClientesProdutos() {
   const [editingProduto, setEditingProduto] = useState(null);
   const [empresaId, setEmpresaId] = useState(null);
 
-  const loadData = useCallback(async () => {
+  const loadData = useCallback(async (silent = false) => {
     if (!empresaId) return;
-    setIsLoading(true);
+    if (!silent) setIsLoading(true);
     try {
       // Use .list() as fallback due to RLS issues, then filter client-side
       const [clientesData, produtosData, usuariosEmpresaData, membrosData, funisData] = await Promise.all([
@@ -89,8 +89,11 @@ export default function ClientesProdutos() {
 
   const handleClienteMove = async (cliente, newStatus) => {
     try {
+      // Optimistic update
+      setClientes(prev => prev.map(c => c.id === cliente.id ? { ...c, status_funil: newStatus } : c));
+
       await Cliente.update(cliente.id, { status_funil: newStatus });
-      loadData();
+      loadData(true);
     } catch (error) {
       console.error("Erro ao atualizar status do cliente:", error);
     }
@@ -117,7 +120,7 @@ export default function ClientesProdutos() {
         await Cliente.create(dataToSave); 
       }
       
-      loadData(); // Recarrega os dados
+      loadData(true); // Recarrega os dados
       
       // Fecha os modais
       setShowClienteModal(false);
@@ -138,7 +141,7 @@ export default function ClientesProdutos() {
       } else {
         await Produto.create({ ...produtoData, empresa_id: empresaId }); 
       }
-      loadData();
+      loadData(true);
       setShowProdutoModal(false);
       setEditingProduto(null);
     } catch (error) {
@@ -161,7 +164,7 @@ export default function ClientesProdutos() {
     try {
       // Deletar cliente
       await Cliente.delete(clienteId);
-      loadData();
+      loadData(true);
       setShowClienteDetalhes(false); 
       setSelectedCliente(null); 
     } catch (error) {
@@ -172,7 +175,7 @@ export default function ClientesProdutos() {
   const handleDeleteProduto = async (produtoId) => {
     try {
       await Produto.delete(produtoId);
-      loadData();
+      loadData(true);
     } catch (error) {
       console.error("Erro ao excluir produto:", error);
     }
@@ -267,7 +270,7 @@ export default function ClientesProdutos() {
             <FunilVendasTab
               funisDeVendas={funisDeVendas}
               produtos={produtos}
-              onUpdate={loadData}
+              onUpdate={() => loadData(true)}
               empresaId={empresaId}
             />
           </TabsContent>
@@ -310,7 +313,7 @@ export default function ClientesProdutos() {
             <CatalogoProdutos 
               produtos={produtos} 
               onProdutoClick={handleProdutoClick} 
-              onUpdate={loadData}
+              onUpdate={() => loadData(true)}
               empresaId={empresaId} 
             />
           </TabsContent>
@@ -368,7 +371,7 @@ export default function ClientesProdutos() {
           cliente={selectedCliente}
           produtos={produtos}
           funisDeVendas={funisDeVendas}
-          onUpdate={loadData}
+          onUpdate={() => loadData(true)}
           onEdit={handleEditCliente}
           onDelete={handleDeleteCliente}
           responsaveis={responsaveis}
