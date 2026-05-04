@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { 
   Home, Plus, Layers, Newspaper, TrendingUp, MonitorSmartphone, Users, 
   DollarSign, CreditCard, User, ClipboardList, Share2, Camera, Image as ImageIcon,
-  Building2, Upload
+  Building2, Upload, Settings
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import SistemaCard from "../components/home_empresa/SistemaCard";
