@@ -93,31 +93,29 @@ export default function HomeDaEmpresa() {
         formatosData
       ] = await Promise.all([
         SistemasDaEmpresa.filter({ empresa_id: empresaData.id }),
-        Membro.list(),
-        Cargo.list(),
-        Setor.list(),
-        Produto.list(),
-        FunilDeVendas.list(),
-        Cliente.list(),
-        Projeto.list(),
-        ContaSocial.list(),
-        Plataforma.list(),
-        Formato.list()
+        Membro.filter({ empresa_id: empresaData.id }),
+        Cargo.filter({ empresa_id: empresaData.id }),
+        Setor.filter({ empresa_id: empresaData.id }),
+        Produto.filter({ empresa_id: empresaData.id }),
+        FunilDeVendas.filter({ empresa_id: empresaData.id }),
+        Cliente.filter({ empresa_id: empresaData.id }),
+        Projeto.filter({ empresa_id: empresaData.id }),
+        ContaSocial.filter({ empresa_id: empresaData.id }),
+        Plataforma.filter({ empresa_id: empresaData.id }),
+        Formato.filter({ empresa_id: empresaData.id })
       ]);
       
-      const filterByEmpresa = (data) => Array.isArray(data) ? data.filter(item => item && item.empresa_id === empresaData.id) : [];
-
       setSistemas(sistemasData);
-      setMembros(filterByEmpresa(membrosData));
-      setCargos(filterByEmpresa(cargosData));
-      setSetores(filterByEmpresa(setoresData));
-      setProdutos(filterByEmpresa(produtosData));
-      setFunisDeVendas(filterByEmpresa(funisData));
-      setClientes(filterByEmpresa(clientesData));
-      setProjetos(filterByEmpresa(projetosData));
-      setContasSociais(filterByEmpresa(contasSociaisData));
-      setPlataformas(filterByEmpresa(plataformasData));
-      setFormatos(filterByEmpresa(formatosData));
+      setMembros(membrosData);
+      setCargos(cargosData);
+      setSetores(setoresData);
+      setProdutos(produtosData);
+      setFunisDeVendas(funisData);
+      setClientes(clientesData);
+      setProjetos(projetosData);
+      setContasSociais(contasSociaisData);
+      setPlataformas(plataformasData);
+      setFormatos(formatosData);
 
     } catch (error) {
       console.error("Erro ao carregar dados da home da empresa:", error);
@@ -458,53 +456,69 @@ export default function HomeDaEmpresa() {
           </Tabs>
         </div>
       </div>
-      <SistemaModal
-        isOpen={showSistemaModal}
-        onClose={() => { setShowSistemaModal(false); setSelectedSistema(null); }}
-        onSave={handleSaveSistema}
-        onDelete={handleDeleteSistema}
-        sistema={selectedSistema}
-      />
+      {showSistemaModal && (
+        <SistemaModal
+          isOpen={showSistemaModal}
+          onClose={() => { setShowSistemaModal(false); setSelectedSistema(null); }}
+          onSave={handleSaveSistema}
+          onDelete={handleDeleteSistema}
+          sistema={selectedSistema}
+        />
+      )}
 
-      {/* Modals for Quick Actions */}
-      <FaturaModal
-        isOpen={showFaturaModal}
-        onClose={() => setShowFaturaModal(false)}
-        onSave={handleSaveFatura}
-        produtos={produtos}
-        funisDeVendas={funisDeVendas}
-        clientes={clientes}
-      />
-      <DespesaModal
-        isOpen={showDespesaModal}
-        onClose={() => setShowDespesaModal(false)}
-        onSave={handleSaveDespesa}
-      />
-      <ClienteModal
-        isOpen={showClienteModal}
-        onClose={() => setShowClienteModal(false)}
-        onSave={handleSaveCliente}
-        empresaId={empresa.id}
-        membros={membros}
-      />
-      <TaskModal
-        isOpen={showTaskModal}
-        onClose={() => setShowTaskModal(false)}
-        onSave={handleSaveTask}
-        projetos={projetos}
-        empresaId={empresa.id}
-        membros={membros}
-      />
-      <PostModal
-        isOpen={showPostModal}
-        onClose={() => setShowPostModal(false)}
-        onSave={handleSavePost}
-        contas={contasSociais}
-        formatos={formatos}
-        plataformas={plataformas}
-        membros={membros}
-        empresaId={empresa.id}
-      />
+      {/* Modals for Quick Actions - Rendered only when needed */}
+      {showFaturaModal && (
+        <FaturaModal
+          isOpen={showFaturaModal}
+          onClose={() => setShowFaturaModal(false)}
+          onSave={handleSaveFatura}
+          produtos={produtos}
+          funisDeVendas={funisDeVendas}
+          clientes={clientes}
+        />
+      )}
+      
+      {showDespesaModal && (
+        <DespesaModal
+          isOpen={showDespesaModal}
+          onClose={() => setShowDespesaModal(false)}
+          onSave={handleSaveDespesa}
+        />
+      )}
+      
+      {showClienteModal && (
+        <ClienteModal
+          isOpen={showClienteModal}
+          onClose={() => setShowClienteModal(false)}
+          onSave={handleSaveCliente}
+          empresaId={empresa.id}
+          membros={membros}
+        />
+      )}
+      
+      {showTaskModal && (
+        <TaskModal
+          isOpen={showTaskModal}
+          onClose={() => setShowTaskModal(false)}
+          onSave={handleSaveTask}
+          projetos={projetos}
+          empresaId={empresa.id}
+          membros={membros}
+        />
+      )}
+      
+      {showPostModal && (
+        <PostModal
+          isOpen={showPostModal}
+          onClose={() => setShowPostModal(false)}
+          onSave={handleSavePost}
+          contas={contasSociais}
+          formatos={formatos}
+          plataformas={plataformas}
+          membros={membros}
+          empresaId={empresa.id}
+        />
+      )}
     </>
   );
 }
