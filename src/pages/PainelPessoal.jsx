@@ -12,10 +12,13 @@ import {
   Filter,
   ArrowLeft,
   Loader2,
-  AlertCircle
+  AlertCircle,
+  Edit,
+  CheckCircle,
+  Circle
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { Tarefa, Projeto, Empresa, UsuarioEmpresa } from "@/api/entities";
+import { Tarefa, Projeto, Empresa, UsuarioEmpresa, Pasta } from "@/api/entities";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,6 +26,8 @@ import { Badge } from "@/components/ui/badge";
 import { createPageUrl } from "@/utils";
 import { format, parseISO, isToday, isPast, startOfToday } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import TaskModal from "@/components/agendas/TaskModal";
+import { toast } from "sonner";
 
 const isOverdue = (date) => {
   return isPast(date) && !isToday(date);
@@ -37,6 +42,13 @@ export default function PainelPessoal() {
   const [projetos, setProjetos] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("tarefas");
+  const [statusFilter, setStatusFilter] = useState("pendentes"); // pendentes, atrasadas, concluidas, todas
+
+  // Estados para Edição de Tarefa
+  const [showTaskModal, setShowTaskModal] = useState(false);
+  const [editingTask, setEditingTask] = useState(null);
+  const [companyMembers, setCompanyMembers] = useState([]);
+  const [companyPastas, setCompanyPastas] = useState([]);
 
   const loadAllData = useCallback(async () => {
     if (!user?.id) return;
@@ -65,6 +77,48 @@ export default function PainelPessoal() {
     }
   }, [user]);
 
+  const handleToggleStatus = async (tarefa) => {
+    try {
+      const newStatus = tarefa.status === 'concluido' ? 'pendente' : 'concluido';
+      await Tarefa.update(tarefa.id, { status: newStatus });
+      setTarefas(prev => prev.map(t => t.id === tarefa.id ? { ...t, status: newStatus } : t));
+      toast.success(`Tarefa ${newStatus === 'concluido' ? 'concluída' : 'reaberta'}!`);
+    } catch (error) {
+      console.error("Erro ao atualizar status:", error);
+      toast.error("Falha ao atualizar tarefa.");
+    }
+  };
+
+  const handleEditTask = async (tarefa) => {
+    try {
+      setEditingTask(tarefa);
+      // Carregar dados específicos da empresa da tarefa
+      const { Membro, Pasta } = await import('@/api/entities');
+      const [members, pastas] = await Promise.all([
+        Membro.filter({ empresa_id: tarefa.empresa_id }),
+        Pasta.filter({ empresa_id: tarefa.empresa_id })
+      ]);
+      setCompanyMembers(members);
+      setCompanyPastas(pastas);
+      setShowTaskModal(true);
+    } catch (error) {
+      console.error("Erro ao carregar dados para edição:", error);
+      toast.error("Erro ao carregar modal de edição.");
+    }
+  };
+
+  const handleSaveEditedTask = async (taskData) => {
+    try {
+      await Tarefa.update(editingTask.id, taskData);
+      setTarefas(prev => prev.map(t => t.id === editingTask.id ? { ...t, ...taskData } : t));
+      setShowTaskModal(false);
+      toast.success("Tarefa atualizada!");
+    } catch (error) {
+      console.error("Erro ao salvar tarefa:", error);
+      toast.error("Erro ao salvar alterações.");
+    }
+  };
+
   useEffect(() => {
     loadAllData();
   }, [loadAllData]);
@@ -78,10 +132,20 @@ export default function PainelPessoal() {
   }, [tarefas, projetos]);
 
   const filteredTarefas = useMemo(() => {
-    return tarefas.filter(t => 
+    let result = tarefas.filter(t => 
       t.titulo.toLowerCase().includes(searchTerm.toLowerCase())
-    ).sort((a, b) => new Date(a.vencimento) - new Date(b.vencimento));
-  }, [tarefas, searchTerm]);
+    );
+
+    if (statusFilter === 'pendentes') {
+      result = result.filter(t => t.status !== 'concluido');
+    } else if (statusFilter === 'atrasadas') {
+      result = result.filter(t => t.status !== 'concluido' && t.vencimento && isOverdue(parseISO(t.vencimento)));
+    } else if (statusFilter === 'concluidas') {
+      result = result.filter(t => t.status === 'concluido');
+    }
+
+    return result.sort((a, b) => new Date(a.vencimento) - new Date(b.vencimento));
+  }, [tarefas, searchTerm, statusFilter]);
 
   const filteredProjetos = useMemo(() => {
     return projetos.filter(p => 
@@ -149,32 +213,58 @@ export default function PainelPessoal() {
         </header>
 
         {/* Search and Tabs */}
-        <div className="flex flex-col md:flex-row gap-6 mb-8">
-          <div className="relative flex-1 group">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
-            <Input 
-              placeholder="Pesquisar em todas as empresas..." 
-              className="pl-12 h-14 bg-white/5 border-white/10 rounded-2xl text-lg font-medium focus:ring-primary/20 transition-all"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+        <div className="flex flex-col gap-6 mb-8">
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="relative flex-1 group">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
+              <Input 
+                placeholder="Pesquisar em todas as empresas..." 
+                className="pl-12 h-14 bg-white/5 border-white/10 rounded-2xl text-lg font-medium focus:ring-primary/20 transition-all"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            <div className="flex gap-2 p-1 bg-white/5 rounded-2xl border border-white/10 h-14">
+              <button 
+                onClick={() => setActiveTab("tarefas")}
+                className={`flex-1 px-8 rounded-xl font-bold flex items-center justify-center gap-2 transition-all ${activeTab === 'tarefas' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-muted-foreground hover:text-white'}`}
+              >
+                <CheckCircle2 className="w-4 h-4" />
+                Tarefas
+              </button>
+              <button 
+                onClick={() => setActiveTab("projetos")}
+                className={`flex-1 px-8 rounded-xl font-bold flex items-center justify-center gap-2 transition-all ${activeTab === 'projetos' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-muted-foreground hover:text-white'}`}
+              >
+                <LayoutDashboard className="w-4 h-4" />
+                Projetos
+              </button>
+            </div>
           </div>
-          <div className="flex gap-2 p-1 bg-white/5 rounded-2xl border border-white/10 h-14">
-            <button 
-              onClick={() => setActiveTab("tarefas")}
-              className={`flex-1 px-8 rounded-xl font-bold flex items-center justify-center gap-2 transition-all ${activeTab === 'tarefas' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-muted-foreground hover:text-white'}`}
-            >
-              <CheckCircle2 className="w-4 h-4" />
-              Tarefas
-            </button>
-            <button 
-              onClick={() => setActiveTab("projetos")}
-              className={`flex-1 px-8 rounded-xl font-bold flex items-center justify-center gap-2 transition-all ${activeTab === 'projetos' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-muted-foreground hover:text-white'}`}
-            >
-              <LayoutDashboard className="w-4 h-4" />
-              Projetos
-            </button>
-          </div>
+
+          {activeTab === 'tarefas' && (
+            <div className="flex flex-wrap gap-2">
+              {[
+                { id: 'pendentes', label: 'Pendentes', icon: Clock },
+                { id: 'atrasadas', label: 'Atrasadas', icon: AlertCircle, color: 'text-red-400' },
+                { id: 'concluidas', label: 'Concluídas', icon: CheckCircle },
+                { id: 'todas', label: 'Todas', icon: Filter },
+              ].map(filter => (
+                <button
+                  key={filter.id}
+                  onClick={() => setStatusFilter(filter.id)}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all border ${
+                    statusFilter === filter.id 
+                      ? 'bg-white/10 border-white/20 text-white shadow-xl' 
+                      : 'bg-transparent border-transparent text-muted-foreground hover:bg-white/5'
+                  }`}
+                >
+                  <filter.icon className={`w-3.5 h-3.5 ${filter.color || ''}`} />
+                  {filter.label}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Content */}
@@ -187,11 +277,20 @@ export default function PainelPessoal() {
                   <Card key={tarefa.id} className="group bg-white/5 border-white/10 hover:border-primary/40 transition-all duration-500 rounded-3xl overflow-hidden backdrop-blur-sm">
                     <CardContent className="p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
                       <div className="flex items-center gap-6 flex-1">
-                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center border transition-all ${tarefa.status === 'concluido' ? 'bg-green-500/10 border-green-500/20 text-green-500' : 'bg-primary/10 border-primary/20 text-primary'}`}>
-                          {tarefa.status === 'concluido' ? <CheckCircle2 className="w-6 h-6" /> : <Clock className="w-6 h-6" />}
-                        </div>
+                        <button 
+                          onClick={() => handleToggleStatus(tarefa)}
+                          className={`w-12 h-12 rounded-2xl flex items-center justify-center border transition-all hover:scale-110 active:scale-95 ${
+                            tarefa.status === 'concluido' 
+                              ? 'bg-green-500/20 border-green-500/40 text-green-500 shadow-lg shadow-green-500/10' 
+                              : 'bg-white/5 border-white/10 text-muted-foreground hover:border-primary/40 hover:text-primary'
+                          }`}
+                        >
+                          {tarefa.status === 'concluido' ? <CheckCircle className="w-6 h-6" /> : <Circle className="w-6 h-6" />}
+                        </button>
                         <div className="space-y-1">
-                          <h3 className="text-xl font-black group-hover:text-primary transition-colors">{tarefa.titulo}</h3>
+                          <h3 className={`text-xl font-black transition-all ${tarefa.status === 'concluido' ? 'text-muted-foreground line-through decoration-2' : 'text-white group-hover:text-primary'}`}>
+                            {tarefa.titulo}
+                          </h3>
                           <div className="flex flex-wrap items-center gap-3">
                             <button 
                               onClick={() => handleIrParaEmpresa(tarefa.empresa_id)}
@@ -210,9 +309,14 @@ export default function PainelPessoal() {
                         </div>
                       </div>
                       <div className="flex items-center gap-4 w-full md:w-auto">
-                        <Badge variant="outline" className="h-8 px-4 rounded-full border-white/10 text-[10px] font-black uppercase tracking-widest">
-                          {tarefa.status}
-                        </Badge>
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
+                          onClick={() => handleEditTask(tarefa)}
+                          className="w-12 h-12 rounded-2xl bg-white/5 hover:bg-primary/20 text-muted-foreground hover:text-primary border border-transparent hover:border-primary/20"
+                        >
+                          <Edit className="w-5 h-5" />
+                        </Button>
                         <Button 
                           onClick={() => handleIrParaEmpresa(tarefa.empresa_id)}
                           className="flex-1 md:flex-none h-12 bg-white/10 hover:bg-primary transition-all rounded-2xl font-bold group/btn"
@@ -286,6 +390,19 @@ export default function PainelPessoal() {
           </div>
         )}
       </div>
+
+      {/* Task Modal for Editing */}
+      {editingTask && (
+        <TaskModal
+          isOpen={showTaskModal}
+          onClose={() => setShowTaskModal(false)}
+          onSave={handleSaveEditedTask}
+          task={editingTask}
+          membros={companyMembers}
+          pastas={companyPastas}
+          empresaId={editingTask.empresa_id}
+        />
+      )}
     </div>
   );
 }
