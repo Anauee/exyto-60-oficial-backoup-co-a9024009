@@ -61,7 +61,7 @@ function generateRecurringDates(startDate, frequencia, endDate, diasDaSemana = [
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import AcessoNegado from "@/components/shared/AcessoNegado";
-import { toast } from "react-hot-toast";
+import { toast } from "sonner";
 
 export default function Agendas() {
   const navigate = useNavigate();

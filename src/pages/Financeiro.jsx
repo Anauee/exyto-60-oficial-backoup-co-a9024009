@@ -27,7 +27,7 @@ import DespesaViewModal from "../components/financeiro/DespesaViewModal";
 import SimpleDateRangePicker from "../components/shared/SimpleDateRangePicker";
 import { useNavigate } from "react-router-dom";
 import AcessoNegado from "@/components/shared/AcessoNegado";
-import { toast } from "react-hot-toast";
+import { toast } from "sonner";
 import { createPageUrl } from "@/utils";
 
 // Helper for eachMonthOfInterval, as it's not a standard date-fns export but needed for recurring dates
