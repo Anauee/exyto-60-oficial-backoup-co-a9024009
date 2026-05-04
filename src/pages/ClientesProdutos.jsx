@@ -77,7 +77,7 @@ export default function ClientesProdutos() {
       setEmpresaId(empresa.id);
     } else {
       // Redirect to company selection if no company is selected
-      window.location.href = createPageUrl('SelecionarEmpresa');
+      navigate('/selecionarempresa');
     }
   }, []);
 

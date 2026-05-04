@@ -60,7 +60,7 @@ export default function Dashboard({ session, user }) {
       
       if (!empresaSelecionadaString || empresaSelecionadaString === "undefined" || empresaSelecionadaString === "null") {
         console.warn("Nenhuma empresa no localStorage, redirecionando...");
-        window.location.href = createPageUrl('SelecionarEmpresa');
+        navigate('/selecionarempresa');
         return;
       }
 
@@ -70,12 +70,12 @@ export default function Dashboard({ session, user }) {
       } catch (e) {
         console.error("Erro ao parsear empresa selecionada:", e);
         localStorage.removeItem('empresa_selecionada');
-        window.location.href = createPageUrl('SelecionarEmpresa');
+        navigate('/selecionarempresa');
         return;
       }
 
       if (!empresa || !empresa.id) {
-        window.location.href = createPageUrl('SelecionarEmpresa');
+        navigate('/selecionarempresa');
         return;
       }
 

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { 
   SistemasDaEmpresa, Empresa, Membro, Cargo, Setor, 
   Produto, FunilDeVendas, Cliente, Projeto, ContaSocial, Plataforma, Formato,
@@ -37,6 +38,7 @@ import TaskModal from "../components/agendas/TaskModal";
 import PostModal from "../components/midia/PostModal";
 
 export default function HomeDaEmpresa() {
+  const navigate = useNavigate();
   const { userPermissions, userRole } = useAuth();
   
   // HomeDaEmpresa requires 'home-da-empresa' permission
@@ -69,7 +71,7 @@ export default function HomeDaEmpresa() {
     setIsLoading(true);
     const empresaDataString = localStorage.getItem('empresa_selecionada');
     if (!empresaDataString) {
-      window.location.href = createPageUrl('SelecionarEmpresa');
+      navigate('/selecionarempresa');
       return;
     }
     const empresaData = JSON.parse(empresaDataString);

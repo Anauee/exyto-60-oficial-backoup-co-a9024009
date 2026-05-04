@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { Empresa, UsuarioEmpresa, User } from "@/api/entities";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,6 +19,7 @@ import { useAuth, DEFAULT_PERMISSIONS } from "@/contexts/AuthContext";
 import { useToast } from "@/components/ui/use-toast";
 
 export default function SelecionarEmpresa() {
+  const navigate = useNavigate();
   const { 
     user: authUser, 
     setCurrentCompany, 
@@ -59,7 +61,7 @@ export default function SelecionarEmpresa() {
       setCurrentCompany(empresa);
       
       // Redirecionar para o dashboard
-      window.location.href = createPageUrl('Dashboard');
+      navigate('/dashboard');
     } catch (error) {
       console.error("Falha ao selecionar empresa:", error);
       toast({
@@ -268,7 +270,7 @@ export default function SelecionarEmpresa() {
 
         <div className="flex justify-center gap-4 mb-12">
           <Button
-            onClick={() => window.location.href = createPageUrl('PainelPessoal')}
+            onClick={() => navigate('/painelpessoal')}
             variant="outline"
             className="flex items-center gap-2 h-12 border-primary/20 bg-primary/5 hover:bg-primary/10 text-primary rounded-full px-8 font-bold shadow-lg shadow-primary/5 transition-all active:scale-95"
           >
@@ -313,7 +315,7 @@ export default function SelecionarEmpresa() {
             {/* CARD PAINEL PESSOAL - SEMPRE EM PRIMEIRO */}
             <Card 
               className="group cursor-pointer transition-all duration-700 border border-primary/20 shadow-2xl bg-gradient-to-br from-primary/10 via-background to-background backdrop-blur-2xl rounded-[3rem] overflow-hidden hover:border-primary/40 hover:shadow-primary/10 hover:-translate-y-4"
-              onClick={() => window.location.href = createPageUrl('PainelPessoal')}
+              onClick={() => navigate('/painelpessoal')}
             >
               <CardHeader className="text-center pb-8 pt-12 relative">
                 <div className="w-28 h-28 mx-auto rounded-[2.5rem] flex items-center justify-center mb-8 shadow-2xl transition-all duration-500 bg-gradient-to-br from-primary to-blue-600 group-hover:scale-110 group-hover:rotate-3 shadow-primary/20">

@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { useLocation, Link } from 'react-router-dom';
+import { useLocation, Link } useNavigate } from 'react-router-dom';
 import { Pasta, Documento, Post, Membro, User, ContaSocial, Formato, Plataforma } from '@/api/entities';
 import { createPageUrl } from '@/utils';
 import { Button } from "@/components/ui/button";
@@ -31,6 +31,7 @@ const getFileIcon = (tipo) => {
 };
 
 export default function Pastas() {
+  const navigate = useNavigate();
     const { user: authUser, currentCompany } = useAuth();
     const { toast } = useToast();
     const location = useLocation();
@@ -188,7 +189,7 @@ export default function Pastas() {
             if (empresa) {
                 setEmpresaId(JSON.parse(empresa).id);
             } else {
-                window.location.href = createPageUrl('SelecionarEmpresa');
+                navigate('/selecionarempresa');
                 return;
             }
 

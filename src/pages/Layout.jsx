@@ -1,7 +1,7 @@
 
 
 import React, { useState, useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { createPageUrl } from "@/utils";
 import {
   Home,
@@ -128,6 +128,7 @@ const navigationItems = [
 ];
 
 export default function Layout({ children, currentPageName }) {
+  const navigate = useNavigate();
   const location = useLocation();
   // Usando o novo AuthContext para obter dados de autenticação e permissões
   const [theme, setTheme] = useState(() => {
@@ -202,7 +203,7 @@ export default function Layout({ children, currentPageName }) {
 
   const handleVoltarSelecaoEmpresa = () => {
     localStorage.removeItem('empresa_selecionada');
-    window.location.href = createPageUrl("SelecionarEmpresa");
+    navigate('/selecionarempresa');
   };
 
   return (

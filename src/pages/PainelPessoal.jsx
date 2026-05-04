@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   Building2, 
   Calendar, 
@@ -34,6 +35,7 @@ const isOverdue = (date) => {
 };
 
 export default function PainelPessoal() {
+  const navigate = useNavigate();
   const { user, setCurrentCompany } = useAuth();
   
   const [loading, setLoading] = useState(true);
@@ -162,7 +164,7 @@ export default function PainelPessoal() {
     if (empresa) {
       localStorage.setItem('empresa_selecionada', JSON.stringify(empresa));
       setCurrentCompany(empresa);
-      window.location.href = createPageUrl('Dashboard');
+      navigate('/dashboard');
     }
   };
 
@@ -186,7 +188,7 @@ export default function PainelPessoal() {
         <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
           <div className="space-y-2">
             <button 
-              onClick={() => window.location.href = createPageUrl('SelecionarEmpresa')}
+              onClick={() => navigate('/selecionarempresa')}
               className="flex items-center gap-2 text-muted-foreground hover:text-white transition-colors text-xs font-bold uppercase tracking-widest group"
             >
               <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />

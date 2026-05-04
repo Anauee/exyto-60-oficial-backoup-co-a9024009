@@ -179,7 +179,7 @@ export default function Financeiro() {
       setEmpresaId(empresa.id);
     } else {
       // If no company is selected, redirect to company selection page
-      window.location.href = createPageUrl('SelecionarEmpresa');
+      navigate('/selecionarempresa');
     }
   }, []);
 

@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { Post, ContaSocial, Marca, Plataforma, Formato, FichaEditorial, User, UsuarioEmpresa, Membro, PostEtapa, Tarefa } from "@/api/entities";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -30,6 +31,7 @@ const generateUniqueId = () => {
 };
 
 export default function MidiaSocial() {
+  const navigate = useNavigate();
   const { userPermissions, userRole } = useAuth();
   
   // MidiaSocial requires 'midia-social' permission
@@ -271,7 +273,7 @@ export default function MidiaSocial() {
       const empresa = JSON.parse(empresaSelecionadaString);
       setEmpresaId(empresa.id);
     } else {
-      window.location.href = createPageUrl('SelecionarEmpresa');
+      navigate('/selecionarempresa');
     }
   }, []);
 

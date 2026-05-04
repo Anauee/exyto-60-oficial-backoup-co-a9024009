@@ -48,7 +48,7 @@ export default function Automacoes() {
       const empresa = JSON.parse(empresaSelecionadaString);
       setEmpresaId(empresa.id);
     } else {
-      window.location.href = createPageUrl('SelecionarEmpresa');
+      navigate('/selecionarempresa');
     }
   }, []);
 
