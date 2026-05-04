@@ -172,22 +172,8 @@ export default function Layout({ children, currentPageName }) {
   }
 
 
-  // Verificar se está em páginas "globais" (sem empresa selecionada ou que não devem ter sidebar)
-  const isGlobalPage = [
-    '/selecionarempresa',
-    '/painelpessoal',
-    '/completar-perfil',
-    '/auth/callback'
-  ].some(path => location.pathname.toLowerCase().startsWith(path.toLowerCase()));
-
-  // Se está em uma página global, renderizar apenas o conteúdo sem layout de sidebar de empresa
-  if (isGlobalPage) {
-    return (
-      <main className="min-h-screen bg-background">
-        {children}
-      </main>
-    );
-  }
+  // O roteamento de páginas globais é tratado no index.jsx (GlobalLayout)
+  // Aqui só chegam rotas que precisam do Layout completo com sidebar
 
   const hasPermission = (permission, item) => {
     // Se o usuário for admin global (do banco de dados), tem acesso total
