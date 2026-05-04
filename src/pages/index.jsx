@@ -24,6 +24,7 @@ import Automacoes from "./Automacoes";
 import AIAssistant from "./AIAssistant";
 import AuthCallback from "./AuthCallback";
 import Analytics from "./Analytics";
+import CompleteProfile from "./CompleteProfile";
 
 import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
 
@@ -52,6 +53,7 @@ const PAGES = {
     Automacoes: Automacoes,
     AIAssistant: AIAssistant,
     Analytics: Analytics,
+    CompleteProfile: CompleteProfile,
 }
 
 function _getCurrentPage(url) {
@@ -102,6 +104,7 @@ function PagesContent() {
                 <Route path="/automacoes" element={<Automacoes />} />
                 <Route path="/ia-assistente" element={<AIAssistant />} />
                 <Route path="/analytics" element={<Analytics />} />
+                <Route path="/completar-perfil" element={<CompleteProfile />} />
                 <Route path="/auth/callback/:provider" element={<AuthCallback />} />
             </Routes>
         </Layout>
