@@ -178,7 +178,11 @@ export default function Layout({ children, currentPageName }) {
     createPageUrl("PainelPessoal"),
     "/selecionarempresa",
     "/painelpessoal"
-  ].some(path => location.pathname === path || currentPageName === path.replace('/', ''));
+  ].some(path => {
+    const currentPath = location.pathname.toLowerCase();
+    const targetPath = path.toLowerCase();
+    return currentPath === targetPath || currentPath === targetPath + '/';
+  });
 
   // Se está em uma página global, renderizar apenas o conteúdo sem layout de sidebar de empresa
   if (isGlobalPage) {
@@ -260,17 +264,18 @@ export default function Layout({ children, currentPageName }) {
                       <SidebarMenuItem key={item.title}>
                         <SidebarMenuButton
                           asChild
+                          isActive={location.pathname === item.url || (item.url === '/dashboard' && location.pathname === '/')}
                           className={`
                             transition-all duration-300 rounded-xl h-12 px-4 group
-                            ${location.pathname === item.url
+                            ${(location.pathname === item.url || (item.url === '/dashboard' && location.pathname === '/'))
                               ? 'bg-primary/10 text-primary shadow-[0_0_20px_rgba(var(--primary),0.05)] border-l-4 border-primary'
                               : 'hover:bg-muted text-muted-foreground hover:text-foreground border-l-4 border-transparent'
                             }
                           `}
                         >
-                          <Link to={item.url} className="flex items-center gap-4 w-full">
+                          <Link to={item.url}>
                             <item.icon className={`w-5 h-5 transition-all duration-300 ${
-                              location.pathname === item.url
+                              (location.pathname === item.url || (item.url === '/dashboard' && location.pathname === '/'))
                                 ? 'scale-110 text-primary'
                                 : 'text-muted-foreground group-hover:text-foreground group-hover:scale-110'
                             }`} />
