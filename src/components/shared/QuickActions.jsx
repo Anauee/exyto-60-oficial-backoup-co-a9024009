@@ -17,7 +17,14 @@ import ClienteModal from "@/components/crm/ClienteModal";
 import TaskModal from "@/components/agendas/TaskModal";
 import PostModal from "@/components/midia/PostModal";
 
-export default function QuickActions() {
+export default function QuickActions({ 
+  empresaId: propEmpresaId, 
+  membros: propMembros, 
+  produtos: propProdutos,
+  clientes: propClientes,
+  projetos: propProjetos,
+  onActionComplete 
+}) {
   const [empresa, setEmpresa] = useState(null);
   const [data, setData] = useState({
     produtos: [],
@@ -39,40 +46,55 @@ export default function QuickActions() {
   });
 
   useEffect(() => {
+    if (propEmpresaId) {
+      setEmpresa({ id: propEmpresaId });
+      // If we already have members and products from props, we might not need to load everything
+      if (!propMembros || !propProdutos) {
+        loadDependencies(propEmpresaId);
+      } else {
+        setData(prev => ({
+          ...prev,
+          membros: propMembros,
+          produtos: propProdutos,
+          clientes: propClientes || [],
+          projetos: propProjetos || []
+        }));
+      }
+      return;
+    }
+
     const empresaDataString = localStorage.getItem('empresa_selecionada');
     if (empresaDataString) {
       const empresaData = JSON.parse(empresaDataString);
       setEmpresa(empresaData);
       loadDependencies(empresaData.id);
     }
-  }, []);
+  }, [propEmpresaId, propMembros, propProdutos, propClientes, propProjetos]);
 
   const loadDependencies = async (empresaId) => {
     try {
       const [
         produtos, funis, clientes, projetos, contas, formatos, plataformas, membros
       ] = await Promise.all([
-        Produto.list(),
-        FunilDeVendas.list(),
-        Cliente.list(),
-        Projeto.list(),
-        ContaSocial.list(),
-        Formato.list(),
-        Plataforma.list(),
-        Membro.list()
+        Produto.filter({ empresa_id: empresaId }),
+        FunilDeVendas.filter({ empresa_id: empresaId }),
+        Cliente.filter({ empresa_id: empresaId }),
+        Projeto.filter({ empresa_id: empresaId }),
+        ContaSocial.filter({ empresa_id: empresaId }),
+        Formato.filter({ empresa_id: empresaId }),
+        Plataforma.filter({ empresa_id: empresaId }),
+        Membro.filter({ empresa_id: empresaId })
       ]);
 
-      const filter = (list) => list.filter(i => i.empresa_id === empresaId);
-
       setData({
-        produtos: filter(produtos),
-        funisDeVendas: filter(funis),
-        clientes: filter(clientes),
-        projetos: filter(projetos),
-        contasSociais: filter(contas),
-        formatos: filter(formatos),
-        plataformas: filter(plataformas),
-        membros: filter(membros)
+        produtos,
+        funisDeVendas: funis,
+        clientes,
+        projetos,
+        contasSociais: contas,
+        formatos,
+        plataformas,
+        membros
       });
     } catch (error) {
       console.error("Error loading quick actions data:", error);
@@ -89,6 +111,7 @@ export default function QuickActions() {
       else await Entity.create({ ...entityData, empresa_id: empresa.id });
       toast.success("Salvo com sucesso!");
       toggleModal(modalName, false);
+      if (onActionComplete) onActionComplete();
     } catch (error) {
       console.error(`Error saving ${modalName}:`, error);
     }
@@ -136,44 +159,54 @@ export default function QuickActions() {
         </Button>
       </div>
 
-      <FaturaModal
-        isOpen={modals.fatura}
-        onClose={() => toggleModal('fatura', false)}
-        onSave={(d, id) => handleSave(Fatura, d, id, 'fatura')}
-        produtos={data.produtos}
-        funisDeVendas={data.funisDeVendas}
-        clientes={data.clientes}
-      />
-      <DespesaModal
-        isOpen={modals.despesa}
-        onClose={() => toggleModal('despesa', false)}
-        onSave={(d, id) => handleSave(Despesa, d, id, 'despesa')}
-      />
-      <ClienteModal
-        isOpen={modals.cliente}
-        onClose={() => toggleModal('cliente', false)}
-        onSave={(d, id) => handleSave(Cliente, d, id, 'cliente')}
-        empresaId={empresa.id}
-        membros={data.membros}
-      />
-      <TaskModal
-        isOpen={modals.task}
-        onClose={() => toggleModal('task', false)}
-        onSave={(d, id) => handleSave(Tarefa, d, id, 'task')}
-        projetos={data.projetos}
-        empresaId={empresa.id}
-        membros={data.membros}
-      />
-      <PostModal
-        isOpen={modals.post}
-        onClose={() => toggleModal('post', false)}
-        onSave={(d, id) => handleSave(Post, d, id, 'post')}
-        contas={data.contasSociais}
-        formatos={data.formatos}
-        plataformas={data.plataformas}
-        membros={data.membros}
-        empresaId={empresa.id}
-      />
+      {modals.fatura && (
+        <FaturaModal
+          isOpen={modals.fatura}
+          onClose={() => toggleModal('fatura', false)}
+          onSave={(d, id) => handleSave(Fatura, d, id, 'fatura')}
+          produtos={data.produtos}
+          funisDeVendas={data.funisDeVendas}
+          clientes={data.clientes}
+        />
+      )}
+      {modals.despesa && (
+        <DespesaModal
+          isOpen={modals.despesa}
+          onClose={() => toggleModal('despesa', false)}
+          onSave={(d, id) => handleSave(Despesa, d, id, 'despesa')}
+        />
+      )}
+      {modals.cliente && (
+        <ClienteModal
+          isOpen={modals.cliente}
+          onClose={() => toggleModal('cliente', false)}
+          onSave={(d, id) => handleSave(Cliente, d, id, 'cliente')}
+          empresaId={empresa.id}
+          membros={data.membros}
+        />
+      )}
+      {modals.task && (
+        <TaskModal
+          isOpen={modals.task}
+          onClose={() => toggleModal('task', false)}
+          onSave={(d, id) => handleSave(Tarefa, d, id, 'task')}
+          projetos={data.projetos}
+          empresaId={empresa.id}
+          membros={data.membros}
+        />
+      )}
+      {modals.post && (
+        <PostModal
+          isOpen={modals.post}
+          onClose={() => toggleModal('post', false)}
+          onSave={(d, id) => handleSave(Post, d, id, 'post')}
+          contas={data.contasSociais}
+          formatos={data.formatos}
+          plataformas={data.plataformas}
+          membros={data.membros}
+          empresaId={empresa.id}
+        />
+      )}
     </>
   );
 }

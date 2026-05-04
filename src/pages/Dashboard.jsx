@@ -213,7 +213,14 @@ export default function Dashboard({ session, user }) {
           </Button>
         </div>
 
-        <QuickActions />
+        <QuickActions 
+          empresaId={empresaId}
+          membros={membros}
+          produtos={produtos}
+          clientes={clientes}
+          projetos={projetos}
+          onActionComplete={loadData}
+        />
 
         <Tabs defaultValue="geral" className="w-full">
           <div className="flex justify-center mb-10">
