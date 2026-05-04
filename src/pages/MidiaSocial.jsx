@@ -126,47 +126,38 @@ export default function MidiaSocial() {
     setIsLoading(true);
     try {
       const [
-        postsDataRaw, 
-        contasDataRaw, 
-        marcasDataRaw, 
-        plataformasDataRaw, 
-        formatosDataRaw,
-        fichasEditoriaisDataRaw,
-        usuariosEmpresaData,
+        postsData, 
+        contasData, 
+        marcasData, 
+        plataformasData, 
+        formatosData,
+        fichasEditoriaisData,
         membrosData,
-        etapasDataRaw
+        etapasData
       ] = await Promise.all([
-        Post.list("-created_date").catch(() => []),
-        ContaSocial.list().catch(() => []),
-        Marca.list().catch(() => []),
-        Plataforma.list().catch(() => []),
-        Formato.list().catch(() => []),
-        FichaEditorial.list("-created_date").catch(() => []),
-        UsuarioEmpresa.filter({ empresa_id: empresaId, ativo: true }).catch(() => []),
-        Membro.list().catch(() => []),
+        Post.filter({ empresa_id: empresaId }, "-created_date").catch(() => []),
+        ContaSocial.filter({ empresa_id: empresaId }).catch(() => []),
+        Marca.filter({ empresa_id: empresaId }).catch(() => []),
+        Plataforma.filter({ empresa_id: empresaId }).catch(() => []),
+        Formato.filter({ empresa_id: empresaId }).catch(() => []),
+        FichaEditorial.filter({ empresa_id: empresaId }, "-created_date").catch(() => []),
+        Membro.filter({ empresa_id: empresaId }).catch(() => []),
         PostEtapa.filter({ empresa_id: empresaId }, "ordem").catch(() => [])
       ]);
       
       // Filter data by empresa_id on client side for security
       const allPosts = Array.isArray(postsDataRaw) ? postsDataRaw.filter(item => item.empresa_id === empresaId) : [];
-      const filteredContas = Array.isArray(contasDataRaw) ? contasDataRaw.filter(item => item.empresa_id === empresaId) : [];
-      const filteredMarcas = Array.isArray(marcasDataRaw) ? marcasDataRaw.filter(item => item.empresa_id === empresaId) : [];
-      const filteredPlataformas = Array.isArray(plataformasDataRaw) ? plataformasDataRaw.filter(item => item.empresa_id === empresaId) : [];
-      const filteredFormatos = Array.isArray(formatosDataRaw) ? formatosDataRaw.filter(item => item.empresa_id === empresaId) : [];
-      const filteredFichasEditoriais = Array.isArray(fichasEditoriaisDataRaw) ? fichasEditoriaisDataRaw.filter(item => item.empresa_id === empresaId) : [];
-      const filteredMembros = Array.isArray(membrosData) ? membrosData.filter(item => item.empresa_id === empresaId) : [];
-      const filteredEtapas = Array.isArray(etapasDataRaw) ? etapasDataRaw.filter(item => item.empresa_id === empresaId) : [];
-
-      setPosts(allPosts);
-      setContas(filteredContas);
-      setMarcas(filteredMarcas);
-      setPlataformas(filteredPlataformas);
-      setFormatos(filteredFormatos);
-      setFichasEditoriais(filteredFichasEditoriais);
-      setMembros(filteredMembros);
-      setEtapas(filteredEtapas);
+      setPosts(postsData);
+      setContas(contasData);
+      setMarcas(marcasData);
+      setPlataformas(plataformasData);
+      setFormatos(formatosData);
+      setFichasEditoriais(fichasEditoriaisData);
+      setMembros(membrosData);
+      setEtapas(etapasData);
 
       // Load responsaveis (users from this company)
+      const usuariosEmpresaData = await UsuarioEmpresa.filter({ empresa_id: empresaId }).catch(() => []);
       if (usuariosEmpresaData && Array.isArray(usuariosEmpresaData) && usuariosEmpresaData.length > 0) {
         const userEmails = usuariosEmpresaData.map(ue => ue.usuario_email).filter(Boolean);
         try {
@@ -830,26 +821,25 @@ export default function MidiaSocial() {
 
         </Tabs>
 
-        <PostModal
-          isOpen={showModal}
-          onClose={() => setShowModal(false)}
-          onSave={handleSavePost}
-          initialDate={selectedDate}
-          contas={contas}
-          formatos={formatos}
-          plataformas={plataformas}
-          membros={membros}
-          empresaId={empresaId}
-          etapas={etapas}
-        />
+        {showModal && (
+          <PostModal
+            isOpen={showModal}
+            onClose={() => { setShowModal(false); setSelectedDate(null); }}
+            onSave={handleSavePost}
+            prefilledData={selectedDate ? { data_agendamento: selectedDate } : {}}
+            contas={contas}
+            formatos={formatos}
+            plataformas={plataformas}
+            membros={membros}
+            empresaId={empresaId}
+            etapas={etapas}
+          />
+        )}
 
-        {selectedPost && (
+        {showViewModal && selectedPost && (
           <PostViewModal
             isOpen={showViewModal}
-            onClose={() => {
-              setShowViewModal(false);
-              setSelectedPost(null);
-            }}
+            onClose={() => { setShowViewModal(false); setSelectedPost(null); }}
             post={selectedPost}
             onSave={handleSavePost}
             onDelete={handlePostDelete}

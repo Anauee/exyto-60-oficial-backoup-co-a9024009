@@ -96,43 +96,32 @@ export default function Dashboard({ session, user }) {
         usuariosEmpresaData,
         etapasData
       ] = await Promise.all([
-        Tarefa.list("-created_date").catch((e) => { console.error(e); return []; }),
-        Post.list("-created_date").catch((e) => { console.error(e); return []; }),
-        Fatura.list("-created_date").catch((e) => { console.error(e); return []; }),
-        Despesa.list("-created_date").catch((e) => { console.error(e); return []; }),
-        Cliente.list("-created_date").catch((e) => { console.error(e); return []; }),
-        Produto.list("-created_date").catch((e) => { console.error(e); return []; }),
-        Compromisso.list("-created_date").catch((e) => { console.error(e); return []; }),
-        Projeto.list("-created_date").catch((e) => { console.error(e); return []; }),
-        Membro.list().catch((e) => { console.error(e); return []; }),
-        UsuarioEmpresa.filter({ empresa_id: empresa.id, ativo: true }).catch((e) => { console.error(e); return []; }),
-        PostEtapa.filter({ empresa_id: empresa.id }, "ordem").catch((e) => { console.error(e); return []; })
+        Tarefa.filter({ empresa_id: empresa.id }, "-created_date").catch(() => []),
+        Post.filter({ empresa_id: empresa.id }, "-created_date").catch(() => []),
+        Fatura.filter({ empresa_id: empresa.id }, "-created_date").catch(() => []),
+        Despesa.filter({ empresa_id: empresa.id }, "-created_date").catch(() => []),
+        Cliente.filter({ empresa_id: empresa.id }, "-created_date").catch(() => []),
+        Produto.filter({ empresa_id: empresa.id }, "-created_date").catch(() => []),
+        Compromisso.filter({ empresa_id: empresa.id }, "-created_date").catch(() => []),
+        Projeto.filter({ empresa_id: empresa.id }, "-created_date").catch(() => []),
+        Membro.filter({ empresa_id: empresa.id }).catch(() => []),
+        UsuarioEmpresa.filter({ empresa_id: empresa.id, ativo: true }).catch(() => []),
+        PostEtapa.filter({ empresa_id: empresa.id }, "ordem").catch(() => [])
       ]);
 
       if (!isMounted) return;
 
       // Filter data by empresa_id on client side for security
-      const filteredTasks = Array.isArray(tasksData) ? tasksData.filter(item => item && item.empresa_id === empresa.id) : [];
-      const filteredPosts = Array.isArray(postsData) ? postsData.filter(item => item && item.empresa_id === empresa.id) : [];
-      const filteredFaturas = Array.isArray(faturasData) ? faturasData.filter(item => item && item.empresa_id === empresa.id) : [];
-      const filteredDespesas = Array.isArray(despesasData) ? despesasData.filter(item => item && item.empresa_id === empresa.id) : [];
-      const filteredClientes = Array.isArray(clientesData) ? clientesData.filter(item => item && item.empresa_id === empresa.id) : [];
-      const filteredProdutos = Array.isArray(produtosData) ? produtosData.filter(item => item && item.empresa_id === empresa.id) : [];
-      const filteredCompromissos = Array.isArray(compromissosData) ? compromissosData.filter(item => item && item.empresa_id === empresa.id) : [];
-      const filteredProjetos = (projetosData || []).filter(item => item.empresa_id === empresa.id);
-      const filteredMembros = (membrosData || []).filter(item => item.empresa_id === empresa.id);
-      const filteredEtapas = (etapasData || []).filter(item => item.empresa_id === empresa.id);
-
-      setTasks(filteredTasks);
-      setPosts(filteredPosts);
-      setFaturas(filteredFaturas);
-      setDespesas(filteredDespesas);
-      setClientes(filteredClientes);
-      setProdutos(filteredProdutos);
-      setCompromissos(filteredCompromissos);
-      setProjetos(filteredProjetos);
-      setMembros(filteredMembros);
-      setEtapas(filteredEtapas);
+      setTasks(tasksData);
+      setPosts(postsData);
+      setFaturas(faturasData);
+      setDespesas(despesasData);
+      setClientes(clientesData);
+      setProdutos(produtosData);
+      setCompromissos(compromissosData);
+      setProjetos(projetosData);
+      setMembros(membrosData);
+      setEtapas(etapasData);
 
       if (Array.isArray(usuariosEmpresaData) && usuariosEmpresaData.length > 0) {
         const userEmails = usuariosEmpresaData.map(ue => ue.usuario_email).filter(Boolean);
