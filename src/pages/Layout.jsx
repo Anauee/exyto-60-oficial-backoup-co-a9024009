@@ -172,8 +172,18 @@ export default function Layout({ children, currentPageName }) {
   }
 
 
-  // O roteamento de páginas globais é tratado no index.jsx (GlobalLayout)
-  // Aqui só chegam rotas que precisam do Layout completo com sidebar
+  // Verificar se está em páginas "globais" (sem empresa selecionada)
+  const isGlobalPage = [
+    createPageUrl("SelecionarEmpresa"),
+    createPageUrl("PainelPessoal"),
+    "/selecionarempresa",
+    "/painelpessoal"
+  ].some(path => location.pathname === path || currentPageName === path.replace('/', ''));
+
+  // Se está em uma página global, renderizar apenas o conteúdo sem layout de sidebar de empresa
+  if (isGlobalPage) {
+    return children;
+  }
 
   const hasPermission = (permission, item) => {
     // Se o usuário for admin global (do banco de dados), tem acesso total
@@ -250,18 +260,17 @@ export default function Layout({ children, currentPageName }) {
                       <SidebarMenuItem key={item.title}>
                         <SidebarMenuButton
                           asChild
-                          isActive={location.pathname.toLowerCase() === item.url.toLowerCase() || (item.url === '/dashboard' && location.pathname === '/')}
                           className={`
                             transition-all duration-300 rounded-xl h-12 px-4 group
-                            ${(location.pathname.toLowerCase() === item.url.toLowerCase() || (item.url === '/dashboard' && location.pathname === '/'))
+                            ${location.pathname === item.url
                               ? 'bg-primary/10 text-primary shadow-[0_0_20px_rgba(var(--primary),0.05)] border-l-4 border-primary'
                               : 'hover:bg-muted text-muted-foreground hover:text-foreground border-l-4 border-transparent'
                             }
                           `}
                         >
-                          <Link to={item.url}>
+                          <Link to={item.url} className="flex items-center gap-4 w-full">
                             <item.icon className={`w-5 h-5 transition-all duration-300 ${
-                              (location.pathname.toLowerCase() === item.url.toLowerCase() || (item.url === '/dashboard' && location.pathname === '/'))
+                              location.pathname === item.url
                                 ? 'scale-110 text-primary'
                                 : 'text-muted-foreground group-hover:text-foreground group-hover:scale-110'
                             }`} />
