@@ -76,14 +76,13 @@ export default function HomeDaEmpresa() {
       return;
     }
     const empresaData = JSON.parse(empresaDataString);
+    setEmpresa(empresaData);
     
     try {
       // Re-fetch actual company data to get latest logo/banner
       const freshEmpresa = await Empresa.getById(empresaData.id);
       if (freshEmpresa) {
         setEmpresa(freshEmpresa);
-      } else {
-        setEmpresa(empresaData);
       }
 
       // Carregando todos os dados em paralelo
