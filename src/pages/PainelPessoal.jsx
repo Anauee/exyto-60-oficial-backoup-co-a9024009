@@ -19,7 +19,8 @@ import {
   Circle
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { Tarefa, Projeto, Empresa, UsuarioEmpresa, Pasta } from "@/api/entities";
+import { Tarefa, Projeto, Empresa, UsuarioEmpresa, Pasta, Compromisso, Membro } from "@/api/entities";
+import CalendarioAgendas from "@/components/agendas/CalendarioAgendas";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -42,6 +43,8 @@ export default function PainelPessoal() {
   const [empresas, setEmpresas] = useState([]);
   const [tarefas, setTarefas] = useState([]);
   const [projetos, setProjetos] = useState([]);
+  const [compromissos, setCompromissos] = useState([]);
+  const [membros, setMembros] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("tarefas");
   const [statusFilter, setStatusFilter] = useState("pendentes"); // pendentes, atrasadas, concluidas, todas
@@ -67,10 +70,17 @@ export default function PainelPessoal() {
       const todasTarefas = await Tarefa.filter({ responsavel_id: user.id });
       setTarefas(todasTarefas);
 
-      // 3. Buscar Projetos (aqui filtramos projetos que pertencem às empresas do usuário)
-      // Nota: Idealmente projetos teriam relação de membros, mas por enquanto pegamos das empresas
+      // 3. Buscar Compromissos onde o usuário é participante
+      const todosCompromissos = await Compromisso.list();
+      setCompromissos((todosCompromissos || []).filter(c => c.participantes?.includes(user.id)));
+
+      // 4. Buscar Projetos (aqui filtramos projetos que pertencem às empresas do usuário)
       const todosProjetos = await Projeto.filter({ empresa_id: { $in: empresaIds } });
       setProjetos(todosProjetos);
+
+      // 5. Buscar Membros para o calendário
+      const todosMembros = await Membro.list();
+      setMembros(todosMembros);
 
     } catch (error) {
       console.error("Erro ao carregar dados do Painel Pessoal:", error);
@@ -235,6 +245,13 @@ export default function PainelPessoal() {
                 Tarefas
               </button>
               <button 
+                onClick={() => setActiveTab("calendario")}
+                className={`flex-1 px-8 rounded-xl font-bold flex items-center justify-center gap-2 transition-all ${activeTab === 'calendario' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-muted-foreground hover:text-white'}`}
+              >
+                <Calendar className="w-4 h-4" />
+                Calendário
+              </button>
+              <button 
                 onClick={() => setActiveTab("projetos")}
                 className={`flex-1 px-8 rounded-xl font-bold flex items-center justify-center gap-2 transition-all ${activeTab === 'projetos' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-muted-foreground hover:text-white'}`}
               >
@@ -338,6 +355,23 @@ export default function PainelPessoal() {
                 <p className="text-muted-foreground font-medium">Tudo limpo por aqui ou nenhum filtro corresponde.</p>
               </div>
             )}
+          </div>
+        ) : activeTab === "calendario" ? (
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
+            <CalendarioAgendas 
+              tarefas={tarefas}
+              compromissos={compromissos}
+              onDateClick={(date) => {
+                // Ao clicar numa data, poderíamos abrir o modal de nova tarefa
+                // ou simplesmente ignorar se for apenas visualização
+              }}
+              onTaskClick={handleEditTask}
+              onAppointmentClick={(appt) => {
+                // Poderíamos implementar visualização de compromisso aqui se necessário
+                toast.info(`Compromisso: ${appt.titulo}`);
+              }}
+              membros={membros}
+            />
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

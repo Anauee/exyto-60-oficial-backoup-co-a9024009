@@ -261,7 +261,7 @@ export default function SelecionarEmpresa() {
             </div>
           </div>
           <h1 className="text-6xl font-black text-foreground mb-6 tracking-tight">
-            Bem-vindo ao <span className="text-primary italic bg-clip-text text-transparent bg-gradient-to-r from-primary to-blue-600">Exyto</span>
+            Todo dia é dia de <span className="text-primary italic bg-clip-text text-transparent bg-gradient-to-r from-primary to-blue-600">vencer!</span>
           </h1>
           <p className="text-2xl text-muted-foreground font-semibold max-w-2xl mx-auto leading-relaxed">
             Escolha a organização que você deseja gerenciar hoje

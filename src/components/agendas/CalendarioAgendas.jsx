@@ -39,7 +39,7 @@ export default function CalendarioAgendas({
   membros
 }) {
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [view, setView] = useState('mensal'); // 'diaria', 'semanal', 'mensal'
+  const [view, setView] = useState('mensal'); // 'diaria', 'semanal', 'quinzenal', 'mensal'
 
   const getDaysToShow = () => {
     if (view === 'mensal') {
@@ -50,6 +50,9 @@ export default function CalendarioAgendas({
       const start = startOfWeek(currentDate, { weekStartsOn: 0 });
       const end = endOfWeek(currentDate, { weekStartsOn: 0 });
       return eachDayOfInterval({ start, end });
+    } else if (view === 'quinzenal') {
+      const start = startOfWeek(currentDate, { weekStartsOn: 0 });
+      return eachDayOfInterval({ start, end: addDays(start, 13) });
     } else {
       return [currentDate];
     }
@@ -74,6 +77,8 @@ export default function CalendarioAgendas({
       setCurrentDate(direction === 'next' ? addMonths(currentDate, 1) : subMonths(currentDate, 1));
     } else if (view === 'semanal') {
       setCurrentDate(direction === 'next' ? addWeeks(currentDate, 1) : subWeeks(currentDate, 1));
+    } else if (view === 'quinzenal') {
+      setCurrentDate(direction === 'next' ? addDays(currentDate, 14) : subDays(currentDate, 14));
     } else {
       setCurrentDate(direction === 'next' ? addDays(currentDate, 1) : subDays(currentDate, 1));
     }
@@ -87,6 +92,10 @@ export default function CalendarioAgendas({
       return format(currentDate, "MMMM 'de' yyyy", { locale: ptBR });
     } else if (view === 'semanal') {
       return `${format(startOfWeek(currentDate, { weekStartsOn: 0 }), "dd", { locale: ptBR })} - ${format(endOfWeek(currentDate, { weekStartsOn: 0 }), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}`;
+    } else if (view === 'quinzenal') {
+      const start = startOfWeek(currentDate, { weekStartsOn: 0 });
+      const end = addDays(start, 13);
+      return `${format(start, "dd", { locale: ptBR })} - ${format(end, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}`;
     } else {
       return format(currentDate, "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
     }
@@ -121,6 +130,14 @@ export default function CalendarioAgendas({
                 className={`text-xs font-bold rounded-xl px-4 ${view === 'semanal' ? 'shadow-lg' : 'text-muted-foreground'}`}
               >
                 Semanal
+              </Button>
+              <Button
+                variant={view === 'quinzenal' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setView('quinzenal')}
+                className={`text-xs font-bold rounded-xl px-4 ${view === 'quinzenal' ? 'shadow-lg' : 'text-muted-foreground'}`}
+              >
+                Quinzenal
               </Button>
               <Button
                 variant={view === 'mensal' ? 'default' : 'ghost'}
@@ -166,6 +183,7 @@ export default function CalendarioAgendas({
         <div className={`${
           view === 'mensal' ? 'grid grid-cols-7 gap-px bg-border/20' : 
           view === 'semanal' ? 'grid grid-cols-7 gap-px bg-border/20' : 
+          view === 'quinzenal' ? 'grid grid-cols-7 gap-px bg-border/20' : 
           'grid grid-cols-1'
         }`}>
           {days.map((day, index) => {
