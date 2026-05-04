@@ -131,9 +131,9 @@ export default function EmpresasTab({ empresas, users, associations, isLoading, 
       {/* Stats Quick View */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {[
-          { label: 'Total', value: empresas?.length || 0, icon: Building2, color: 'text-blue-500' },
-          { label: 'Ativas', value: empresas?.filter(e => e.ativo !== false).length || 0, icon: TrendingUp, color: 'text-emerald-500' },
-          { label: 'Premium', value: empresas?.filter(e => e.plano === 'empresarial').length || 0, icon: Layout, color: 'text-purple-500' },
+          { label: 'Total', value: (empresas || []).length, icon: Building2, color: 'text-blue-500' },
+          { label: 'Ativas', value: (empresas || []).filter(e => e.ativo !== false).length, icon: TrendingUp, color: 'text-emerald-500' },
+          { label: 'Premium', value: (empresas || []).filter(e => e.plano === 'empresarial').length, icon: Layout, color: 'text-purple-500' },
         ].map((stat, i) => (
           <Card key={i} className="bg-white/5 border-white/10 rounded-3xl overflow-hidden backdrop-blur-sm">
             <CardContent className="p-6 flex items-center justify-between">
