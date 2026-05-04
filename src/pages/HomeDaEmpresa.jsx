@@ -262,8 +262,8 @@ export default function HomeDaEmpresa() {
             )}
             
             {userRole === 'admin' && (
-              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4 backdrop-blur-sm z-30">
-                <label className="cursor-pointer bg-white/20 hover:bg-white/30 backdrop-blur-md text-white px-8 py-4 rounded-2xl font-black flex items-center gap-3 transition-all border border-white/20 shadow-2xl hover:scale-105 active:scale-95 block">
+              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4 backdrop-blur-sm z-30 pointer-events-none">
+                <label className="cursor-pointer bg-white/20 hover:bg-white/30 backdrop-blur-md text-white px-8 py-4 rounded-2xl font-black flex items-center gap-3 transition-all border border-white/20 shadow-2xl hover:scale-105 active:scale-95 block pointer-events-auto">
                   <Camera className="w-5 h-5" />
                   <span>Alterar Banner</span>
                   <input type="file" className="hidden" accept="image/*" onChange={(e) => handleFileUpload(e, 'banner')} />
@@ -271,8 +271,8 @@ export default function HomeDaEmpresa() {
               </div>
             )}
             
-            <div className="absolute bottom-0 left-0 w-full p-8 bg-gradient-to-t from-black/90 to-transparent flex items-end gap-6 z-20">
-              <div className="relative group/logo">
+            <div className="absolute bottom-0 left-0 w-full p-8 bg-gradient-to-t from-black/90 to-transparent flex items-end gap-6 z-20 pointer-events-none">
+              <div className="relative group/logo pointer-events-auto">
                 <div className="w-24 h-24 md:w-32 md:h-32 rounded-[2rem] bg-card border-4 border-background shadow-2xl flex items-center justify-center overflow-hidden">
                   {empresa.logo_url ? (
                     <img src={empresa.logo_url} alt="Logo" className="w-full h-full object-cover" />
@@ -287,7 +287,7 @@ export default function HomeDaEmpresa() {
                   </label>
                 )}
               </div>
-              <div className="mb-2">
+              <div className="mb-2 pointer-events-none">
                 <h1 className="text-3xl md:text-5xl font-black text-white tracking-tight drop-shadow-xl">{empresa.nome}</h1>
                 <p className="text-white/70 font-bold uppercase tracking-widest text-xs md:text-sm drop-shadow-md">Ecossistema de Gestão e Comunicação</p>
               </div>
