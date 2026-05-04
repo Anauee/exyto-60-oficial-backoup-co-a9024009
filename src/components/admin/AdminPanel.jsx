@@ -154,8 +154,11 @@ export default function AdminPanel({ isOpen, onClose, onEmpresasUpdate }) {
               <TabsContent value="usuarios" className="mt-0 focus-visible:outline-none">
                 <UsuariosTab
                   users={users}
+                  empresas={empresas}
+                  associations={associations}
                   isLoading={isLoading}
                   onManagePermissions={handleManagePermissions}
+                  onUpdate={loadAdminData}
                 />
               </TabsContent>
               

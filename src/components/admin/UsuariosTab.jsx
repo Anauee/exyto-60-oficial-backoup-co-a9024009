@@ -4,6 +4,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   User as UserIcon, 
   Settings, 
@@ -14,7 +15,8 @@ import {
   ShieldAlert,
   Loader2,
   ChevronRight,
-  UserPlus
+  UserPlus,
+  Building2
 } from "lucide-react";
 import InviteUserAdminModal from './InviteUserAdminModal';
 
@@ -30,9 +32,10 @@ const permissoesDisponiveis = [
   { id: 'documentos-e-anotacoes', label: 'Documentos e Anotações' }
 ];
 
-export default function UsuariosTab({ users, isLoading, onManagePermissions, onUpdate }) {
+export default function UsuariosTab({ users, empresas, associations, isLoading, onManagePermissions, onUpdate }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("todos"); // todos, admin, user
+  const [empresaFilter, setEmpresaFilter] = useState("todas");
   const [showInviteModal, setShowInviteModal] = useState(false);
 
   const filteredUsers = useMemo(() => {
@@ -45,10 +48,14 @@ export default function UsuariosTab({ users, isLoading, onManagePermissions, onU
         statusFilter === "todos" || 
         (statusFilter === "admin" && user.role === "admin") || 
         (statusFilter === "user" && user.role === "user");
+
+      const matchesEmpresa = 
+        empresaFilter === "todas" || 
+        (associations || []).some(a => a.usuario_id === user.id && a.empresa_id === empresaFilter);
         
-      return matchesSearch && matchesStatus;
+      return matchesSearch && matchesStatus && matchesEmpresa;
     });
-  }, [users, searchTerm, statusFilter]);
+  }, [users, searchTerm, statusFilter, empresaFilter, associations]);
 
   if (isLoading) {
     return (
@@ -79,7 +86,25 @@ export default function UsuariosTab({ users, isLoading, onManagePermissions, onU
           </div>
         </div>
         
-        <div className="flex gap-4 w-full md:w-auto">
+        <div className="flex flex-wrap gap-4 w-full md:w-auto items-end">
+          <div className="space-y-2 flex-1 md:flex-none min-w-[200px]">
+            <div className="flex items-center gap-2 text-white/50 text-[10px] font-black uppercase tracking-widest ml-2">
+              <Building2 className="w-3 h-3" />
+              Empresa
+            </div>
+            <Select value={empresaFilter} onValueChange={setEmpresaFilter}>
+              <SelectTrigger className="h-14 bg-black/40 border-white/10 rounded-2xl text-white focus:ring-primary/20">
+                <SelectValue placeholder="Filtrar por Empresa" />
+              </SelectTrigger>
+              <SelectContent className="bg-[#18181b] border-white/10 rounded-2xl text-white">
+                <SelectItem value="todas">Todas as Empresas</SelectItem>
+                {(empresas || []).map(emp => (
+                  <SelectItem key={emp.id} value={emp.id}>{emp.nome}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
           <div className="flex bg-black/40 p-1.5 rounded-2xl border border-white/10 h-14 shrink-0">
             {[
               { id: 'todos', label: 'Todos' },
@@ -135,17 +160,34 @@ export default function UsuariosTab({ users, isLoading, onManagePermissions, onU
                     </div>
                   </TableCell>
                   <TableCell className="p-6">
-                    <div className="flex items-center gap-2">
-                      {user.role === 'admin' ? (
-                        <Badge className="bg-rose-500/20 text-rose-500 border-none px-4 py-1.5 rounded-full font-black text-[10px] uppercase tracking-widest gap-1.5">
-                          <ShieldAlert className="w-3 h-3" />
-                          Sistema Admin
-                        </Badge>
-                      ) : (
-                        <Badge className="bg-white/10 text-white/60 border-none px-4 py-1.5 rounded-full font-black text-[10px] uppercase tracking-widest gap-1.5">
-                          <Shield className="w-3 h-3" />
-                          Usuário Padrão
-                        </Badge>
+                    <div className="flex flex-col gap-2">
+                      <div className="flex items-center gap-2">
+                        {user.role === 'admin' ? (
+                          <Badge className="bg-rose-500/20 text-rose-500 border-none px-4 py-1.5 rounded-full font-black text-[10px] uppercase tracking-widest gap-1.5">
+                            <ShieldAlert className="w-3 h-3" />
+                            Sistema Admin
+                          </Badge>
+                        ) : (
+                          <Badge className="bg-white/10 text-white/60 border-none px-4 py-1.5 rounded-full font-black text-[10px] uppercase tracking-widest gap-1.5">
+                            <Shield className="w-3 h-3" />
+                            Usuário Padrão
+                          </Badge>
+                        )}
+                      </div>
+                      
+                      {empresaFilter !== "todas" && (
+                        <div className="flex items-center gap-2">
+                          {(() => {
+                            const assoc = (associations || []).find(a => a.usuario_id === user.id && a.empresa_id === empresaFilter);
+                            if (!assoc) return null;
+                            return (
+                              <Badge className="bg-primary/10 text-primary border-none px-4 py-1.5 rounded-full font-black text-[9px] uppercase tracking-widest gap-1.5">
+                                <Building2 className="w-2.5 h-2.5" />
+                                {assoc.perfil} nesta empresa
+                              </Badge>
+                            );
+                          })()}
+                        </div>
                       )}
                     </div>
                   </TableCell>
