@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { useLocation, Link } useNavigate } from 'react-router-dom';
+import { useLocation, Link, useNavigate } from 'react-router-dom';
 import { Pasta, Documento, Post, Membro, User, ContaSocial, Formato, Plataforma } from '@/api/entities';
 import { createPageUrl } from '@/utils';
 import { Button } from "@/components/ui/button";
