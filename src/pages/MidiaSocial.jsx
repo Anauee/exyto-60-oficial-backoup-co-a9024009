@@ -142,7 +142,7 @@ export default function MidiaSocial() {
         Formato.filter({ empresa_id: empresaId }).catch(() => []),
         FichaEditorial.filter({ empresa_id: empresaId }, "-created_date").catch(() => []),
         Membro.filter({ empresa_id: empresaId }).catch(() => []),
-        PostEtapa.filter({ empresa_id: empresaId }, "order").catch(() => [])
+        PostEtapa.filter({ empresa_id: empresaId }, "ordem").catch(() => [])
       ]);
       
       // Filter data by empresa_id on client side for security
@@ -650,25 +650,42 @@ export default function MidiaSocial() {
             />
             
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mt-8">
-              {['ideia', 'producao', 'revisao', 'agendado', 'publicado'].map((status) => {
-                const filteredCount = filteredPosts.filter(p => p.status === status).length;
-                
-                return (
-                  <div key={status} className="bg-card rounded-xl p-5 border border-border shadow-sm">
-                    <div className="text-center">
-                      <div className="text-3xl font-bold text-foreground mb-1 tracking-tight">
-                        {filteredCount}
-                      </div>
-                      <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
-                        {status === 'ideia' ? 'Ideias' : 
-                         status === 'producao' ? 'Produção' : 
-                         status === 'revisao' ? 'Revisão' :
-                         status}
+              {etapas.length > 0 ? (
+                etapas.map((etapa) => {
+                  const filteredCount = filteredPosts.filter(p => p.status === etapa.id).length;
+                  return (
+                    <div key={etapa.id} className="bg-card rounded-xl p-5 border border-border shadow-sm">
+                      <div className="text-center">
+                        <div className="text-3xl font-bold text-foreground mb-1 tracking-tight">
+                          {filteredCount}
+                        </div>
+                        <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                          {etapa.nome}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })
+              ) : (
+                ['ideia', 'producao', 'revisao', 'agendado', 'publicado'].map((status) => {
+                  const filteredCount = filteredPosts.filter(p => p.status === status).length;
+                  return (
+                    <div key={status} className="bg-card rounded-xl p-5 border border-border shadow-sm">
+                      <div className="text-center">
+                        <div className="text-3xl font-bold text-foreground mb-1 tracking-tight">
+                          {filteredCount}
+                        </div>
+                        <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                          {status === 'ideia' ? 'Ideias' : 
+                           status === 'producao' ? 'Produção' : 
+                           status === 'revisao' ? 'Revisão' :
+                           status}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
             </div>
           </TabsContent>
 
@@ -797,25 +814,42 @@ export default function MidiaSocial() {
               plataformas={plataformas}
             />
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mt-8">
-              {['ideia', 'producao', 'revisao', 'agendado', 'publicado'].map((status) => {
-                const filteredCount = filteredPosts.filter(p => p.status === status).length;
-                
-                return (
-                  <div key={status} className="bg-card rounded-xl p-5 border border-border shadow-sm">
-                    <div className="text-center">
-                      <div className="text-3xl font-bold text-foreground mb-1 tracking-tight">
-                        {filteredCount}
-                      </div>
-                      <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
-                        {status === 'ideia' ? 'Ideias' : 
-                         status === 'producao' ? 'Produção' : 
-                         status === 'revisao' ? 'Revisão' :
-                         status}
+              {etapas.length > 0 ? (
+                etapas.map((etapa) => {
+                  const filteredCount = filteredPosts.filter(p => p.status === etapa.id).length;
+                  return (
+                    <div key={etapa.id} className="bg-card rounded-xl p-5 border border-border shadow-sm">
+                      <div className="text-center">
+                        <div className="text-3xl font-bold text-foreground mb-1 tracking-tight">
+                          {filteredCount}
+                        </div>
+                        <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                          {etapa.nome}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })
+              ) : (
+                ['ideia', 'producao', 'revisao', 'agendado', 'publicado'].map((status) => {
+                  const filteredCount = filteredPosts.filter(p => p.status === status).length;
+                  return (
+                    <div key={status} className="bg-card rounded-xl p-5 border border-border shadow-sm">
+                      <div className="text-center">
+                        <div className="text-3xl font-bold text-foreground mb-1 tracking-tight">
+                          {filteredCount}
+                        </div>
+                        <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                          {status === 'ideia' ? 'Ideias' : 
+                           status === 'producao' ? 'Produção' : 
+                           status === 'revisao' ? 'Revisão' :
+                           status}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
             </div>
           </TabsContent>
 
