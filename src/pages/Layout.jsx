@@ -172,11 +172,16 @@ export default function Layout({ children, currentPageName }) {
   }
 
 
-  // Verificar se está na página SelecionarEmpresa APÓS os hooks
-  const isSelecionarEmpresaPage = location.pathname === createPageUrl("SelecionarEmpresa") || currentPageName === "SelecionarEmpresa";
+  // Verificar se está em páginas "globais" (sem empresa selecionada)
+  const isGlobalPage = [
+    createPageUrl("SelecionarEmpresa"),
+    createPageUrl("PainelPessoal"),
+    "/selecionarempresa",
+    "/painelpessoal"
+  ].some(path => location.pathname === path || currentPageName === path.replace('/', ''));
 
-  // Se está na página SelecionarEmpresa, renderizar apenas o conteúdo sem layout
-  if (isSelecionarEmpresaPage) {
+  // Se está em uma página global, renderizar apenas o conteúdo sem layout de sidebar de empresa
+  if (isGlobalPage) {
     return children;
   }
 

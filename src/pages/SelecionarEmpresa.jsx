@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Building2, Plus, Settings, Users, Crown, Lock, AlertCircle, Loader2 } from "lucide-react";
+import { Building2, Plus, Settings, Users, Crown, Lock, AlertCircle, Loader2, User as UserIcon, LayoutDashboard } from "lucide-react";
 import { createPageUrl } from "@/utils";
 import { supabase } from "@/lib/supabase-client";
 
@@ -266,8 +266,17 @@ export default function SelecionarEmpresa() {
           </p>
         </div>
 
-        {isAdmin() && (
-          <div className="flex justify-center mb-12">
+        <div className="flex justify-center gap-4 mb-12">
+          <Button
+            onClick={() => window.location.href = createPageUrl('PainelPessoal')}
+            variant="outline"
+            className="flex items-center gap-2 h-12 border-primary/20 bg-primary/5 hover:bg-primary/10 text-primary rounded-full px-8 font-bold shadow-lg shadow-primary/5 transition-all active:scale-95"
+          >
+            <UserIcon className="w-4 h-4" />
+            Meu Painel Pessoal
+          </Button>
+
+          {isAdmin() && (
             <Button
               onClick={() => setShowAdminPanel(true)}
               variant="outline"
@@ -276,8 +285,8 @@ export default function SelecionarEmpresa() {
               <Crown className="w-4 h-4" />
               Painel Admin
             </Button>
-          </div>
-        )}
+          )}
+        </div>
 
         {/* Exibir empresas com acesso ou mensagem se não houver */}
         {todasEmpresas.length === 0 && minhasEmpresas.length === 0 ? (
@@ -301,28 +310,37 @@ export default function SelecionarEmpresa() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 px-4">
-            {/* Lógica unificada para mostrar todas as empresas */}
-            {(todasEmpresas || []).map((empresa) => {
+            {/* CARD PAINEL PESSOAL - SEMPRE EM PRIMEIRO */}
+            <Card 
+              className="group cursor-pointer transition-all duration-700 border border-primary/20 shadow-2xl bg-gradient-to-br from-primary/10 via-background to-background backdrop-blur-2xl rounded-[3rem] overflow-hidden hover:border-primary/40 hover:shadow-primary/10 hover:-translate-y-4"
+              onClick={() => window.location.href = createPageUrl('PainelPessoal')}
+            >
+              <CardHeader className="text-center pb-8 pt-12 relative">
+                <div className="w-28 h-28 mx-auto rounded-[2.5rem] flex items-center justify-center mb-8 shadow-2xl transition-all duration-500 bg-gradient-to-br from-primary to-blue-600 group-hover:scale-110 group-hover:rotate-3 shadow-primary/20">
+                  <UserIcon className="w-12 h-12 text-white" />
+                </div>
+                <CardTitle className="text-3xl font-black tracking-tight mb-2 text-foreground">
+                  Painel Pessoal
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="text-center pb-12">
+                <p className="text-muted-foreground font-bold opacity-80 px-6">
+                  Veja todas as suas tarefas e projetos de todas as empresas em um só lugar.
+                </p>
+              </CardContent>
+            </Card>
+
+            {/* Lógica unificada para mostrar apenas empresas com acesso */}
+            {(minhasEmpresas || []).map((empresa) => {
               if (!empresa) return null;
-              const temAcesso = temAcessoEmpresa(empresa.id);
               
               return (
                 <Card 
                   key={empresa.id}
-                  className={`group transition-all duration-700 border border-border/40 shadow-2xl bg-card/40 backdrop-blur-2xl rounded-[3rem] overflow-hidden ${
-                    temAcesso 
-                      ? 'cursor-pointer hover:border-primary/40 hover:shadow-primary/10 hover:-translate-y-4' 
-                      : 'opacity-40 grayscale cursor-not-allowed border-dashed'
-                  }`}
-                  onClick={() => temAcesso && handleSelecionarEmpresa(empresa)}
+                  className="group transition-all duration-700 border border-border/40 shadow-2xl bg-card/40 backdrop-blur-2xl rounded-[3rem] overflow-hidden cursor-pointer hover:border-primary/40 hover:shadow-primary/10 hover:-translate-y-4"
+                  onClick={() => handleSelecionarEmpresa(empresa)}
                 >
                   <CardHeader className="text-center pb-8 pt-12 relative">
-                    {!temAcesso && (
-                      <div className="absolute top-6 right-8 bg-muted/50 p-3 rounded-2xl backdrop-blur-md" title="Você não tem acesso a esta empresa">
-                        <Lock className="w-5 h-5 text-muted-foreground" />
-                      </div>
-                    )}
-                    
                     {empresa.logo_url ? (
                       <div className="relative inline-block mb-8">
                         <img 
@@ -332,25 +350,17 @@ export default function SelecionarEmpresa() {
                         />
                       </div>
                     ) : (
-                      <div className={`w-28 h-28 mx-auto rounded-[2.5rem] flex items-center justify-center mb-8 shadow-2xl transition-all duration-500 ${
-                        temAcesso 
-                          ? 'bg-gradient-to-br from-primary to-primary/60 group-hover:scale-110 group-hover:rotate-3 shadow-primary/20' 
-                          : 'bg-muted'
-                      }`}>
-                        <Building2 className={`w-12 h-12 ${temAcesso ? 'text-primary-foreground' : 'text-muted-foreground'}`} />
+                      <div className="w-28 h-28 mx-auto rounded-[2.5rem] flex items-center justify-center mb-8 shadow-2xl transition-all duration-500 bg-gradient-to-br from-primary to-primary/60 group-hover:scale-110 group-hover:rotate-3 shadow-primary/20">
+                        <Building2 className="w-12 h-12 text-primary-foreground" />
                       </div>
                     )}
-                    <CardTitle className={`text-3xl font-black tracking-tight mb-2 ${temAcesso ? 'text-foreground' : 'text-muted-foreground'}`}>
+                    <CardTitle className="text-3xl font-black tracking-tight mb-2 text-foreground">
                       {empresa.nome}
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="text-center pb-12">
                     <div className="flex justify-center items-center gap-4">
-                      <span className={`px-6 py-2 text-[10px] font-black rounded-full uppercase tracking-[0.2em] transition-all duration-500 ${
-                        temAcesso 
-                          ? 'bg-primary/10 text-primary border border-primary/20 group-hover:bg-primary group-hover:text-primary-foreground' 
-                          : 'bg-muted text-muted-foreground'
-                      }`}>
+                      <span className="px-6 py-2 text-[10px] font-black rounded-full uppercase tracking-[0.2em] transition-all duration-500 bg-primary/10 text-primary border border-primary/20 group-hover:bg-primary group-hover:text-primary-foreground">
                         {empresa.plano}
                       </span>
                     </div>
