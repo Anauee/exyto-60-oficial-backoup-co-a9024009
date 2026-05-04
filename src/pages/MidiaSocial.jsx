@@ -146,7 +146,6 @@ export default function MidiaSocial() {
       ]);
       
       // Filter data by empresa_id on client side for security
-      const allPosts = Array.isArray(postsDataRaw) ? postsDataRaw.filter(item => item.empresa_id === empresaId) : [];
       setPosts(postsData);
       setContas(contasData);
       setMarcas(marcasData);
