@@ -59,16 +59,19 @@ const PAGES = {
 }
 
 function _getCurrentPage(url) {
-    if (url.endsWith('/')) {
-        url = url.slice(0, -1);
-    }
-    let urlLastPart = url.split('/').pop();
-    if (urlLastPart.includes('?')) {
-        urlLastPart = urlLastPart.split('?')[0];
-    }
-
-    const pageName = Object.keys(PAGES).find(page => page.toLowerCase() === urlLastPart.toLowerCase());
-    return pageName || Object.keys(PAGES)[0];
+    if (!url) return Object.keys(PAGES)[0];
+    
+    // Remover query strings e barras finais para uma comparação limpa
+    const cleanPath = url.split('?')[0].replace(/\/$/, '');
+    const urlParts = cleanPath.split('/');
+    const urlLastPart = urlParts[urlParts.length - 1] || 'dashboard';
+    
+    // Encontrar a página correspondente no objeto PAGES (case insensitive)
+    const pageName = Object.keys(PAGES).find(page => 
+        page.toLowerCase() === urlLastPart.toLowerCase()
+    );
+    
+    return pageName || 'Dashboard';
 }
 
 function PagesContent() {
@@ -76,7 +79,7 @@ function PagesContent() {
     const currentPage = _getCurrentPage(location.pathname);
     
     return (
-        <Layout key={location.pathname} currentPageName={currentPage}>
+        <Layout currentPageName={currentPage}>
             <Routes>            
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/dashboard" element={<Dashboard />} />
