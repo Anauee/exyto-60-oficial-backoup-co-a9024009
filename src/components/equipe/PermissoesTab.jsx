@@ -187,7 +187,7 @@ export default function PermissoesTab({ empresaId, currentUserRole }) {
                       size="sm" 
                       className="rounded-xl font-bold gap-2 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50"
                       onClick={() => handleEdit(usuario)}
-                      disabled={currentUserRole !== 'admin' && usuario.perfil === 'admin'}
+                      disabled={usuario.perfil === 'admin'}
                     >
                       <Settings2 className="w-4 h-4" />
                       Configurar
@@ -221,9 +221,6 @@ export default function PermissoesTab({ empresaId, currentUserRole }) {
                   <SelectItem value="operador" className="rounded-xl">Operador (Acesso personalizado)</SelectItem>
                   <SelectItem value="gestor" className="rounded-xl">Gestor (Controle da Operação)</SelectItem>
                   <SelectItem value="dono" className="rounded-xl">Dono (Acesso Total à Empresa)</SelectItem>
-                  {currentUserRole === 'admin' && (
-                    <SelectItem value="admin" className="rounded-xl">Sistema Admin (Controle Global)</SelectItem>
-                  )}
                 </SelectContent>
               </Select>
             </div>
