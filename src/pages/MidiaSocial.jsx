@@ -142,7 +142,7 @@ export default function MidiaSocial() {
         Formato.filter({ empresa_id: empresaId }).catch(() => []),
         FichaEditorial.filter({ empresa_id: empresaId }, "-created_date").catch(() => []),
         Membro.filter({ empresa_id: empresaId }).catch(() => []),
-        PostEtapa.filter({ empresa_id: empresaId }, "ordem").catch(() => [])
+        PostEtapa.filter({ empresa_id: empresaId }, "order").catch(() => [])
       ]);
       
       // Filter data by empresa_id on client side for security

@@ -106,7 +106,7 @@ export default function Dashboard({ session, user }) {
         Projeto.filter({ empresa_id: empresa.id }, "-created_date").catch(() => []),
         Membro.filter({ empresa_id: empresa.id }).catch(() => []),
         UsuarioEmpresa.filter({ empresa_id: empresa.id, ativo: true }).catch(() => []),
-        PostEtapa.filter({ empresa_id: empresa.id }, "ordem").catch(() => [])
+        PostEtapa.filter({ empresa_id: empresa.id }, "order").catch(() => [])
       ]);
 
       if (!isMounted) return;
