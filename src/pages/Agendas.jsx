@@ -310,6 +310,8 @@ export default function Agendas() {
           await Tarefa.create({ ...taskData, empresa_id: empresaId, status: 'a_fazer' });
         }
       }
+      setShowTaskModal(false);
+      setEditingTask(null);
       loadScheduleData(true);
     } catch (error) {
       console.error("Erro ao salvar tarefa:", error);
@@ -323,6 +325,8 @@ export default function Agendas() {
       } else {
         await Compromisso.create({ ...appointmentData, empresa_id: empresaId });
       }
+      setShowAppointmentModal(false);
+      setEditingAppointment(null);
       loadScheduleData(true);
     } catch (error) {
       console.error("Erro ao salvar compromisso:", error);

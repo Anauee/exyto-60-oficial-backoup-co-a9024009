@@ -184,10 +184,19 @@ export default function Documentos() {
           data_upload: new Date().toISOString()
         });
       }
+      setShowModal(false);
+      setShowViewModal(false);
       loadDocumentos(true);
     } catch (error) {
       console.error("Erro ao salvar documento:", error);
     }
+  };
+
+  const handleDeleteDocumento = (id) => {
+    // Atualização otimista: remove da lista imediatamente
+    setDocumentos(prev => prev.filter(doc => doc.id !== id));
+    // E recarregamos por segurança
+    loadDocumentos(true);
   };
 
   const handleOpenFile = (url) => {
@@ -465,6 +474,7 @@ export default function Documentos() {
           }}
           documento={selectedDocumento}
           onSave={handleSaveDocumento}
+          onDelete={handleDeleteDocumento}
         />
       </div>
     </div>

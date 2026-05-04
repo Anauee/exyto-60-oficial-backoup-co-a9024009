@@ -259,6 +259,7 @@ export default function Financeiro() {
             await Fatura.create(dataToSave);
         }
     }
+    setShowFaturaModal(false);
     loadFinancialData(true);
   };
 
@@ -295,6 +296,7 @@ export default function Financeiro() {
             await Despesa.create(dataToSave);
         }
     }
+    setShowDespesaModal(false);
     loadFinancialData(true);
   };
 
@@ -331,6 +333,8 @@ export default function Financeiro() {
             break;
         }
       }
+      // Atualização otimista
+      setFaturas(prev => prev.filter(f => f.id !== faturaId));
       loadFinancialData(true);
       setShowFaturaViewModal(false); // Close modal after delete
     } catch (error) {
@@ -371,6 +375,8 @@ export default function Financeiro() {
             break;
         }
       }
+      // Atualização otimista
+      setDespesas(prev => prev.filter(d => d.id !== despesaId));
       loadFinancialData(true);
       setShowDespesaViewModal(false); // Close modal after delete
     } catch (error) {
