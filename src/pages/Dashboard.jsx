@@ -12,6 +12,7 @@ import DashboardFinanceiro from "../components/dashboard/DashboardFinanceiro";
 import DashboardProdutividade from "../components/dashboard/DashboardProdutividade";
 import DashboardVendasMarketing from "../components/dashboard/DashboardVendasMarketing";
 import DashboardRelatorios from "../components/dashboard/DashboardRelatorios"; // Import the new component
+import QuickActions from "@/components/shared/QuickActions";
 import { useAuth } from "@/contexts/AuthContext";
 import AcessoNegado from "@/components/shared/AcessoNegado";
 
@@ -222,6 +223,8 @@ export default function Dashboard({ session, user }) {
             Sair
           </Button>
         </div>
+
+        <QuickActions />
 
         <Tabs defaultValue="geral" className="w-full">
           <div className="flex justify-center mb-10">

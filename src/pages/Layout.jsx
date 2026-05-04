@@ -215,8 +215,12 @@ export default function Layout({ children, currentPageName }) {
                   Trocar empresa
                 </button>
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-gradient-to-br from-primary to-primary/70 rounded-2xl flex items-center justify-center shadow-xl shadow-primary/20 border border-primary/20 transform hover:scale-105 transition-transform">
-                    <Building2 className="w-6 h-6 text-primary-foreground" />
+                  <div className="w-12 h-12 bg-gradient-to-br from-primary to-primary/70 rounded-2xl flex items-center justify-center shadow-xl shadow-primary/20 border border-primary/20 transform hover:scale-105 transition-transform overflow-hidden">
+                    {empresaSelecionada.logo_url ? (
+                      <img src={empresaSelecionada.logo_url} alt={empresaSelecionada.nome} className="w-full h-full object-cover" />
+                    ) : (
+                      <Building2 className="w-6 h-6 text-primary-foreground" />
+                    )}
                   </div>
                   <div className="flex-1 min-w-0">
                     <h2 className="font-black text-foreground text-lg truncate tracking-tight leading-none mb-1">

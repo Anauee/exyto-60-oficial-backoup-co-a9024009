@@ -7,7 +7,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { 
   Home, Plus, Layers, Newspaper, TrendingUp, MonitorSmartphone, Users, 
-  DollarSign, CreditCard, User, ClipboardList, Share2 
+  DollarSign, CreditCard, User, ClipboardList, Share2, Camera, Image as ImageIcon,
+  Building2, Upload
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import SistemaCard from "../components/home_empresa/SistemaCard";
@@ -16,6 +17,7 @@ import MembrosTab from "../components/home_empresa/MembrosTab";
 import CardBoard from "../components/card_board/CardBoard";
 import { createPageUrl } from "@/utils";
 import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 import AcessoNegado from "@/components/shared/AcessoNegado";
 
 // Import Modals for Quick Actions
@@ -183,6 +185,44 @@ export default function HomeDaEmpresa() {
     }
   };
 
+  const handleFileUpload = async (e, type) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    try {
+      setIsLoading(true);
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${empresa.id}-${type}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+      const filePath = `company-assets/${fileName}`;
+
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('images')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('images')
+        .getPublicUrl(filePath);
+
+      // Update empresa in DB
+      const field = type === 'logo' ? 'logo_url' : 'banner_url';
+      await Empresa.update(empresa.id, { [field]: publicUrl });
+
+      // Update local state and localStorage
+      const updatedEmpresa = { ...empresa, [field]: publicUrl };
+      setEmpresa(updatedEmpresa);
+      localStorage.setItem('empresa_selecionada', JSON.stringify(updatedEmpresa));
+      
+      toast.success(`${type === 'logo' ? 'Logo' : 'Banner'} atualizado com sucesso!`);
+    } catch (error) {
+      console.error("Erro no upload:", error);
+      toast.error("Erro ao fazer upload da imagem.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
 
   if (!hasAccess && !isLoading) {
     return <AcessoNegado />;
@@ -209,56 +249,50 @@ export default function HomeDaEmpresa() {
     <>
       <div className="p-6 md:p-8 min-h-screen bg-background/50 transition-colors duration-300">
         <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-6">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center border border-primary/20">
-                <Home className="w-6 h-6 text-primary" />
+          {/* Banner Area */}
+          <div className="relative w-full h-[250px] md:h-[350px] rounded-[2.5rem] overflow-hidden mb-10 border border-border/40 shadow-2xl group">
+            {empresa.banner_url ? (
+              <img src={empresa.banner_url} alt="Banner" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+            ) : (
+              <div className="w-full h-full bg-gradient-to-br from-muted/50 to-muted flex flex-col items-center justify-center gap-4">
+                <ImageIcon className="w-16 h-16 text-muted-foreground/20" />
+                <p className="text-muted-foreground/40 font-bold uppercase tracking-widest text-[10px]">Sem Banner Definido</p>
               </div>
-              <div>
-                <h1 className="text-3xl font-bold text-foreground tracking-tight">{empresa.nome}</h1>
-                <p className="text-muted-foreground font-medium">Ecossistema de Gestão e Comunicação</p>
+            )}
+            
+            {userRole === 'admin' && (
+              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4 backdrop-blur-sm">
+                <label className="cursor-pointer bg-white/20 hover:bg-white/30 backdrop-blur-md text-white px-6 py-3 rounded-2xl font-bold flex items-center gap-2 transition-all border border-white/20">
+                  <Camera className="w-5 h-5" />
+                  Alterar Banner
+                  <input type="file" className="hidden" accept="image/*" onChange={(e) => handleFileUpload(e, 'banner')} />
+                </label>
+              </div>
+            )}
+            
+            <div className="absolute bottom-0 left-0 w-full p-8 bg-gradient-to-t from-black/80 to-transparent flex items-end gap-6">
+              <div className="relative group/logo">
+                <div className="w-24 h-24 md:w-32 md:h-32 rounded-[2rem] bg-card border-4 border-background shadow-2xl flex items-center justify-center overflow-hidden">
+                  {empresa.logo_url ? (
+                    <img src={empresa.logo_url} alt="Logo" className="w-full h-full object-cover" />
+                  ) : (
+                    <Building2 className="w-10 h-10 text-muted-foreground" />
+                  )}
+                </div>
+                {userRole === 'admin' && (
+                  <label className="absolute inset-0 bg-black/40 opacity-0 group-hover/logo:opacity-100 transition-opacity flex items-center justify-center cursor-pointer rounded-[2rem]">
+                    <Upload className="w-8 h-8 text-white" />
+                    <input type="file" className="hidden" accept="image/*" onChange={(e) => handleFileUpload(e, 'logo')} />
+                  </label>
+                )}
+              </div>
+              <div className="mb-2">
+                <h1 className="text-3xl md:text-5xl font-black text-white tracking-tight drop-shadow-xl">{empresa.nome}</h1>
+                <p className="text-white/70 font-bold uppercase tracking-widest text-xs md:text-sm drop-shadow-md">Ecossistema de Gestão e Comunicação</p>
               </div>
             </div>
           </div>
 
-          {/* Quick Action Buttons */}
-          <div className="flex flex-wrap gap-3 mb-10 p-5 bg-card/60 rounded-[2rem] border border-border/40 shadow-xl backdrop-blur-md">
-            <Button
-              className="h-12 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20 border border-emerald-500/20 shadow-none font-bold transition-all"
-              onClick={() => setShowFaturaModal(true)}
-            >
-              <DollarSign className="w-4 h-4 mr-2" />
-              Nova Fatura
-            </Button>
-            <Button
-              className="h-12 rounded-2xl bg-red-500/10 text-red-600 dark:text-red-400 hover:bg-red-500/20 border border-red-500/20 shadow-none font-bold transition-all"
-              onClick={() => setShowDespesaModal(true)}
-            >
-              <CreditCard className="w-4 h-4 mr-2" />
-              Nova Despesa
-            </Button>
-            <Button
-              className="h-12 rounded-2xl bg-blue-500/10 text-blue-600 dark:text-blue-400 hover:bg-blue-500/20 border border-blue-500/20 shadow-none font-bold transition-all"
-              onClick={() => setShowClienteModal(true)}
-            >
-              <User className="w-4 h-4 mr-2" />
-              Novo Cliente
-            </Button>
-            <Button
-              className="h-12 rounded-2xl bg-muted/50 text-foreground hover:bg-muted border border-border/40 shadow-none font-bold transition-all"
-              onClick={() => setShowTaskModal(true)}
-            >
-              <ClipboardList className="w-4 h-4 mr-2" />
-              Nova Tarefa
-            </Button>
-            <Button
-              className="h-12 rounded-2xl bg-muted/50 text-foreground hover:bg-muted border border-border/40 shadow-none font-bold transition-all"
-              onClick={() => setShowPostModal(true)}
-            >
-              <Share2 className="w-4 h-4 mr-2" />
-              Novo Post
-            </Button>
-          </div>
 
           <Tabs defaultValue="sistemas" className="w-full">
             <div className="flex justify-center mb-10">
