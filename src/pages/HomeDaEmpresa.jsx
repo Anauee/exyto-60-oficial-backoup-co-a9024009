@@ -21,6 +21,14 @@ import { supabase } from "@/lib/supabase-client";
 import { toast } from "sonner";
 import AcessoNegado from "@/components/shared/AcessoNegado";
 
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
+import { Trash2 } from "lucide-react";
+
 // Import Modals for Quick Actions
 import FaturaModal from "../components/financeiro/FaturaModal";
 import DespesaModal from "../components/financeiro/DespesaModal";
@@ -215,10 +223,38 @@ export default function HomeDaEmpresa() {
       setEmpresa(updatedEmpresa);
       localStorage.setItem('empresa_selecionada', JSON.stringify(updatedEmpresa));
       
+      // Refresh Auth Context to sync logo across the system (Sidebar, etc)
+      if (refreshAuth) await refreshAuth();
+      
       toast.success(`${type === 'logo' ? 'Logo' : 'Banner'} atualizado com sucesso!`);
     } catch (error) {
       console.error("Erro no upload:", error);
       toast.error("Erro ao fazer upload da imagem.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleRemovePhoto = async (type) => {
+    try {
+      setIsLoading(true);
+      const field = type === 'logo' ? 'logo_url' : 'banner_url';
+      
+      // Update in DB
+      await Empresa.update(empresa.id, { [field]: null });
+
+      // Update local state and localStorage
+      const updatedEmpresa = { ...empresa, [field]: null };
+      setEmpresa(updatedEmpresa);
+      localStorage.setItem('empresa_selecionada', JSON.stringify(updatedEmpresa));
+      
+      // Refresh Auth Context
+      if (refreshAuth) await refreshAuth();
+      
+      toast.success(`${type === 'logo' ? 'Logo' : 'Banner'} removido com sucesso.`);
+    } catch (error) {
+      console.error("Erro ao remover foto:", error);
+      toast.error("Erro ao remover a imagem.");
     } finally {
       setIsLoading(false);
     }
@@ -262,12 +298,33 @@ export default function HomeDaEmpresa() {
             )}
             
             {userRole === 'admin' && (
-              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4 backdrop-blur-sm z-30 pointer-events-none">
-                <label className="cursor-pointer bg-white/20 hover:bg-white/30 backdrop-blur-md text-white px-8 py-4 rounded-2xl font-black flex items-center gap-3 transition-all border border-white/20 shadow-2xl hover:scale-105 active:scale-95 block pointer-events-auto">
-                  <Camera className="w-5 h-5" />
-                  <span>Alterar Banner</span>
-                  <input type="file" className="hidden" accept="image/*" onChange={(e) => handleFileUpload(e, 'banner')} />
-                </label>
+              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center z-30 pointer-events-none">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="cursor-pointer bg-black/60 hover:bg-black/80 backdrop-blur-md text-white px-8 py-4 rounded-2xl font-black flex items-center gap-3 transition-all border border-white/10 shadow-2xl hover:scale-105 active:scale-95 pointer-events-auto">
+                      <Camera className="w-5 h-5" />
+                      <span>Gerenciar Banner</span>
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-56 rounded-2xl border-border/40 backdrop-blur-xl">
+                    <DropdownMenuItem className="py-3 rounded-xl cursor-pointer font-bold gap-3 focus:bg-primary/10 focus:text-primary">
+                      <label className="flex items-center gap-3 w-full cursor-pointer">
+                        <Upload className="w-4 h-4" />
+                        <span>Subir Nova Foto</span>
+                        <input type="file" className="hidden" accept="image/*" onChange={(e) => handleFileUpload(e, 'banner')} />
+                      </label>
+                    </DropdownMenuItem>
+                    {empresa.banner_url && (
+                      <DropdownMenuItem 
+                        onClick={() => handleRemovePhoto('banner')}
+                        className="py-3 rounded-xl cursor-pointer font-bold gap-3 text-red-500 focus:bg-red-500/10 focus:text-red-500"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        <span>Remover Banner</span>
+                      </DropdownMenuItem>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             )}
             
@@ -281,10 +338,33 @@ export default function HomeDaEmpresa() {
                   )}
                 </div>
                 {userRole === 'admin' && (
-                  <label className="absolute inset-0 bg-black/40 opacity-0 group-hover/logo:opacity-100 transition-opacity flex items-center justify-center cursor-pointer rounded-[2rem] z-40 transition-all">
-                    <Upload className="w-8 h-8 text-white" />
-                    <input type="file" className="hidden" accept="image/*" onChange={(e) => handleFileUpload(e, 'logo')} />
-                  </label>
+                  <div className="absolute inset-0 opacity-0 group-hover/logo:opacity-100 transition-all flex items-center justify-center z-40 transition-all">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button className="w-full h-full flex items-center justify-center bg-black/60 rounded-[2rem] cursor-pointer text-white">
+                          <Settings className="w-8 h-8" />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent className="w-56 rounded-2xl border-border/40 backdrop-blur-xl">
+                        <DropdownMenuItem className="py-3 rounded-xl cursor-pointer font-bold gap-3 focus:bg-primary/10 focus:text-primary">
+                          <label className="flex items-center gap-3 w-full cursor-pointer">
+                            <Upload className="w-4 h-4" />
+                            <span>Subir Logo</span>
+                            <input type="file" className="hidden" accept="image/*" onChange={(e) => handleFileUpload(e, 'logo')} />
+                          </label>
+                        </DropdownMenuItem>
+                        {empresa.logo_url && (
+                          <DropdownMenuItem 
+                            onClick={() => handleRemovePhoto('logo')}
+                            className="py-3 rounded-xl cursor-pointer font-bold gap-3 text-red-500 focus:bg-red-500/10 focus:text-red-500"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                            <span>Remover Logo</span>
+                          </DropdownMenuItem>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
                 )}
               </div>
               <div className="mb-2 pointer-events-none">
