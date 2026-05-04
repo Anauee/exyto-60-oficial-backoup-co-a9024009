@@ -27,7 +27,7 @@ import Analytics from "./Analytics";
 import CompleteProfile from "./CompleteProfile";
 import PainelPessoal from "./PainelPessoal";
 
-import { BrowserRouter as Router, Route, Routes, useLocation, Outlet } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, useLocation, Outlet, useNavigate } from 'react-router-dom';
 
 const PAGES = {
     
@@ -74,11 +74,11 @@ function _getCurrentPage(url) {
 // Wrapper para injetar o nome da página atual no Layout
 function LayoutWrapper() {
     const location = useLocation();
-    const currentPage = _getCurrentPage(location.pathname);
+    const currentPage = React.useMemo(() => _getCurrentPage(location.pathname), [location.pathname]);
     
     return (
         <Layout currentPageName={currentPage}>
-            <Outlet />
+            <Outlet key={location.pathname} />
         </Layout>
     );
 }
