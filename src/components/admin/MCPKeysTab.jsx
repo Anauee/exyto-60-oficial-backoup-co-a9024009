@@ -1,12 +1,11 @@
-
 import React, { useState, useEffect } from 'react';
 import { supabase } from "@/lib/supabase-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Shield, RefreshCw, Trash2, Key, User as UserIcon, Lock, Loader2 } from "lucide-react";
+import { Shield, RefreshCw, Trash2, Key, User as UserIcon, Lock, Loader2, ShieldAlert, Fingerprint } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 
 export default function MCPKeysTab() {
@@ -90,101 +89,117 @@ export default function MCPKeysTab() {
   };
 
   return (
-    <div className="space-y-6">
-      <Card className="border-amber-200 bg-amber-50/30">
-        <CardHeader>
-          <CardTitle className="text-amber-800 flex items-center gap-2">
-            <Lock className="w-5 h-5" />
-            Gerar Nova Chave Mestra (Admin)
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-grow space-y-2">
-              <Label htmlFor="keyName">Identificação da Chave</Label>
-              <Input 
-                id="keyName"
-                placeholder="Ex: Chave de Emergência - [Seu Nome]" 
-                value={newKeyName}
-                onChange={(e) => setNewKeyName(e.target.value)}
-                className="bg-white border-amber-200"
-              />
+    <div className="space-y-8 animate-in fade-in duration-700">
+      {/* Warning Alert */}
+      <div className="p-8 rounded-[2.5rem] bg-rose-500/10 border border-rose-500/20 backdrop-blur-xl flex items-start gap-6">
+        <div className="w-14 h-14 rounded-2xl bg-rose-500/20 flex items-center justify-center shrink-0">
+          <ShieldAlert className="w-8 h-8 text-rose-500" />
+        </div>
+        <div className="space-y-1">
+          <h3 className="text-xl font-black text-rose-500 tracking-tight">Zona de Segurança Máxima</h3>
+          <p className="text-rose-500/60 font-medium leading-relaxed">
+            As Chaves Mestras ignoram o isolamento de empresas e fornecem acesso total a todo o banco de dados. 
+            Crie-as apenas para administradores de confiança absoluta e revogue-as imediatamente após o uso.
+          </p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Create Key Card */}
+        <Card className="lg:col-span-1 bg-white/5 border-white/10 rounded-[2.5rem] backdrop-blur-sm overflow-hidden">
+          <CardContent className="p-8 space-y-6">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
+                <RefreshCw className="w-5 h-5 text-primary" />
+              </div>
+              <h3 className="text-lg font-black text-white tracking-tight">Nova Chave Mestra</h3>
             </div>
-            <div className="flex items-end">
+            
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black uppercase tracking-widest text-white/40 ml-2">Identificação</Label>
+                <Input 
+                  placeholder="Nome do Administrador..." 
+                  value={newKeyName}
+                  onChange={(e) => setNewKeyName(e.target.value)}
+                  className="h-14 bg-black/40 border-white/10 rounded-2xl text-white focus:ring-primary/20 placeholder:text-white/10"
+                />
+              </div>
+              
               <Button 
                 onClick={generateNewAdminKey} 
                 disabled={isGenerating}
-                className="bg-amber-600 hover:bg-amber-700 text-white gap-2 w-full md:w-auto"
+                className="w-full h-14 bg-white hover:bg-white/90 text-black font-black rounded-2xl gap-3 shadow-xl transition-all active:scale-95"
               >
-                {isGenerating ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
-                Gerar Chave Global
+                {isGenerating ? <Loader2 className="w-5 h-5 animate-spin" /> : <Shield className="w-5 h-5" />}
+                Gerar Acesso Global
               </Button>
             </div>
-          </div>
-          <p className="text-xs text-amber-700 mt-4">
-            <strong>Atenção:</strong> Chaves Mestras ignoram o isolamento de empresas e têm acesso total a todo o banco de dados.
-          </p>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg font-semibold flex items-center gap-2">
-            <Key className="w-5 h-5 text-slate-500" />
-            Chaves Ativas no Sistema
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="flex justify-center p-8">
-              <Loader2 className="w-8 h-8 animate-spin text-slate-300" />
-            </div>
-          ) : adminKeys.length === 0 ? (
-            <div className="text-center p-8 text-slate-400 border-2 border-dashed rounded-lg">
-              Nenhuma chave mestra ativa encontrada.
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Identificação</TableHead>
-                  <TableHead>Administrador</TableHead>
-                  <TableHead>Chave (Prefixo)</TableHead>
-                  <TableHead>Criada em</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {adminKeys.map((key) => (
-                  <TableRow key={key.id}>
-                    <TableCell className="font-medium text-slate-900">{key.name}</TableCell>
-                    <TableCell className="flex items-center gap-2 text-slate-600">
-                      <UserIcon className="w-3 h-3" />
-                      {key.users?.full_name || 'Desconhecido'}
-                    </TableCell>
-                    <TableCell className="font-mono text-xs text-slate-500">
-                      {key.key_value.substring(0, 15)}...
-                    </TableCell>
-                    <TableCell className="text-slate-500">
-                      {new Date(key.created_at).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        onClick={() => deleteKey(key.id)}
-                        className="text-slate-400 hover:text-red-600"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </TableCell>
+        {/* Active Keys Table Card */}
+        <Card className="lg:col-span-2 bg-white/5 border-white/10 rounded-[2.5rem] backdrop-blur-sm overflow-hidden">
+          <CardContent className="p-0">
+            {isLoading ? (
+              <div className="p-20 text-center">
+                <Loader2 className="w-10 h-10 animate-spin mx-auto text-primary mb-4" />
+                <p className="text-white/50 font-bold uppercase tracking-widest animate-pulse">Sincronizando Chaves...</p>
+              </div>
+            ) : adminKeys.length === 0 ? (
+              <div className="p-20 text-center">
+                <Fingerprint className="w-12 h-12 text-white/10 mx-auto mb-4" />
+                <div className="text-xl font-black text-white/30">Nenhuma chave ativa</div>
+                <p className="text-white/20 font-medium">O sistema está operando sem chaves externas.</p>
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow className="border-b border-white/5 bg-white/5 hover:bg-white/5">
+                    <TableHead className="p-6 text-[10px] font-black uppercase tracking-widest text-white/50">Identificação</TableHead>
+                    <TableHead className="p-6 text-[10px] font-black uppercase tracking-widest text-white/50">Responsável</TableHead>
+                    <TableHead className="p-6 text-[10px] font-black uppercase tracking-widest text-white/50">Prefixo</TableHead>
+                    <TableHead className="p-6 text-[10px] font-black uppercase tracking-widest text-white/50 text-right">Ações</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+                </TableHeader>
+                <TableBody>
+                  {adminKeys.map((key) => (
+                    <TableRow key={key.id} className="border-b border-white/5 hover:bg-rose-500/5 transition-all group">
+                      <TableCell className="p-6">
+                        <div className="font-black text-white text-base tracking-tight">{key.name}</div>
+                        <div className="text-[10px] text-white/30 font-bold uppercase tracking-widest mt-1">
+                          Criada em {new Date(key.created_at).toLocaleDateString()}
+                        </div>
+                      </TableCell>
+                      <TableCell className="p-6">
+                        <div className="flex items-center gap-2 text-white/60 font-bold text-sm">
+                          <UserIcon className="w-3 h-3 text-primary" />
+                          {key.users?.full_name || 'Desconhecido'}
+                        </div>
+                      </TableCell>
+                      <TableCell className="p-6">
+                        <code className="bg-black/40 px-3 py-1 rounded-lg text-primary font-mono text-xs border border-white/5">
+                          {key.key_value.substring(0, 15)}...
+                        </code>
+                      </TableCell>
+                      <TableCell className="p-6 text-right">
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          onClick={() => deleteKey(key.id)}
+                          className="w-10 h-10 rounded-xl text-white/20 hover:text-rose-500 hover:bg-rose-500/10 transition-all"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

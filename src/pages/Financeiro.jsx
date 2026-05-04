@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 import { Fatura, Despesa, Produto, FunilDeVendas, Cliente } from "@/api/entities";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -90,6 +91,7 @@ const formatDateSafely = (dateString, formatString, options = {}) => {
 };
 
 export default function Financeiro() {
+  const { hasPermission } = useAuth();
   const [faturas, setFaturas] = useState([]);
   const [despesas, setDespesas] = useState([]);
   const [produtos, setProdutos] = useState([]);
@@ -617,20 +619,24 @@ export default function Financeiro() {
             <SimpleDateRangePicker date={date} setDate={setDate} />
 
             <div className="flex gap-2 w-full sm:w-auto">
-                <Button
-                className="flex-1 sm:flex-none bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-500/20"
-                onClick={() => { setEditingFatura(null); setShowFaturaModal(true); }}
-                >
-                <Plus className="w-4 h-4 mr-2" />
-                Fatura
-                </Button>
-                <Button
-                className="flex-1 sm:flex-none bg-destructive hover:bg-destructive/90 text-destructive-foreground shadow-lg shadow-destructive/20"
-                onClick={() => { setEditingDespesa(null); setShowDespesaModal(true); }}
-                >
-                <Plus className="w-4 h-4 mr-2" />
-                Despesa
-                </Button>
+                {hasPermission('financeiro:create') && (
+                  <>
+                    <Button
+                    className="flex-1 sm:flex-none bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-500/20"
+                    onClick={() => { setEditingFatura(null); setShowFaturaModal(true); }}
+                    >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Fatura
+                    </Button>
+                    <Button
+                    className="flex-1 sm:flex-none bg-destructive hover:bg-destructive/90 text-destructive-foreground shadow-lg shadow-destructive/20"
+                    onClick={() => { setEditingDespesa(null); setShowDespesaModal(true); }}
+                    >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Despesa
+                    </Button>
+                  </>
+                )}
             </div>
           </div>
         </div>

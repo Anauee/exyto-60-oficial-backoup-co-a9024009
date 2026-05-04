@@ -29,7 +29,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { DEFAULT_PERMISSIONS } from "@/contexts/AuthContext";
+import { DEFAULT_PERMISSIONS, FEATURES, ACTIONS } from "@/contexts/AuthContext";
 
 export default function PermissoesTab({ empresaId, currentUserRole }) {
   const [usuarios, setUsuarios] = useState([]);
@@ -42,7 +42,6 @@ export default function PermissoesTab({ empresaId, currentUserRole }) {
     if (!empresaId) return;
     setIsLoading(true);
     try {
-      // Usando o método list customizado que já traz o email
       const data = await UsuarioEmpresa.filter({ empresa_id: empresaId });
       setUsuarios(data || []);
     } catch (error) {
@@ -84,13 +83,14 @@ export default function PermissoesTab({ empresaId, currentUserRole }) {
     }
   };
 
-  const togglePermission = (perm) => {
+  const togglePermission = (featureId, actionId) => {
+    const permString = `${featureId}:${actionId}`;
     setSelectedUsuario(prev => {
       const current = prev.permissoes || [];
-      if (current.includes(perm)) {
-        return { ...prev, permissoes: current.filter(p => p !== perm) };
+      if (current.includes(permString)) {
+        return { ...prev, permissoes: current.filter(p => p !== permString) };
       } else {
-        return { ...prev, permissoes: [...current, perm] };
+        return { ...prev, permissoes: [...current, permString] };
       }
     });
   };
@@ -98,6 +98,7 @@ export default function PermissoesTab({ empresaId, currentUserRole }) {
   const getRoleIcon = (perfil) => {
     switch (perfil) {
       case 'admin': return <ShieldAlert className="w-4 h-4 text-rose-500" />;
+      case 'dono': return <Crown className="w-4 h-4 text-amber-500" />;
       case 'gestor': return <ShieldCheck className="w-4 h-4 text-blue-500" />;
       default: return <Shield className="w-4 h-4 text-slate-400" />;
     }
@@ -105,17 +106,12 @@ export default function PermissoesTab({ empresaId, currentUserRole }) {
 
   const getRoleBadge = (perfil) => {
     switch (perfil) {
-      case 'admin': return <Badge variant="destructive" className="uppercase text-[10px] font-black">Administrador</Badge>;
+      case 'admin': return <Badge variant="destructive" className="uppercase text-[10px] font-black">Sistema Admin</Badge>;
+      case 'dono': return <Badge variant="default" className="bg-amber-500 uppercase text-[10px] font-black">Dono</Badge>;
       case 'gestor': return <Badge variant="default" className="bg-blue-600 uppercase text-[10px] font-black">Gestor</Badge>;
       default: return <Badge variant="outline" className="uppercase text-[10px] font-black">Operador</Badge>;
     }
   };
-
-  const allPermissions = Array.from(new Set([
-    ...DEFAULT_PERMISSIONS.admin,
-    ...DEFAULT_PERMISSIONS.gestor,
-    ...DEFAULT_PERMISSIONS.operador
-  ])).sort();
 
   if (isLoading) {
     return (
@@ -137,7 +133,7 @@ export default function PermissoesTab({ empresaId, currentUserRole }) {
             <div>
               <CardTitle className="text-2xl font-black">Controle de Acessos</CardTitle>
               <CardDescription className="text-muted-foreground font-medium">
-                Gerencie quem pode acessar cada módulo do sistema nesta empresa.
+                Gerencie permissões granulares para cada membro da equipe.
               </CardDescription>
             </div>
           </div>
@@ -194,7 +190,7 @@ export default function PermissoesTab({ empresaId, currentUserRole }) {
                       disabled={currentUserRole !== 'admin' && usuario.perfil === 'admin'}
                     >
                       <Settings2 className="w-4 h-4" />
-                      Gerenciar
+                      Configurar
                     </Button>
                   </TableCell>
                 </TableRow>
@@ -204,76 +200,88 @@ export default function PermissoesTab({ empresaId, currentUserRole }) {
         </CardContent>
       </Card>
 
-      {/* Modal de Gerenciamento de Acessos */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="sm:max-w-[600px] bg-card/60 backdrop-blur-2xl border-border/40 rounded-[2.5rem] shadow-2xl overflow-hidden">
-          <DialogHeader>
-            <DialogTitle className="text-2xl font-black">Gerenciar Acessos</DialogTitle>
+        <DialogContent className="sm:max-w-[800px] bg-card/60 backdrop-blur-2xl border-border/40 rounded-[2.5rem] shadow-2xl overflow-hidden p-0">
+          <div className="p-8 border-b border-border/20 bg-muted/20">
+            <DialogTitle className="text-2xl font-black">Configurar Acessos</DialogTitle>
             <p className="text-muted-foreground font-medium">{selectedUsuario?.usuario_email}</p>
-          </DialogHeader>
+          </div>
 
-          <div className="space-y-8 py-6 max-h-[60vh] overflow-y-auto px-1">
+          <div className="p-8 space-y-8 max-h-[70vh] overflow-y-auto custom-scrollbar">
             <div className="space-y-4">
-              <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Perfil Principal</Label>
+              <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Cargo na Empresa</Label>
               <Select 
                 value={selectedUsuario?.perfil} 
                 onValueChange={(val) => setSelectedUsuario(prev => ({ ...prev, perfil: val }))}
               >
-                <SelectTrigger className="h-12 rounded-2xl border-border/40">
-                  <SelectValue placeholder="Selecione o perfil" />
+                <SelectTrigger className="h-14 rounded-2xl border-border/40 bg-background/50">
+                  <SelectValue placeholder="Selecione o cargo" />
                 </SelectTrigger>
                 <SelectContent className="rounded-2xl border-border/40 shadow-xl">
-                  <SelectItem value="operador" className="rounded-xl">Operador (Acesso Limitado)</SelectItem>
-                  <SelectItem value="gestor" className="rounded-xl">Gestor (Acesso Total ao CRM)</SelectItem>
+                  <SelectItem value="operador" className="rounded-xl">Operador (Acesso personalizado)</SelectItem>
+                  <SelectItem value="gestor" className="rounded-xl">Gestor (Controle da Operação)</SelectItem>
+                  <SelectItem value="dono" className="rounded-xl">Dono (Acesso Total à Empresa)</SelectItem>
                   {currentUserRole === 'admin' && (
-                    <SelectItem value="admin" className="rounded-xl">Administrador (Controle Total)</SelectItem>
+                    <SelectItem value="admin" className="rounded-xl">Sistema Admin (Controle Global)</SelectItem>
                   )}
                 </SelectContent>
               </Select>
-              <p className="text-[10px] text-muted-foreground italic px-2">
-                O perfil define o conjunto base de permissões que o usuário terá.
-              </p>
             </div>
 
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Permissões Específicas</Label>
-                <Badge variant="outline" className="text-[9px] font-bold">Personalizado</Badge>
+            <div className="space-y-6">
+              <div className="flex items-center justify-between border-b border-border/20 pb-4">
+                <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Matriz de Permissões</Label>
+                <Badge variant="outline" className="text-[10px] font-black uppercase tracking-wider text-primary border-primary/20">Ação Granular</Badge>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {allPermissions.map((perm) => (
-                  <div key={perm} className="flex items-center space-x-3 p-3 rounded-2xl bg-muted/30 border border-border/10 hover:border-primary/20 transition-all">
-                    <Checkbox 
-                      id={perm} 
-                      checked={selectedUsuario?.permissoes?.includes(perm)}
-                      onCheckedChange={() => togglePermission(perm)}
-                      className="rounded-lg border-muted-foreground/30 data-[state=checked]:bg-primary"
-                    />
-                    <label 
-                      htmlFor={perm} 
-                      className="text-xs font-bold text-slate-700 capitalize cursor-pointer flex-1"
-                    >
-                      {perm.replace(/-/g, ' ')}
-                    </label>
-                  </div>
-                ))}
+              <div className="rounded-3xl border border-border/20 overflow-hidden bg-background/30">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-muted/30 hover:bg-muted/30">
+                      <TableHead className="w-[250px] font-black uppercase text-[10px] tracking-widest p-4">Módulo</TableHead>
+                      {ACTIONS.map(action => (
+                        <TableHead key={action.id} className="text-center font-black uppercase text-[10px] tracking-widest p-4">
+                          {action.label}
+                        </TableHead>
+                      ))}
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {FEATURES.map(feature => (
+                      <TableRow key={feature.id} className="hover:bg-primary/5 transition-colors">
+                        <TableCell className="font-bold text-slate-700 p-4">{feature.label}</TableCell>
+                        {ACTIONS.map(action => {
+                          const isChecked = selectedUsuario?.permissoes?.includes(`${feature.id}:${action.id}`);
+                          return (
+                            <TableCell key={action.id} className="text-center p-4">
+                              <Checkbox 
+                                checked={isChecked}
+                                onCheckedChange={() => togglePermission(feature.id, action.id)}
+                                className="w-5 h-5 rounded-md border-muted-foreground/30 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                              />
+                            </TableCell>
+                          );
+                        })}
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
               </div>
             </div>
           </div>
 
-          <DialogFooter className="pt-6 border-t border-border/20">
-            <Button variant="ghost" onClick={() => setIsModalOpen(false)} className="rounded-xl font-bold">
+          <div className="p-8 bg-muted/20 border-t border-border/20 flex justify-end gap-3">
+            <Button variant="ghost" onClick={() => setIsModalOpen(false)} className="rounded-xl font-bold h-12 px-6">
               Cancelar
             </Button>
             <Button 
               onClick={handleSave} 
-              className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold px-8 rounded-xl shadow-lg shadow-primary/20"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground font-black h-12 px-10 rounded-xl shadow-lg shadow-primary/20 transition-all active:scale-95"
               disabled={isSaving}
             >
-              {isSaving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : "Salvar Alterações"}
+              {isSaving ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : "Salvar Acessos"}
             </Button>
-          </DialogFooter>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

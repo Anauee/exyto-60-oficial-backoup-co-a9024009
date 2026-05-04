@@ -25,315 +25,176 @@ const permissoesDisponiveis = [
   { id: 'documentos-e-anotacoes', label: 'Documentos e Anotações' }
 ];
 
-export default function UsuariosTab({ onUpdate }) {
-  const [usuarios, setUsuarios] = useState([]);
-  const [empresas, setEmpresas] = useState([]);
-  const [usuarioEmpresas, setUsuarioEmpresas] = useState([]);
-  const [selectedUser, setSelectedUser] = useState(null);
-  const [showPermissionsModal, setShowPermissionsModal] = useState(false);
+import React, { useState, useMemo } from 'react';
+import { Card, CardContent } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { 
+  User as UserIcon, 
+  Settings, 
+  Search, 
+  Filter, 
+  Mail, 
+  Shield, 
+  ShieldAlert,
+  Loader2,
+  ChevronRight,
+  UserPlus
+} from "lucide-react";
+import InviteUserAdminModal from './InviteUserAdminModal';
+
+export default function UsuariosTab({ users, isLoading, onManagePermissions, onUpdate }) {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("todos"); // todos, admin, user
   const [showInviteModal, setShowInviteModal] = useState(false);
-  const [userPermissions, setUserPermissions] = useState({});
-  const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const loadData = async () => {
-    setIsLoading(true);
-    try {
-      const [usuariosData, empresasData, usuarioEmpresasData] = await Promise.all([
-        UserEntity.list(),
-        Empresa.list(),
-        UsuarioEmpresa.list()
-      ]);
+  const filteredUsers = useMemo(() => {
+    return (users || []).filter(user => {
+      const matchesSearch = 
+        user.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+        user.email?.toLowerCase().includes(searchTerm.toLowerCase());
       
-      setUsuarios(usuariosData);
-      setEmpresas(empresasData.filter(emp => emp.ativo));
-      setUsuarioEmpresas(usuarioEmpresasData);
-    } catch (error) {
-      console.error("Erro ao carregar dados:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleManagePermissions = (user) => {
-    setSelectedUser(user);
-    
-    // Montar estrutura de permissões do usuário
-    const permissions = {};
-    empresas.forEach(empresa => {
-      const userEmpresa = usuarioEmpresas.find(
-        ue => ue.usuario_id === user.id && ue.empresa_id === empresa.id
-      );
-      
-      permissions[empresa.id] = {
-        hasAccess: !!userEmpresa,
-        permissoes: userEmpresa?.permissoes || []
-      };
+      const matchesStatus = 
+        statusFilter === "todos" || 
+        (statusFilter === "admin" && user.role === "admin") || 
+        (statusFilter === "user" && user.role === "user");
+        
+      return matchesSearch && matchesStatus;
     });
-    
-    setUserPermissions(permissions);
-    setShowPermissionsModal(true);
-  };
-
-  const handleEmpresaAccessChange = (empresaId, hasAccess) => {
-    setUserPermissions(prev => ({
-      ...prev,
-      [empresaId]: {
-        hasAccess,
-        perfil: hasAccess ? 'operador' : null,
-        permissoes: hasAccess ? DEFAULT_PERMISSIONS.operador : []
-      }
-    }));
-  };
-
-  const handlePerfilChange = (empresaId, perfil) => {
-    setUserPermissions(prev => ({
-      ...prev,
-      [empresaId]: {
-        ...prev[empresaId],
-        perfil,
-        permissoes: DEFAULT_PERMISSIONS[perfil] || []
-      }
-    }));
-  };
-
-  const handleModuloPermissionChange = (empresaId, moduloId, hasPermission) => {
-    setUserPermissions(prev => {
-      const currentPermissions = prev[empresaId]?.permissoes || [];
-      const newPermissions = hasPermission
-        ? [...new Set([...currentPermissions, moduloId])] // Ensure no duplicates
-        : currentPermissions.filter(p => p !== moduloId);
-      
-      return {
-        ...prev,
-        [empresaId]: {
-          ...prev[empresaId],
-          permissoes: newPermissions
-        }
-      };
-    });
-  };
-
-  const handleSavePermissions = async () => {
-    try {
-      for (const empresaId in userPermissions) {
-        const permission = userPermissions[empresaId];
-        const existingRecord = usuarioEmpresas.find(
-          ue => ue.usuario_id === selectedUser.id && ue.empresa_id === empresaId
-        );
-
-        if (permission.hasAccess) {
-          if (existingRecord) {
-            // Atualizar permissões existentes
-            await UsuarioEmpresa.update(existingRecord.id, {
-              perfil: permission.perfil || existingRecord.perfil || 'operador',
-              permissoes: permission.permissoes,
-              ativo: true
-            });
-          } else {
-            // Criar novo acesso
-            await UsuarioEmpresa.create({
-              usuario_id: selectedUser.id,
-              empresa_id: empresaId,
-              perfil: permission.perfil || 'operador',
-              permissoes: permission.permissoes,
-              ativo: true
-            });
-          }
-        } else if (existingRecord) {
-          // Remover acesso
-          await UsuarioEmpresa.delete(existingRecord.id);
-        }
-      }
-
-      setShowPermissionsModal(false);
-      loadData();
-      if (onUpdate) {
-        onUpdate();
-      }
-    } catch (error) {
-      console.error("Erro ao salvar permissões:", error);
-    }
-  };
-
-  const getUserEmpresasCount = (userId) => {
-    return usuarioEmpresas.filter(ue => ue.usuario_id === userId && ue.ativo).length;
-  };
+  }, [users, searchTerm, statusFilter]);
 
   if (isLoading) {
     return (
-      <Card>
-        <CardContent className="p-6">
-          <div className="animate-pulse">
-            <div className="h-8 bg-slate-200 rounded w-64 mb-4"></div>
-            <div className="space-y-3">
-              {[...Array(5)].map((_, i) => (
-                <div key={i} className="h-12 bg-slate-200 rounded"></div>
-              ))}
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="p-20 text-center">
+        <Loader2 className="w-10 h-10 animate-spin mx-auto text-primary mb-4" />
+        <p className="text-white/50 font-bold uppercase tracking-widest animate-pulse">Sincronizando Usuários...</p>
+      </div>
     );
   }
 
   return (
-    <>
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
-            <User className="w-5 h-5" />
-            Gerenciar Usuários
-          </CardTitle>
+    <div className="space-y-8 animate-in fade-in duration-700">
+      {/* Filters Header */}
+      <div className="flex flex-col md:flex-row gap-4 items-end justify-between bg-white/5 p-8 rounded-[2.5rem] border border-white/10 backdrop-blur-xl">
+        <div className="flex-1 w-full space-y-4">
+          <div className="flex items-center gap-2 text-white/50 text-[10px] font-black uppercase tracking-widest ml-2">
+            <Search className="w-3 h-3" />
+            Buscar Usuários
+          </div>
+          <div className="relative group">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/30 group-focus-within:text-primary transition-colors" />
+            <Input 
+              placeholder="Nome ou email do usuário..." 
+              className="h-14 pl-12 bg-black/40 border-white/10 rounded-2xl text-white focus:ring-primary/20 transition-all placeholder:text-white/20"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+        </div>
+        
+        <div className="flex gap-4 w-full md:w-auto">
+          <div className="flex bg-black/40 p-1.5 rounded-2xl border border-white/10 h-14 shrink-0">
+            {[
+              { id: 'todos', label: 'Todos' },
+              { id: 'admin', label: 'Admins' },
+              { id: 'user', label: 'Usuários' }
+            ].map(filter => (
+              <button
+                key={filter.id}
+                onClick={() => setStatusFilter(filter.id)}
+                className={`px-6 rounded-xl text-xs font-black uppercase tracking-tighter transition-all ${statusFilter === filter.id ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-white/40 hover:text-white'}`}
+              >
+                {filter.label}
+              </button>
+            ))}
+          </div>
+          
           <Button 
             onClick={() => setShowInviteModal(true)}
-            className="bg-amber-600 hover:bg-amber-700 font-bold"
+            className="h-14 px-8 bg-white hover:bg-white/90 text-black font-black rounded-2xl gap-2 shadow-xl shadow-white/5 transition-all active:scale-95"
           >
-            Convidar Usuário
+            <UserPlus className="w-5 h-5" />
+            Convidar
           </Button>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nome</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Tipo</TableHead>
-                <TableHead>Empresas com Acesso</TableHead>
-                <TableHead>Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {usuarios.map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell className="font-medium">{user.full_name}</TableCell>
-                  <TableCell>{user.email}</TableCell>
-                  <TableCell>
-                    <Badge variant={user.role === 'admin' ? 'destructive' : 'outline'}>
-                      {user.role === 'admin' ? 'Administrador' : 'Usuário'}
-                    </Badge>
+        </div>
+      </div>
+
+      {/* Users Table */}
+      <div className="rounded-[2.5rem] border border-white/10 overflow-hidden bg-white/5 backdrop-blur-sm">
+        <Table>
+          <TableHeader>
+            <TableRow className="border-b border-white/5 bg-white/5 hover:bg-white/5">
+              <TableHead className="p-6 text-[10px] font-black uppercase tracking-widest text-white/50">Identificação</TableHead>
+              <TableHead className="p-6 text-[10px] font-black uppercase tracking-widest text-white/50">Tipo de Conta</TableHead>
+              <TableHead className="p-6 text-[10px] font-black uppercase tracking-widest text-white/50 text-right">Ações</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {filteredUsers.length > 0 ? (
+              filteredUsers.map((user) => (
+                <TableRow key={user.id} className="border-b border-white/5 hover:bg-primary/5 transition-all group">
+                  <TableCell className="p-6">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center group-hover:border-primary/40 transition-colors">
+                        <UserIcon className="w-6 h-6 text-white/30 group-hover:text-primary transition-colors" />
+                      </div>
+                      <div className="space-y-1">
+                        <div className="font-black text-white text-lg tracking-tight group-hover:text-primary transition-colors">{user.full_name}</div>
+                        <div className="flex items-center gap-2 text-white/40 text-xs font-medium">
+                          <Mail className="w-3 h-3" />
+                          {user.email}
+                        </div>
+                      </div>
+                    </div>
                   </TableCell>
-                  <TableCell>
-                    <Badge variant="outline">
-                      {getUserEmpresasCount(user.id)} empresa(s)
-                    </Badge>
+                  <TableCell className="p-6">
+                    <div className="flex items-center gap-2">
+                      {user.role === 'admin' ? (
+                        <Badge className="bg-rose-500/20 text-rose-500 border-none px-4 py-1.5 rounded-full font-black text-[10px] uppercase tracking-widest gap-1.5">
+                          <ShieldAlert className="w-3 h-3" />
+                          Sistema Admin
+                        </Badge>
+                      ) : (
+                        <Badge className="bg-white/10 text-white/60 border-none px-4 py-1.5 rounded-full font-black text-[10px] uppercase tracking-widest gap-1.5">
+                          <Shield className="w-3 h-3" />
+                          Usuário Padrão
+                        </Badge>
+                      )}
+                    </div>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="p-6 text-right">
                     <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleManagePermissions(user)}
-                      className="flex items-center gap-1"
+                      variant="ghost"
+                      onClick={() => onManagePermissions(user)}
+                      className="h-12 px-6 rounded-xl font-black gap-3 text-primary hover:bg-primary/10 transition-all group/btn"
                     >
                       <Settings className="w-4 h-4" />
-                      Gerenciar
+                      Permissões
+                      <ChevronRight className="w-4 h-4 opacity-0 group-hover/btn:opacity-100 group-hover/btn:translate-x-1 transition-all" />
                     </Button>
                   </TableCell>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={3} className="p-20 text-center">
+                  <Filter className="w-12 h-12 text-white/10 mx-auto mb-4" />
+                  <div className="text-xl font-black text-white/30">Nenhum usuário encontrado</div>
+                  <p className="text-white/20 font-medium">Tente ajustar seus filtros de busca.</p>
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
 
-      {/* Modal de Gerenciar Permissões */}
-      <Dialog open={showPermissionsModal} onOpenChange={setShowPermissionsModal}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>
-              Gerenciar Permissões - {selectedUser?.full_name}
-            </DialogTitle>
-          </DialogHeader>
-
-          <div className="space-y-6">
-            {empresas.map((empresa) => {
-              const hasAccess = userPermissions[empresa.id]?.hasAccess || false;
-              const permissoes = userPermissions[empresa.id]?.permissoes || [];
-
-              return (
-                <Card key={empresa.id}>
-                  <CardHeader className="pb-4">
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-lg">{empresa.nome}</CardTitle>
-                      <div className="flex items-center space-x-2">
-                        <Switch
-                          checked={hasAccess}
-                          onCheckedChange={(checked) => handleEmpresaAccessChange(empresa.id, checked)}
-                        />
-                        <Label>Acesso à empresa</Label>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  
-                  {hasAccess && (
-                    <CardContent className="pt-0 space-y-4">
-                      <div className="space-y-2">
-                        <Label className="text-sm font-semibold">Perfil / Cargo</Label>
-                        <div className="flex gap-2">
-                          {['admin', 'gestor', 'operador'].map((role) => (
-                            <Button
-                              key={role}
-                              type="button"
-                              variant={userPermissions[empresa.id]?.perfil === role ? "default" : "outline"}
-                              size="sm"
-                              onClick={() => handlePerfilChange(empresa.id, role)}
-                              className="capitalize"
-                            >
-                              {role}
-                            </Button>
-                          ))}
-                        </div>
-                      </div>
-
-                      <div className="space-y-3 pt-2 border-t">
-                        <h4 className="font-medium text-slate-900 text-sm">Permissões Específicas:</h4>
-                        <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-                          {permissoesDisponiveis.map((modulo) => (
-                            <div key={modulo.id} className="flex items-center space-x-2">
-                              <Checkbox
-                                id={`${empresa.id}-${modulo.id}`}
-                                checked={(userPermissions[empresa.id]?.permissoes || []).includes(modulo.id)}
-                                onCheckedChange={(checked) => 
-                                  handleModuloPermissionChange(empresa.id, modulo.id, checked)
-                                }
-                              />
-                              <Label 
-                                htmlFor={`${empresa.id}-${modulo.id}`}
-                                className="text-xs font-normal cursor-pointer"
-                              >
-                                {modulo.label}
-                              </Label>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </CardContent>
-                  )}
-                </Card>
-              );
-            })}
-          </div>
-
-          <div className="flex justify-end gap-3 pt-6 border-t">
-            <Button variant="outline" onClick={() => setShowPermissionsModal(false)}>
-              Cancelar
-            </Button>
-            <Button onClick={handleSavePermissions} className="flex items-center gap-2">
-              <Save className="w-4 h-4" />
-              Salvar Permissões
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
       <InviteUserAdminModal
         isOpen={showInviteModal}
         onClose={() => setShowInviteModal(false)}
-        empresas={empresas}
-        onInviteSuccess={loadData}
+        onInviteSuccess={onUpdate}
       />
-    </>
+    </div>
   );
 }

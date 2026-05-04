@@ -1,5 +1,6 @@
 
 import React, { useState, useMemo } from 'react';
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
@@ -50,6 +51,7 @@ const formatDateSafely = (dateString, formatString) => {
 };
 
 export default function DespesaViewModal({ isOpen, onClose, despesa, onSave, onMarkAsPaid, onDelete, empresaId }) {
+  const { hasPermission } = useAuth();
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDocumentModal, setShowDocumentModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -125,22 +127,26 @@ export default function DespesaViewModal({ isOpen, onClose, despesa, onSave, onM
                 </div>
               </div>
               <div className="flex gap-2 mr-8">
-                {despesa.status === 'pendente' && (
+                {despesa.status === 'pendente' && hasPermission('financeiro:edit') && (
                   <Button variant="outline" onClick={handleMarkPaid}>
                     Marcar como Paga
                   </Button>
                 )}
-                <Button 
-                  variant="outline" 
-                  onClick={handleDeleteClick}
-                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </Button>
-                <Button onClick={handleEdit} className="flex items-center gap-2">
-                  <Edit className="w-4 h-4" />
-                  Editar
-                </Button>
+                {hasPermission('financeiro:delete') && (
+                  <Button 
+                    variant="outline" 
+                    onClick={handleDeleteClick}
+                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                )}
+                {hasPermission('financeiro:edit') && (
+                  <Button onClick={handleEdit} className="flex items-center gap-2">
+                    <Edit className="w-4 h-4" />
+                    Editar
+                  </Button>
+                )}
               </div>
             </div>
           </DialogHeader>
@@ -253,10 +259,12 @@ export default function DespesaViewModal({ isOpen, onClose, despesa, onSave, onM
             <TabsContent value="documentos" className="mt-6 space-y-4">
               <div className="flex justify-between items-center">
                 <h3 className="text-lg font-semibold">Documentos da Despesa</h3>
-                <Button onClick={handleAddDocument}>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Adicionar Documento
-                </Button>
+                {hasPermission('financeiro:edit') && (
+                  <Button onClick={handleAddDocument}>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Adicionar Documento
+                  </Button>
+                )}
               </div>
               <DocumentosVinculados
                 entidadeTipo="Despesa"

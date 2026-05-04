@@ -8,18 +8,7 @@ import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ShieldCheck, Building2 } from 'lucide-react';
 
-const modulosDisponiveis = [
-  { id: 'home-da-empresa', label: 'Home da Empresa' }, // Adicionado
-  { id: 'dashboard', label: 'Dashboard' }, // Adicionado
-  { id: 'midia-social', label: 'Mídia Social' },
-  { id: 'financeiro', label: 'Financeiro' },
-  { id: 'agendas-e-atividades', label: 'Agendas e Atividades' },
-  { id: 'clientes-e-produtos', label: 'Clientes e Produtos' },
-  { id: 'gestao-equipe', label: 'Gestão de Equipe' },
-  { id: 'gestao-pastas', label: 'Gestão de Pastas' }, // Adicionado
-  { id: 'visibilidade-pastas', label: 'Visibilidade de Pastas' }, // NOVO: Adicionado para o filtro de visibilidade de pastas
-  { id: 'documentos-e-anotacoes', label: 'Documentos e Anotações' }
-];
+import { FEATURES, ACTIONS } from '@/contexts/AuthContext';
 
 export default function PermissionsModal({
   isOpen,
@@ -47,23 +36,33 @@ export default function PermissionsModal({
   }, [isOpen, selectedUser, empresas, initialPermissions]);
 
   const handleAccessChange = (empresaId, checked) => {
-    setPermissions(prev => ({
-      ...prev,
-      [empresaId]: {
-        ...prev[empresaId],
-        ativo: checked,
-        // Se desativar, limpar permissões, se ativar, dar todas por padrão
-        permissoes: checked ? modulosDisponiveis.map(m => m.id) : []
+    setPermissions(prev => {
+      const allPerms = [];
+      if (checked) {
+        FEATURES.forEach(f => {
+          ACTIONS.forEach(a => {
+            allPerms.push(`${f.id}:${a.id}`);
+          });
+        });
       }
-    }));
+      return {
+        ...prev,
+        [empresaId]: {
+          ...prev[empresaId],
+          ativo: checked,
+          permissoes: allPerms
+        }
+      };
+    });
   };
 
-  const handlePermissionChange = (empresaId, moduloId, checked) => {
+  const togglePermission = (empresaId, featureId, actionId) => {
+    const permString = `${featureId}:${actionId}`;
     setPermissions(prev => {
       const currentPermissions = prev[empresaId]?.permissoes || [];
-      const newPermissions = checked
-        ? [...currentPermissions, moduloId]
-        : currentPermissions.filter(p => p !== moduloId);
+      const newPermissions = currentPermissions.includes(permString)
+        ? currentPermissions.filter(p => p !== permString)
+        : [...currentPermissions, permString];
       return {
         ...prev,
         [empresaId]: { ...prev[empresaId], permissoes: newPermissions }
@@ -79,52 +78,76 @@ export default function PermissionsModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-xl">
-            <ShieldCheck className="w-6 h-6 text-blue-600" />
-            Gerenciar Permissões
+      <DialogContent className="max-w-4xl h-[85vh] flex flex-col p-0 overflow-hidden bg-card/60 backdrop-blur-3xl border-border/40 rounded-[2.5rem] shadow-2xl">
+        <DialogHeader className="p-8 border-b border-border/20 bg-muted/20">
+          <DialogTitle className="flex items-center gap-3 text-2xl font-black">
+            <ShieldCheck className="w-8 h-8 text-primary" />
+            Configurar Permissões Globais
           </DialogTitle>
-          <DialogDescription>
-            Defina o acesso de <strong>{selectedUser?.full_name || selectedUser?.email}</strong> para cada empresa.
+          <DialogDescription className="text-muted-foreground font-medium">
+            Defina o acesso de <strong>{selectedUser?.full_name || selectedUser?.email}</strong> em cada empresa do ecossistema.
           </DialogDescription>
         </DialogHeader>
 
-        <ScrollArea className="max-h-[60vh] p-1">
-          <div className="space-y-6 pr-4">
+        <ScrollArea className="flex-1 p-8">
+          <div className="space-y-6">
             {empresas.map(empresa => (
-              <div key={empresa.id} className="p-4 border rounded-lg bg-slate-50/50">
-                <div className="flex items-center justify-between mb-4 pb-4 border-b">
-                  <div className="flex items-center gap-3">
-                    <Building2 className="w-5 h-5 text-slate-600" />
-                    <h3 className="font-semibold text-slate-900">{empresa.nome}</h3>
+              <div key={empresa.id} className="p-6 border border-border/20 rounded-[2rem] bg-background/40 backdrop-blur-sm transition-all hover:border-primary/20">
+                <div className="flex items-center justify-between mb-6 pb-6 border-b border-border/10">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center border border-primary/20">
+                      <Building2 className="w-6 h-6 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="font-black text-lg text-slate-900 leading-tight">{empresa.nome}</h3>
+                      <p className="text-xs text-muted-foreground font-bold uppercase tracking-widest">{empresa.plano}</p>
+                    </div>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <Label htmlFor={`access-switch-${empresa.id}`}>Acesso</Label>
+                  <div className="flex items-center gap-3 bg-muted/30 px-4 py-2 rounded-xl border border-border/10">
+                    <Label htmlFor={`access-switch-${empresa.id}`} className="text-xs font-black uppercase tracking-widest cursor-pointer">Acesso</Label>
                     <Switch
                       id={`access-switch-${empresa.id}`}
                       checked={permissions[empresa.id]?.ativo || false}
                       onCheckedChange={(checked) => handleAccessChange(empresa.id, checked)}
+                      className="data-[state=checked]:bg-primary"
                     />
                   </div>
                 </div>
 
                 {permissions[empresa.id]?.ativo && (
-                  <div className="space-y-3">
-                    <p className="text-sm font-medium text-slate-700">Módulos Permitidos:</p>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      {modulosDisponiveis.map(modulo => (
-                        <div key={modulo.id} className="flex items-center space-x-2">
-                          <Checkbox
-                            id={`${empresa.id}-${modulo.id}`}
-                            checked={permissions[empresa.id]?.permissoes.includes(modulo.id)}
-                            onCheckedChange={(checked) => handlePermissionChange(empresa.id, modulo.id, checked)}
-                          />
-                          <Label htmlFor={`${empresa.id}-${modulo.id}`} className="text-sm font-normal">
-                            {modulo.label}
-                          </Label>
-                        </div>
-                      ))}
+                  <div className="space-y-4">
+                    <div className="rounded-2xl border border-border/10 overflow-hidden">
+                      <Table>
+                        <TableHeader>
+                          <TableRow className="bg-muted/20 hover:bg-muted/20">
+                            <TableHead className="w-[200px] font-black uppercase text-[10px] tracking-widest p-3">Módulo</TableHead>
+                            {ACTIONS.map(action => (
+                              <TableHead key={action.id} className="text-center font-black uppercase text-[10px] tracking-widest p-3">
+                                {action.label}
+                              </TableHead>
+                            ))}
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {FEATURES.map(feature => (
+                            <TableRow key={feature.id} className="hover:bg-primary/5 transition-colors">
+                              <TableCell className="font-bold text-slate-700 text-xs p-3">{feature.label}</TableCell>
+                              {ACTIONS.map(action => {
+                                const isChecked = permissions[empresa.id]?.permissoes.includes(`${feature.id}:${action.id}`);
+                                return (
+                                  <TableCell key={action.id} className="text-center p-3">
+                                    <Checkbox
+                                      checked={isChecked}
+                                      onCheckedChange={() => togglePermission(empresa.id, feature.id, action.id)}
+                                      className="w-4 h-4 rounded border-muted-foreground/30 data-[state=checked]:bg-primary"
+                                    />
+                                  </TableCell>
+                                );
+                              })}
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
                     </div>
                   </div>
                 )}
@@ -132,12 +155,19 @@ export default function PermissionsModal({
             ))}
           </div>
         </ScrollArea>
-        <DialogFooter className="mt-6">
-          <Button variant="outline" onClick={onClose}>Cancelar</Button>
-          <Button onClick={handleSave} disabled={isLoading}>
+
+        <div className="p-8 bg-muted/20 border-t border-border/20 flex justify-end gap-3">
+          <Button variant="ghost" onClick={onClose} className="rounded-xl font-bold h-12 px-6">
+            Cancelar
+          </Button>
+          <Button 
+            onClick={handleSave} 
+            disabled={isLoading}
+            className="bg-primary hover:bg-primary/90 text-primary-foreground font-black h-12 px-10 rounded-xl shadow-lg shadow-primary/20 transition-all active:scale-95"
+          >
             {isLoading ? "Salvando..." : "Salvar Permissões"}
           </Button>
-        </DialogFooter>
+        </div>
       </DialogContent>
     </Dialog>
   );

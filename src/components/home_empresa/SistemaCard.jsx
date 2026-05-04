@@ -3,18 +3,20 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ExternalLink, Edit, Layers } from "lucide-react";
 
-export default function SistemaCard({ sistema, onEdit }) {
+export default function SistemaCard({ sistema, onEdit, canEdit }) {
   const handleAccess = () => {
     window.open(sistema.link, '_blank', 'noopener,noreferrer');
   };
 
   return (
     <Card className="shadow-sm hover:shadow-lg transition-shadow duration-300 relative bg-white/80 backdrop-blur-sm border-0">
-      <div className="absolute top-3 right-3">
-        <Button variant="ghost" size="icon" onClick={() => onEdit(sistema)}>
-          <Edit className="w-4 h-4 text-slate-500 hover:text-slate-800" />
-        </Button>
-      </div>
+      {canEdit && (
+        <div className="absolute top-3 right-3">
+          <Button variant="ghost" size="icon" onClick={() => onEdit(sistema)}>
+            <Edit className="w-4 h-4 text-slate-500 hover:text-slate-800" />
+          </Button>
+        </div>
+      )}
       <CardContent className="p-6 flex flex-col items-center text-center">
         <div className="w-16 h-16 mb-4 rounded-lg flex items-center justify-center bg-slate-100 overflow-hidden">
           {sistema.imagem_url ? (

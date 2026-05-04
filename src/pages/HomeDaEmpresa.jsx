@@ -39,10 +39,11 @@ import PostModal from "../components/midia/PostModal";
 
 export default function HomeDaEmpresa() {
   const navigate = useNavigate();
-  const { userPermissions, userRole, refreshAuth } = useAuth();
+  const { hasPermission, refreshAuth } = useAuth();
   
   // HomeDaEmpresa is now accessible to all members of the company
   const hasAccess = true; 
+  const canEdit = hasPermission('home-da-empresa:edit');
 
   const [sistemas, setSistemas] = useState([]);
   const [membros, setMembros] = useState([]);
@@ -80,7 +81,7 @@ export default function HomeDaEmpresa() {
     
     try {
       // Re-fetch actual company data to get latest logo/banner
-      const freshEmpresa = await Empresa.getById(empresaData.id);
+      const freshEmpresa = await Empresa.get(empresaData.id);
       if (freshEmpresa) {
         setEmpresa(freshEmpresa);
       }
@@ -316,7 +317,7 @@ export default function HomeDaEmpresa() {
               </div>
             )}
             
-            {(userRole === 'admin' || userRole === 'gestor') && (
+            {canEdit && (
               <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center z-30 pointer-events-none">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -356,7 +357,7 @@ export default function HomeDaEmpresa() {
                     <Building2 className="w-10 h-10 text-muted-foreground" />
                   )}
                 </div>
-                {(userRole === 'admin' || userRole === 'gestor') && (
+                {canEdit && (
                   <div className="absolute inset-0 opacity-0 group-hover/logo:opacity-100 transition-all flex items-center justify-center z-40 transition-all">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -429,19 +430,21 @@ export default function HomeDaEmpresa() {
             </div>
             
             <TabsContent value="sistemas">
-              <div className="flex justify-end mb-8">
-                <Button 
-                  onClick={() => openSistemaModal()} 
-                  className="bg-primary text-primary-foreground hover:bg-primary/90 h-12 rounded-2xl px-6 font-bold shadow-lg shadow-primary/20 transition-all"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Adicionar Sistema
-                </Button>
-              </div>
+              {canEdit && (
+                <div className="flex justify-end mb-8">
+                  <Button 
+                    onClick={() => openSistemaModal()} 
+                    className="bg-primary text-primary-foreground hover:bg-primary/90 h-12 rounded-2xl px-6 font-bold shadow-lg shadow-primary/20 transition-all"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Adicionar Sistema
+                  </Button>
+                </div>
+              )}
               {sistemas.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {(sistemas || []).map((sistema) => (
-                    <SistemaCard key={sistema.id} sistema={sistema} onEdit={openSistemaModal} />
+                    <SistemaCard key={sistema.id} sistema={sistema} onEdit={openSistemaModal} canEdit={canEdit} />
                   ))}
                 </div>
               ) : (
@@ -449,10 +452,12 @@ export default function HomeDaEmpresa() {
                   <Layers className="w-16 h-16 mx-auto text-muted-foreground/30 mb-6" />
                   <h2 className="text-xl font-bold text-foreground mb-2">Nenhum sistema adicionado</h2>
                   <p className="text-muted-foreground mb-8 max-w-sm mx-auto">Centralize todas as ferramentas da sua empresa em um único lugar.</p>
-                  <Button onClick={() => openSistemaModal()} className="rounded-xl px-8">
-                    <Plus className="w-4 h-4 mr-2" />
-                    Adicionar Primeiro Sistema
-                  </Button>
+                  {canEdit && (
+                    <Button onClick={() => openSistemaModal()} className="rounded-xl px-8">
+                      <Plus className="w-4 h-4 mr-2" />
+                      Adicionar Primeiro Sistema
+                    </Button>
+                  )}
                 </div>
               )}
             </TabsContent>

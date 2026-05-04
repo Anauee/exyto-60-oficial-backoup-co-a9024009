@@ -53,96 +53,98 @@ export default function InviteUserAdminModal({ isOpen, onClose, empresas, onInvi
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px] border-none shadow-2xl bg-slate-50">
-        <DialogHeader>
-          <div className="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center mb-4 border border-amber-200">
-            <UserPlus className="w-6 h-6 text-amber-600" />
+      <DialogContent className="sm:max-w-[500px] border-white/10 shadow-2xl bg-black/80 backdrop-blur-2xl rounded-[2.5rem] p-0 overflow-hidden text-white">
+        <DialogHeader className="p-8 pb-0">
+          <div className="w-14 h-14 bg-primary/10 rounded-[1.25rem] flex items-center justify-center mb-6 border border-primary/20">
+            <UserPlus className="w-7 h-7 text-primary" />
           </div>
-          <DialogTitle className="text-xl font-bold text-slate-900">Convidar Novo Usuário</DialogTitle>
-          <DialogDescription className="text-slate-500">
-            Convide um novo membro para o sistema e atribua-o a uma empresa inicial.
+          <DialogTitle className="text-3xl font-black tracking-tight text-white">Convidar Novo Usuário</DialogTitle>
+          <DialogDescription className="text-white/50 font-medium">
+            Atribua um novo membro ao sistema com permissões globais ou específicas por empresa.
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleInvite} className="space-y-5 py-4">
+        <form onSubmit={handleInvite} className="p-8 space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="admin-fullName" className="text-sm font-semibold">Nome Completo</Label>
+            <Label htmlFor="admin-fullName" className="text-[10px] font-black uppercase tracking-widest text-white/40 ml-2">Nome Completo</Label>
             <Input
               id="admin-fullName"
               placeholder="Ex: João da Silva"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
-              className="bg-white border-slate-200"
+              className="h-14 bg-white/5 border-white/10 rounded-2xl text-white focus:ring-primary/20 placeholder:text-white/20"
               required
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="admin-email" className="text-sm font-semibold">E-mail</Label>
+            <Label htmlFor="admin-email" className="text-[10px] font-black uppercase tracking-widest text-white/40 ml-2">E-mail Corporativo</Label>
             <div className="relative">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/30" />
               <Input
                 id="admin-email"
                 type="email"
                 placeholder="email@exemplo.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="pl-10 bg-white border-slate-200"
+                className="h-14 pl-12 bg-white/5 border-white/10 rounded-2xl text-white focus:ring-primary/20 placeholder:text-white/20"
                 required
               />
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-6">
             <div className="space-y-2">
-              <Label htmlFor="admin-company" className="text-sm font-semibold">Empresa de Origem</Label>
+              <Label htmlFor="admin-company" className="text-[10px] font-black uppercase tracking-widest text-white/40 ml-2">Empresa</Label>
               <Select value={companyId} onValueChange={setCompanyId}>
-                <SelectTrigger id="admin-company" className="bg-white border-slate-200">
+                <SelectTrigger id="admin-company" className="h-14 bg-white/5 border-white/10 rounded-2xl text-white">
                   <SelectValue placeholder="Selecione" />
                 </SelectTrigger>
-                <SelectContent>
-                  {empresas.map((emp) => (
-                    <SelectItem key={emp.id} value={emp.id}>{emp.nome}</SelectItem>
+                <SelectContent className="bg-slate-900 border-white/10 rounded-2xl text-white">
+                  {(empresas || []).map((emp) => (
+                    <SelectItem key={emp.id} value={emp.id} className="rounded-xl hover:bg-white/5 focus:bg-white/10">{emp.nome}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="admin-role" className="text-sm font-semibold">Perfil Inicial</Label>
+              <Label htmlFor="admin-role" className="text-[10px] font-black uppercase tracking-widest text-white/40 ml-2">Perfil</Label>
               <Select value={role} onValueChange={setRole}>
-                <SelectTrigger id="admin-role" className="bg-white border-slate-200">
+                <SelectTrigger id="admin-role" className="h-14 bg-white/5 border-white/10 rounded-2xl text-white">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="operador">Operador</SelectItem>
-                  <SelectItem value="gestor">Gestor</SelectItem>
-                  <SelectItem value="admin">Administrador</SelectItem>
+                <SelectContent className="bg-slate-900 border-white/10 rounded-2xl text-white">
+                  <SelectItem value="operador" className="rounded-xl">Operador</SelectItem>
+                  <SelectItem value="gestor" className="rounded-xl">Gestor</SelectItem>
+                  <SelectItem value="admin" className="rounded-xl">Admin</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
 
-          <div className="bg-blue-50 p-4 rounded-lg border border-blue-100 flex gap-3">
-            <Building2 className="w-5 h-5 text-blue-500 shrink-0" />
-            <p className="text-xs text-blue-700 leading-relaxed">
-              O usuário será criado no sistema e terá acesso imediato à empresa selecionada após definir sua senha pelo e-mail de convite.
+          <div className="bg-white/5 p-5 rounded-[1.5rem] border border-white/10 flex gap-4">
+            <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center shrink-0 border border-blue-500/20">
+              <Building2 className="w-5 h-5 text-blue-400" />
+            </div>
+            <p className="text-[11px] text-white/50 leading-relaxed font-medium">
+              O usuário será cadastrado e receberá um e-mail para configurar sua senha e acessar o ecossistema Exyto.
             </p>
           </div>
 
-          <DialogFooter className="pt-4">
-            <Button type="button" variant="ghost" onClick={onClose}>
+          <DialogFooter className="pt-4 pb-2">
+            <Button type="button" variant="ghost" onClick={onClose} className="rounded-xl font-bold text-white/50 hover:text-white hover:bg-white/5">
               Cancelar
             </Button>
             <Button 
               type="submit" 
               disabled={loading || !companyId}
-              className="bg-amber-600 hover:bg-amber-700 text-white font-bold px-6"
+              className="bg-white hover:bg-white/90 text-black font-black px-10 h-14 rounded-2xl shadow-xl shadow-white/5 transition-all active:scale-95"
             >
               {loading ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Convidando...
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  Sincronizando...
                 </>
               ) : (
                 "Enviar Convite"

@@ -19,7 +19,8 @@ import {
   Bot,
   Sun,
   Moon,
-  TrendingUp
+  TrendingUp,
+  Crown
 } from "lucide-react";
 import {
   Sidebar,
@@ -123,6 +124,13 @@ const navigationItems = [
     color: "text-slate-600",
     permission: "documentos-e-anotacoes"
   },
+  {
+    title: "Painel Admin",
+    url: "/admin",
+    icon: Shield,
+    color: "text-rose-600",
+    isAdminOnly: true
+  },
 ];
 
 export default function Layout({ children, currentPageName }) {
@@ -154,6 +162,7 @@ export default function Layout({ children, currentPageName }) {
     loading: authLoading, 
     userPermissions, 
     currentCompany: empresaSelecionada,
+    hasPermission: checkPermission,
     refreshAuth
   } = useAuth();
 
@@ -183,18 +192,15 @@ export default function Layout({ children, currentPageName }) {
   }
 
   const hasPermission = (permission, item) => {
-    // Se o usuário for admin global (do banco de dados), tem acesso total
-    if (authUser?.role === 'admin') return true;
-    
-    if (!permission) return true; // Itens sem permissão específica são sempre visíveis
-    
-    // Para itens marcados como isAdminOnly, verificar se o role é 'admin'
+    // If the user is global admin, show admin panel
     if (item?.isAdminOnly) {
       return authUser?.role === 'admin';
     }
     
-    // Check if the user's assigned permissions include the required one
-    return (userPermissions || []).includes(permission);
+    // For other items, check via checkPermission
+    if (!permission) return true;
+    
+    return checkPermission(permission);
   };
 
   const handleVoltarSelecaoEmpresa = () => {
@@ -258,14 +264,17 @@ export default function Layout({ children, currentPageName }) {
                         <SidebarMenuButton
                           asChild
                           className={`
-                            transition-all duration-300 rounded-xl h-12 px-4 group
+                            transition-all duration-300 rounded-xl h-12 px-4 group relative overflow-hidden
                             ${(location.pathname === item.url || (location.pathname === '/' && item.url === createPageUrl("HomeDaEmpresa")))
-                              ? 'bg-primary/10 text-primary shadow-[0_0_20px_rgba(var(--primary),0.05)] border-l-4 border-primary'
+                              ? 'bg-primary/20 text-primary shadow-[0_0_30px_rgba(var(--primary),0.15)] border-l-4 border-primary'
                               : 'hover:bg-muted text-muted-foreground hover:text-foreground border-l-4 border-transparent'
                             }
                           `}
                         >
-                          <Link to={item.url} className="flex items-center gap-4 w-full">
+                          <Link to={item.url} className="flex items-center gap-4 w-full relative z-10">
+                            {(location.pathname === item.url || (location.pathname === '/' && item.url === createPageUrl("HomeDaEmpresa"))) && (
+                              <div className="absolute inset-0 bg-primary/10 blur-xl -z-10 animate-pulse"></div>
+                            )}
                             <item.icon className={`w-5 h-5 transition-all duration-300 ${
                               (location.pathname === item.url || (location.pathname === '/' && item.url === createPageUrl("HomeDaEmpresa")))
                                 ? 'scale-110 text-primary'

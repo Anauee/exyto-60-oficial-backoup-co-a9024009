@@ -32,11 +32,11 @@ export default function AdminPanel({ isOpen, onClose, onEmpresasUpdate }) {
     } finally {
       setIsLoading(false);
     }
-  }, [isOpen]); // Dependência adicionada para isOpen
+  }, [isOpen]);
 
   useEffect(() => {
     loadAdminData();
-  }, [loadAdminData]); // Dependência atualizada para loadAdminData
+  }, [loadAdminData]);
 
   const handleManagePermissions = async (user) => {
     try {
@@ -62,26 +62,21 @@ export default function AdminPanel({ isOpen, onClose, onEmpresasUpdate }) {
     setIsLoading(true);
     
     try {
-      // Iterar sobre todas as empresas disponíveis no sistema
       for (const empresa of empresas) {
         const empresaId = empresa.id;
-        const stateForEmpresa = updatedPermissions[empresaId]; // O estado atual do modal para esta empresa
-        const existingPermission = initialUserPermissions[empresaId]; // O registro que já existe no DB
-
-        const shouldHaveAccess = stateForEmpresa?.ativo; // O switch está ativo?
+        const stateForEmpresa = updatedPermissions[empresaId];
+        const existingPermission = initialUserPermissions[empresaId];
+        const shouldHaveAccess = stateForEmpresa?.ativo;
 
         if (shouldHaveAccess) {
-          // Usuário DEVE ter acesso
           const permissionsToSave = stateForEmpresa.permissoes;
           
           if (existingPermission) {
-            // JÁ EXISTE um registro: ATUALIZAR
             await UsuarioEmpresa.update(existingPermission.id, {
               permissoes: permissionsToSave,
               ativo: true
             });
           } else {
-            // NÃO EXISTE um registro: CRIAR
             await UsuarioEmpresa.create({
               usuario_id: selectedUserForPermissions.id,
               empresa_id: empresaId,
@@ -90,16 +85,12 @@ export default function AdminPanel({ isOpen, onClose, onEmpresasUpdate }) {
             });
           }
         } else {
-          // Usuário NÃO deve ter acesso
           if (existingPermission) {
-            // Se existe um registro, DELETAR
             await UsuarioEmpresa.delete(existingPermission.id);
           }
-          // Se não existe, não fazer nada
         }
       }
 
-      // Sincronização: Forçar recarregamento dos dados na página principal e fechar modal
       await onEmpresasUpdate(); 
       handleClosePermissionsModal();
 
@@ -117,53 +108,74 @@ export default function AdminPanel({ isOpen, onClose, onEmpresasUpdate }) {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl h-[90vh] flex flex-col p-0">
-        <DialogHeader className="p-6 pb-4 border-b">
-          <DialogTitle className="text-2xl font-bold text-slate-900 flex items-center gap-3">
-            <Crown className="w-7 h-7 text-amber-500" />
-            Painel de Administração
-          </DialogTitle>
-          <DialogDescription>
-            Gerencie empresas e usuários do sistema.
-          </DialogDescription>
+      <DialogContent className="max-w-6xl h-[90vh] flex flex-col p-0 overflow-hidden bg-[#09090b]/80 backdrop-blur-3xl border-white/10 rounded-[3rem] shadow-2xl">
+        <DialogHeader className="p-10 pb-6 border-b border-white/5 bg-white/5">
+          <div className="flex items-center justify-between">
+            <div className="space-y-2">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20">
+                  <Crown className="w-6 h-6 text-white" />
+                </div>
+                <DialogTitle className="text-3xl font-black text-white tracking-tighter">
+                  Sistema <span className="text-primary italic">Admin</span>
+                </DialogTitle>
+              </div>
+              <DialogDescription className="text-muted-foreground font-medium text-base">
+                Central de controle mestre do ecossistema Exyto.
+              </DialogDescription>
+            </div>
+            
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={onClose} 
+              className="rounded-full hover:bg-white/10 text-white/50 hover:text-white"
+            >
+              <X className="w-6 h-6" />
+            </Button>
+          </div>
         </DialogHeader>
 
-        <div className="flex-grow overflow-y-auto">
-          <Tabs defaultValue="usuarios" className="p-6">
-            <TabsList className="grid w-full grid-cols-3 max-w-lg mx-auto">
-              <TabsTrigger value="usuarios" className="flex items-center gap-2">
-                <Users className="w-4 h-4" />
-                Usuários
-              </TabsTrigger>
-              <TabsTrigger value="empresas" className="flex items-center gap-2">
-                <Building2 className="w-4 h-4" />
-                Empresas
-              </TabsTrigger>
-              <TabsTrigger value="mcp" className="flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4" />
-                Acesso IA
-              </TabsTrigger>
-            </TabsList>
+        <div className="flex-grow overflow-y-auto custom-scrollbar bg-black/20">
+          <Tabs defaultValue="usuarios" className="w-full">
+            <div className="px-10 py-6 border-b border-white/5 bg-black/20">
+              <TabsList className="bg-white/5 border border-white/10 p-1.5 h-16 rounded-2xl w-full max-w-2xl mx-auto">
+                <TabsTrigger value="usuarios" className="flex-1 rounded-xl font-bold gap-3 data-[state=active]:bg-primary data-[state=active]:text-white transition-all">
+                  <Users className="w-5 h-5" />
+                  Usuários
+                </TabsTrigger>
+                <TabsTrigger value="empresas" className="flex-1 rounded-xl font-bold gap-3 data-[state=active]:bg-primary data-[state=active]:text-white transition-all">
+                  <Building2 className="w-5 h-5" />
+                  Empresas
+                </TabsTrigger>
+                <TabsTrigger value="mcp" className="flex-1 rounded-xl font-bold gap-3 data-[state=active]:bg-primary data-[state=active]:text-white transition-all">
+                  <ShieldCheck className="w-5 h-5" />
+                  Acesso IA
+                </TabsTrigger>
+              </TabsList>
+            </div>
             
-            <TabsContent value="usuarios" className="mt-6">
-              <UsuariosTab
-                users={users}
-                isLoading={isLoading}
-                onManagePermissions={handleManagePermissions}
-              />
-            </TabsContent>
-            
-            <TabsContent value="empresas" className="mt-6">
-              <EmpresasTab
-                empresas={empresas}
-                isLoading={isLoading}
-                onUpdate={loadAdminData}
-              />
-            </TabsContent>
+            <div className="p-10">
+              <TabsContent value="usuarios" className="mt-0 focus-visible:outline-none">
+                <UsuariosTab
+                  users={users}
+                  isLoading={isLoading}
+                  onManagePermissions={handleManagePermissions}
+                />
+              </TabsContent>
+              
+              <TabsContent value="empresas" className="mt-0 focus-visible:outline-none">
+                <EmpresasTab
+                  empresas={empresas}
+                  isLoading={isLoading}
+                  onUpdate={loadAdminData}
+                />
+              </TabsContent>
 
-            <TabsContent value="mcp" className="mt-6">
-              <MCPKeysTab />
-            </TabsContent>
+              <TabsContent value="mcp" className="mt-0 focus-visible:outline-none">
+                <MCPKeysTab />
+              </TabsContent>
+            </div>
           </Tabs>
         </div>
 

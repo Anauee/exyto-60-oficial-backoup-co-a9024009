@@ -26,6 +26,7 @@ import AuthCallback from "./AuthCallback";
 import Analytics from "./Analytics";
 import CompleteProfile from "./CompleteProfile";
 import PainelPessoal from "./PainelPessoal";
+import AdminPanel from "@/components/admin/AdminPanel";
 
 import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
 
@@ -108,6 +109,7 @@ function PagesContent() {
                 <Route path="/analytics" element={<Analytics />} />
                 <Route path="/completar-perfil" element={<CompleteProfile />} />
                 <Route path="/painelpessoal" element={<PainelPessoal />} />
+                <Route path="/admin" element={<AdminPanel />} />
                 <Route path="/auth/callback/:provider" element={<AuthCallback />} />
             </Routes>
         </Layout>

@@ -1,14 +1,43 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase-client';
 
+export const FEATURES = [
+  { id: 'home-da-empresa', label: 'Home da Empresa' },
+  { id: 'dashboard', label: 'Dashboard' },
+  { id: 'midia-social', label: 'Mídia Social' },
+  { id: 'analytics', label: 'Analytics' },
+  { id: 'financeiro', label: 'Financeiro' },
+  { id: 'agendas-e-atividades', label: 'Agendas e Atividades' },
+  { id: 'clientes-e-produtos', label: 'Clientes e Produtos' },
+  { id: 'gestao-equipe', label: 'Gestão de Equipe' },
+  { id: 'gestao-pastas', label: 'Gestão de Pastas' },
+  { id: 'documentos-e-anotacoes', label: 'Documentos e Anotações' },
+  { id: 'automacoes', label: 'Automações' },
+  { id: 'ia-assistente', label: 'Assistente IA' }
+];
+
+export const ACTIONS = [
+  { id: 'view', label: 'Ver' },
+  { id: 'create', label: 'Criar' },
+  { id: 'edit', label: 'Editar' },
+  { id: 'delete', label: 'Excluir' }
+];
+
+const getAllPermissions = () => {
+  const perms = [];
+  FEATURES.forEach(f => {
+    ACTIONS.forEach(a => {
+      perms.push(`${f.id}:${a.id}`);
+    });
+  });
+  return perms;
+};
+
 export const DEFAULT_PERMISSIONS = {
-  admin: [
-    'home-da-empresa', 'dashboard', 'midia-social', 'financeiro', 
-    'agendas-e-atividades', 'clientes-e-produtos', 'gestao-equipe', 
-    'gestao-pastas', 'documentos-e-anotacoes', 'inicio', 'automacoes'
-  ],
-  gestor: [], // Zero access by default
-  operador: [] // Zero access by default
+  admin: getAllPermissions(),
+  dono: getAllPermissions(),
+  gestor: [], // Sem acesso por padrão (deve ser configurado)
+  operador: [] // Sem acesso por padrão
 };
 
 const AuthContext = createContext({});
@@ -102,8 +131,13 @@ export const AuthProvider = ({ children }) => {
             const currentMembership = memberships.find(m => m.empresa_id === savedCompany.id);
             if (currentMembership) {
               setCurrentCompany(savedCompany);
+              
+              // Normalize permissions (legacy support: if no ':', assume ':view')
+              const normalizePerms = (perms) => (perms || []).map(p => p.includes(':') ? p : `${p}:view`);
+              
               const basePermissions = DEFAULT_PERMISSIONS[currentMembership.perfil] || [];
-              const additionalPermissions = currentMembership.permissoes_adicionais || [];
+              const additionalPermissions = normalizePerms(currentMembership.permissoes_adicionais);
+              
               setUserPermissions([...new Set([...basePermissions, ...additionalPermissions])]);
               setUserRole(currentMembership.perfil);
             }
@@ -129,6 +163,16 @@ export const AuthProvider = ({ children }) => {
     setAvailableCompanies([]);
   };
 
+  const hasPermission = (permission) => {
+    if (!permission) return false;
+    
+    // Global System Admin bypasses all checks
+    if (user?.role === 'admin') return true;
+    
+    const permToCheck = permission.includes(':') ? permission : `${permission}:view`;
+    return userPermissions.includes(permToCheck);
+  };
+
   return (
     <AuthContext.Provider value={{ 
       user, 
@@ -140,6 +184,7 @@ export const AuthProvider = ({ children }) => {
       userRole,
       availableCompanies,
       logout,
+      hasPermission,
       refreshAuth: () => session && loadUserData(session.user.id)
     }}>
       {children}
