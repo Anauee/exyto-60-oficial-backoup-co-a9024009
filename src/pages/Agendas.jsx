@@ -595,6 +595,15 @@ export default function Agendas() {
           </TabsContent>
 
           <TabsContent value="lista" className="space-y-6">
+            <FilterAgendas
+              viewMode={viewMode}
+              onViewModeChange={setViewMode}
+              responsibleFilter={responsibleFilter}
+              onResponsibleChange={setResponsibleFilter}
+              membros={membros}
+              date={date}
+              setDate={setDate}
+            />
             <TabelaAtividades 
               tarefas={filteredTarefas}
               compromissos={filteredCompromissos}
@@ -606,6 +615,8 @@ export default function Agendas() {
               empresaId={empresaId}
               membros={membros}
               projetos={projetos}
+              date={date}
+              setDate={setDate}
             />
           </TabsContent>
         </Tabs>

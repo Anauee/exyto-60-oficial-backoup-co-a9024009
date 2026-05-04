@@ -10,6 +10,8 @@ import { CheckSquare, Calendar, Search, Filter, ArrowUpDown, ArrowUp, ArrowDown 
 import { formatDateSafely } from "@/components/utils/dateUtils"; // Import the helper function from utils
 
 
+import SimpleDateRangePicker from '../shared/SimpleDateRangePicker';
+
 export default function TabelaAtividades({
   tarefas,
   compromissos,
@@ -20,7 +22,9 @@ export default function TabelaAtividades({
   onDeleteTask,
   empresaId,
   projetos = [],
-  membros = []
+  membros = [],
+  date,
+  setDate
 }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('todos');
@@ -213,19 +217,19 @@ export default function TabelaAtividades({
           </CardTitle>
 
           {/* Filtros */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mt-4">
-            <div className="relative">
+          <div className="flex flex-wrap items-center gap-4 mt-6">
+            <div className="relative flex-1 min-w-[200px]">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
               <Input
                 placeholder="Buscar atividades..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 bg-muted/50 border-border/40 rounded-xl h-10 font-bold"
+                className="pl-10 bg-muted/50 border-border/40 rounded-xl h-12 font-bold"
               />
             </div>
 
             <Select value={typeFilter} onValueChange={setTypeFilter}>
-              <SelectTrigger className="bg-muted/50 border-border/40 rounded-xl h-10 font-bold">
+              <SelectTrigger className="w-full sm:w-40 bg-muted/50 border-border/40 rounded-xl h-12 font-bold">
                 <SelectValue placeholder="Tipo" />
               </SelectTrigger>
               <SelectContent>
@@ -236,7 +240,7 @@ export default function TabelaAtividades({
             </Select>
 
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="bg-muted/50 border-border/40 rounded-xl h-10 font-bold">
+              <SelectTrigger className="w-full sm:w-44 bg-muted/50 border-border/40 rounded-xl h-12 font-bold">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
@@ -248,7 +252,7 @@ export default function TabelaAtividades({
             </Select>
 
             <Select value={responsibleFilter} onValueChange={setResponsibleFilter}>
-              <SelectTrigger className="bg-muted/50 border-border/40 rounded-xl h-10 font-bold">
+              <SelectTrigger className="w-full sm:w-56 bg-muted/50 border-border/40 rounded-xl h-12 font-bold">
                 <SelectValue placeholder="Filtrar por responsável" />
               </SelectTrigger>
               <SelectContent>
@@ -261,7 +265,11 @@ export default function TabelaAtividades({
               </SelectContent>
             </Select>
 
-            <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+            <div className="flex items-center gap-4 bg-muted/30 p-1 rounded-2xl border border-border/20">
+              <SimpleDateRangePicker date={date} setDate={setDate} />
+            </div>
+
+            <div className="ml-auto text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2 whitespace-nowrap bg-blue-500/5 px-4 py-2 rounded-xl border border-blue-500/10">
               <Filter className="w-4 h-4 text-blue-500" />
               <span>{sortedActivities.length} atividade(s)</span>
             </div>
