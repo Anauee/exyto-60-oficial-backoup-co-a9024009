@@ -745,25 +745,42 @@ export default function MidiaSocial() {
             />
             
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mt-8">
-              {['ideia', 'producao', 'revisao', 'agendado', 'publicado'].map((status) => {
-                const filteredCount = filteredPosts.filter(p => p.status === status).length;
-                
-                return (
-                  <div key={status} className="bg-card rounded-xl p-5 border border-border shadow-sm">
-                    <div className="text-center">
-                      <div className="text-3xl font-bold text-foreground mb-1 tracking-tight">
-                        {filteredCount}
-                      </div>
-                      <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
-                        {status === 'ideia' ? 'Ideias' : 
-                         status === 'producao' ? 'Produção' : 
-                         status === 'revisao' ? 'Revisão' :
-                         status}
+              {etapas.length > 0 ? (
+                etapas.map((etapa) => {
+                  const filteredCount = filteredPosts.filter(p => p.status === etapa.id).length;
+                  return (
+                    <div key={etapa.id} className="bg-card rounded-xl p-5 border border-border shadow-sm">
+                      <div className="text-center">
+                        <div className="text-3xl font-bold text-foreground mb-1 tracking-tight">
+                          {filteredCount}
+                        </div>
+                        <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                          {etapa.nome}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })
+              ) : (
+                ['ideia', 'producao', 'revisao', 'agendado', 'publicado'].map((status) => {
+                  const filteredCount = filteredPosts.filter(p => p.status === status).length;
+                  return (
+                    <div key={status} className="bg-card rounded-xl p-5 border border-border shadow-sm">
+                      <div className="text-center">
+                        <div className="text-3xl font-bold text-foreground mb-1 tracking-tight">
+                          {filteredCount}
+                        </div>
+                        <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                          {status === 'ideia' ? 'Ideias' : 
+                           status === 'producao' ? 'Produção' : 
+                           status === 'revisao' ? 'Revisão' :
+                           status}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
             </div>
 
             <div className="pt-12 mt-12 border-t border-border/40">
@@ -846,6 +863,7 @@ export default function MidiaSocial() {
               contas={contas}
               formatos={formatos}
               plataformas={plataformas}
+              etapas={etapas}
             />
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mt-8">
               {etapas.length > 0 ? (

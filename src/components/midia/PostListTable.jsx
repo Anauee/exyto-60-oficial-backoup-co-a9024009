@@ -6,16 +6,31 @@ import { format } from "date-fns";
 import { ptBR } from 'date-fns/locale';
 import { List, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 
-const getStatusBadge = (status) => {
+const getStatusBadge = (status, etapas = []) => {
+  if (etapas && etapas.length > 0) {
+    const etapa = etapas.find(e => e.id === status);
+    if (etapa) {
+      return (
+        <Badge 
+          style={{ backgroundColor: `${etapa.cor}20`, color: etapa.cor, borderColor: `${etapa.cor}40` }} 
+          variant="outline" 
+          className="font-bold border"
+        >
+          {etapa.nome}
+        </Badge>
+      );
+    }
+  }
+
   const statusMap = {
-    'ideia': { color: 'bg-gray-100 text-gray-800', label: 'Ideia' },
-    'producao': { color: 'bg-blue-100 text-blue-800', label: 'Produção' },
-    'revisao': { color: 'bg-yellow-100 text-yellow-800', label: 'Revisão' },
-    'agendado': { color: 'bg-green-100 text-green-800', label: 'Agendado' },
-    'publicado': { color: 'bg-purple-100 text-purple-800', label: 'Publicado' }
+    'ideia': { color: 'bg-gray-100 text-gray-800 border-gray-200', label: 'Ideia' },
+    'producao': { color: 'bg-blue-100 text-blue-800 border-blue-200', label: 'Produção' },
+    'revisao': { color: 'bg-yellow-100 text-yellow-800 border-yellow-200', label: 'Revisão' },
+    'agendado': { color: 'bg-green-100 text-green-800 border-green-200', label: 'Agendado' },
+    'publicado': { color: 'bg-purple-100 text-purple-800 border-purple-200', label: 'Publicado' }
   };
   const statusInfo = statusMap[status] || statusMap['ideia'];
-  return <Badge className={statusInfo.color}>{statusInfo.label}</Badge>;
+  return <Badge className={`${statusInfo.color} font-bold border`} variant="outline">{statusInfo.label}</Badge>;
 };
 
 const formatDateSafely = (dateString, formatString) => {
@@ -35,7 +50,8 @@ export default function PostListTable({
   membros = [], 
   contas = [], 
   formatos = [],
-  plataformas = [] 
+  plataformas = [],
+  etapas = []
 }) {
   const [sortConfig, setSortConfig] = React.useState({ key: null, direction: 'asc' });
 
@@ -205,7 +221,7 @@ export default function PostListTable({
                         )}
                       </div>
                     </TableCell>
-                    <TableCell>{getStatusBadge(post.status)}</TableCell>
+                    <TableCell>{getStatusBadge(post.status, etapas)}</TableCell>
                     <TableCell>{formatDateSafely(post.data_agendamento, "dd/MM/yyyy 'às' HH:mm")}</TableCell>
                     <TableCell>{getLookupName(post.conta_social_id, contas, 'id', 'nome_usuario')}</TableCell>
                     <TableCell>

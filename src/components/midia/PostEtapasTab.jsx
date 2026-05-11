@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { PostEtapa, Membro } from "@/api/entities";
+import { PostEtapa, Membro, Post } from "@/api/entities";
 import { Plus, Trash2, GripVertical, Settings2, User, CheckCircle2, AlertTriangle, Save, Edit } from "lucide-react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 
@@ -26,7 +26,56 @@ export default function PostEtapasTab({ empresaId, membros = [], onUpdate }) {
     if (!empresaId) return;
     setIsLoading(true);
     try {
-      const data = await PostEtapa.filter({ empresa_id: empresaId }, "ordem");
+      let data = await PostEtapa.filter({ empresa_id: empresaId }, "ordem");
+      
+      if (!data || data.length === 0) {
+        // Criar etapas padrão
+        const defaultEtapas = [
+          { nome: 'Ideias/Pauta', cor: '#64748b', is_final: false },
+          { nome: 'Produção', cor: '#3b82f6', is_final: false },
+          { nome: 'Revisão', cor: '#eab308', is_final: false },
+          { nome: 'Agendado', cor: '#10b981', is_final: false },
+          { nome: 'Publicado', cor: '#a855f7', is_final: true }
+        ];
+
+        for (let i = 0; i < defaultEtapas.length; i++) {
+          await PostEtapa.create({
+            ...defaultEtapas[i],
+            empresa_id: empresaId,
+            ordem: i
+          });
+        }
+        
+        data = await PostEtapa.filter({ empresa_id: empresaId }, "ordem");
+
+        // Migrar os posts existentes que usavam as strings de status antigas
+        try {
+          const postsToUpdate = await Post.filter({ empresa_id: empresaId });
+          const statusMap = {
+            'ideia': data.find(e => e.nome === 'Ideias/Pauta')?.id,
+            'producao': data.find(e => e.nome === 'Produção')?.id,
+            'revisao': data.find(e => e.nome === 'Revisão')?.id,
+            'agendado': data.find(e => e.nome === 'Agendado')?.id,
+            'publicado': data.find(e => e.nome === 'Publicado')?.id,
+          };
+
+          const updatePromises = (postsToUpdate || []).map(post => {
+            if (statusMap[post.status]) {
+               return Post.update(post.id, { status: statusMap[post.status] });
+            }
+            return Promise.resolve();
+          });
+          
+          if (updatePromises.length > 0) {
+            await Promise.all(updatePromises);
+          }
+        } catch (postError) {
+          console.error("Erro ao migrar posts para novas etapas:", postError);
+        }
+        
+        if (onUpdate) onUpdate();
+      }
+
       setEtapas(data || []);
     } catch (error) {
       console.error("Erro ao carregar etapas:", error);
