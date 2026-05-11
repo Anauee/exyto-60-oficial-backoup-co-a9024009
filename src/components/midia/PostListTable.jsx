@@ -83,24 +83,24 @@ export default function PostListTable({
           bValue = b.data_agendamento ? new Date(b.data_agendamento).getTime() : 0;
           break;
         case 'conta':
-          aValue = getLookupName(a.conta_social_id, contas, 'id', 'nome_usuario').toLowerCase();
-          bValue = getLookupName(b.conta_social_id, contas, 'id', 'nome_usuario').toLowerCase();
+          aValue = String(getLookupName(a.conta_social_id, contas, 'id', 'nome_usuario') || '').toLowerCase();
+          bValue = String(getLookupName(b.conta_social_id, contas, 'id', 'nome_usuario') || '').toLowerCase();
           break;
         case 'plataforma':
           const aConta = contas.find(c => c.id === a.conta_social_id);
           const aPlat = plataformas.find(p => p.id === aConta?.plataforma_id);
           const bConta = contas.find(c => c.id === b.conta_social_id);
           const bPlat = plataformas.find(p => p.id === bConta?.plataforma_id);
-          aValue = (aPlat?.nome || '').toLowerCase();
-          bValue = (bPlat?.nome || '').toLowerCase();
+          aValue = String(aPlat?.nome || '').toLowerCase();
+          bValue = String(bPlat?.nome || '').toLowerCase();
           break;
         case 'formato':
-          aValue = getLookupName(a.formato_id, formatos).toLowerCase();
-          bValue = getLookupName(b.formato_id, formatos).toLowerCase();
+          aValue = String(getLookupName(a.formato_id, formatos) || '').toLowerCase();
+          bValue = String(getLookupName(b.formato_id, formatos) || '').toLowerCase();
           break;
         case 'responsavel':
-          aValue = getLookupName(a.responsavel_id, membros).toLowerCase();
-          bValue = getLookupName(b.responsavel_id, membros).toLowerCase();
+          aValue = String(getLookupName(a.responsavel_id, membros) || '').toLowerCase();
+          bValue = String(getLookupName(b.responsavel_id, membros) || '').toLowerCase();
           break;
         default:
           return 0;
@@ -123,7 +123,7 @@ export default function PostListTable({
   const getLookupName = (id, list, key = 'id', nameKey = 'nome') => {
     if (!id || !list) return '-';
     const item = list.find(i => i[key] === id);
-    return item ? item[nameKey] : '-';
+    return (item && item[nameKey]) ? String(item[nameKey]) : '-';
   };
 
   return (
@@ -203,7 +203,12 @@ export default function PostListTable({
               {sortedPosts.map((post) => {
                 const conta = contas.find(c => c.id === post.conta_social_id);
                 const plataforma = plataformas.find(p => p.id === conta?.plataforma_id);
-                const isDelayed = post.status !== 'publicado' && post.data_agendamento && new Date(post.data_agendamento) < new Date();
+                
+                const isFinalStage = (() => {
+                  const etapa = etapas?.find(e => e.id === post.status);
+                  return etapa?.is_final || post.status === 'publicado';
+                })();
+                const isDelayed = !isFinalStage && post.data_agendamento && new Date(post.data_agendamento) < new Date();
                 
                 return (
                   <TableRow

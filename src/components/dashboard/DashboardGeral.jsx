@@ -41,13 +41,19 @@ export default function DashboardGeral({ faturas, despesas, tasks, posts, client
   const { vendasFechadas, postsAgendados, postsAtrasados } = useMemo(() => {
     const hoje = new Date();
     const vendasFechadas = clientes.filter(c => c.status_funil === 'venda_concluida').length;
-    const postsAgendados = posts.filter(p => p.status === 'agendado').length;
+    
+    const postsAgendados = posts.filter(p => {
+      const etapaAtual = etapas?.find(e => e.id === p.status);
+      const isFinal = etapaAtual?.is_final || p.status === 'publicado';
+      if (isFinal || !p.data_agendamento) return false;
+      return new Date(p.data_agendamento) >= hoje;
+    }).length;
     
     const postsAtrasados = posts.filter(p => {
-      const etapaAtual = etapas.find(e => e.id === p.status);
+      const etapaAtual = etapas?.find(e => e.id === p.status);
+      const isFinal = etapaAtual?.is_final || p.status === 'publicado';
       return (
-        p.status !== 'publicado' && 
-        !etapaAtual?.is_final &&
+        !isFinal &&
         p.data_agendamento && 
         new Date(p.data_agendamento) < hoje
       );
