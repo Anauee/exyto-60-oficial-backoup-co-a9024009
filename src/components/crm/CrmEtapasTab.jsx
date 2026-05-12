@@ -5,17 +5,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { PostEtapa, Membro, Post } from "@/api/entities";
-import { Plus, Trash2, GripVertical, Settings2, User, CheckCircle2, AlertTriangle, Save, Edit } from "lucide-react";
+import { CrmEtapa, Membro, Cliente } from "@/api/entities";
+import { Plus, Trash2, GripVertical, Settings2, User, CheckCircle2, AlertTriangle, Edit } from "lucide-react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 
-export default function PostEtapasTab({ empresaId, membros = [], onUpdate }) {
+export default function CrmEtapasTab({ empresaId, membros = [], onUpdate }) {
   const [etapas, setEtapas] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isEditing, setIsEditing] = useState(false);
   const [newEtapa, setNewEtapa] = useState({
     nome: '',
-    cor: '#6366f1',
+    cor: '#3b82f6',
     responsavel_id: '',
     is_final: false,
     tempo_maximo_horas: ''
@@ -27,42 +26,43 @@ export default function PostEtapasTab({ empresaId, membros = [], onUpdate }) {
     if (!empresaId) return;
     setIsLoading(true);
     try {
-      let data = await PostEtapa.filter({ empresa_id: empresaId }, "ordem");
+      let data = await CrmEtapa.filter({ empresa_id: empresaId }, "ordem");
       
       if (!data || data.length === 0) {
-        // Criar etapas padrão
+        // Criar etapas padrão para manter compatibilidade
         const defaultEtapas = [
-          { nome: 'Ideias/Pauta', cor: '#64748b', is_final: false, tempo_maximo_horas: null },
-          { nome: 'Produção', cor: '#3b82f6', is_final: false, tempo_maximo_horas: null },
-          { nome: 'Revisão', cor: '#eab308', is_final: false, tempo_maximo_horas: null },
-          { nome: 'Agendado', cor: '#10b981', is_final: false, tempo_maximo_horas: null },
-          { nome: 'Publicado', cor: '#a855f7', is_final: true, tempo_maximo_horas: null }
+          { nome: 'Prospecção', cor: '#64748b', is_final: false, tempo_maximo_horas: null },
+          { nome: 'Contato Feito', cor: '#3b82f6', is_final: false, tempo_maximo_horas: null },
+          { nome: 'Proposta Enviada', cor: '#eab308', is_final: false, tempo_maximo_horas: null },
+          { nome: 'Negociação', cor: '#f97316', is_final: false, tempo_maximo_horas: null },
+          { nome: 'Fechado/Ganho', cor: '#10b981', is_final: true, tempo_maximo_horas: null },
+          { nome: 'Perdido', cor: '#ef4444', is_final: true, tempo_maximo_horas: null }
         ];
 
         for (let i = 0; i < defaultEtapas.length; i++) {
-          await PostEtapa.create({
+          await CrmEtapa.create({
             ...defaultEtapas[i],
             empresa_id: empresaId,
             ordem: i
           });
         }
         
-        data = await PostEtapa.filter({ empresa_id: empresaId }, "ordem");
+        data = await CrmEtapa.filter({ empresa_id: empresaId }, "ordem");
 
-        // Migrar os posts existentes que usavam as strings de status antigas
+        // Migrar clientes existentes
         try {
-          const postsToUpdate = await Post.filter({ empresa_id: empresaId });
+          const clientesToUpdate = await Cliente.filter({ empresa_id: empresaId });
           const statusMap = {
-            'ideia': data.find(e => e.nome === 'Ideias/Pauta')?.id,
-            'producao': data.find(e => e.nome === 'Produção')?.id,
-            'revisao': data.find(e => e.nome === 'Revisão')?.id,
-            'agendado': data.find(e => e.nome === 'Agendado')?.id,
-            'publicado': data.find(e => e.nome === 'Publicado')?.id,
+            'prospeccao': data.find(e => e.nome === 'Prospecção')?.id,
+            'contato_feito': data.find(e => e.nome === 'Contato Feito')?.id,
+            'proposta_enviada': data.find(e => e.nome === 'Proposta Enviada')?.id,
+            'negociacao': data.find(e => e.nome === 'Negociação')?.id,
+            'fechado': data.find(e => e.nome === 'Fechado/Ganho')?.id,
           };
 
-          const updatePromises = (postsToUpdate || []).map(post => {
-            if (statusMap[post.status]) {
-               return Post.update(post.id, { status: statusMap[post.status] });
+          const updatePromises = (clientesToUpdate || []).map(cliente => {
+            if (cliente.status_funil && statusMap[cliente.status_funil]) {
+               return Cliente.update(cliente.id, { status_funil: statusMap[cliente.status_funil] });
             }
             return Promise.resolve();
           });
@@ -70,8 +70,8 @@ export default function PostEtapasTab({ empresaId, membros = [], onUpdate }) {
           if (updatePromises.length > 0) {
             await Promise.all(updatePromises);
           }
-        } catch (postError) {
-          console.error("Erro ao migrar posts para novas etapas:", postError);
+        } catch (error) {
+          console.error("Erro ao migrar clientes para novas etapas:", error);
         }
         
         if (onUpdate) onUpdate();
@@ -79,7 +79,7 @@ export default function PostEtapasTab({ empresaId, membros = [], onUpdate }) {
 
       setEtapas(data || []);
     } catch (error) {
-      console.error("Erro ao carregar etapas:", error);
+      console.error("Erro ao carregar etapas de CRM:", error);
     } finally {
       setIsLoading(false);
     }
@@ -92,13 +92,13 @@ export default function PostEtapasTab({ empresaId, membros = [], onUpdate }) {
   const handleCreateEtapa = async () => {
     if (!newEtapa.nome) return;
     try {
-      await PostEtapa.create({
+      await CrmEtapa.create({
         ...newEtapa,
         tempo_maximo_horas: newEtapa.tempo_maximo_horas ? parseInt(newEtapa.tempo_maximo_horas) : null,
         empresa_id: empresaId,
         ordem: etapas.length
       });
-      setNewEtapa({ nome: '', cor: '#6366f1', responsavel_id: '', is_final: false, tempo_maximo_horas: '' });
+      setNewEtapa({ nome: '', cor: '#3b82f6', responsavel_id: '', is_final: false, tempo_maximo_horas: '' });
       loadEtapas();
       if (onUpdate) onUpdate();
     } catch (error) {
@@ -107,9 +107,9 @@ export default function PostEtapasTab({ empresaId, membros = [], onUpdate }) {
   };
 
   const handleDeleteEtapa = async (id) => {
-    if (!window.confirm("Tem certeza que deseja excluir esta etapa? Posts nesta etapa ficarão sem status.")) return;
+    if (!window.confirm("Tem certeza que deseja excluir esta etapa? Clientes nesta etapa não aparecerão no Funil de Vendas.")) return;
     try {
-      await PostEtapa.delete(id);
+      await CrmEtapa.delete(id);
       loadEtapas();
       if (onUpdate) onUpdate();
     } catch (error) {
@@ -119,7 +119,7 @@ export default function PostEtapasTab({ empresaId, membros = [], onUpdate }) {
 
   const handleUpdateEtapa = async (id, data) => {
     try {
-      await PostEtapa.update(id, data);
+      await CrmEtapa.update(id, data);
       loadEtapas();
       if (onUpdate) onUpdate();
     } catch (error) {
@@ -142,9 +142,8 @@ export default function PostEtapasTab({ empresaId, membros = [], onUpdate }) {
     setEtapas(updatedItems);
 
     try {
-      // Atualiza as ordens no banco
       await Promise.all(updatedItems.map(item => 
-        PostEtapa.update(item.id, { ordem: item.ordem })
+        CrmEtapa.update(item.id, { ordem: item.ordem })
       ));
       if (onUpdate) onUpdate();
     } catch (error) {
@@ -189,7 +188,7 @@ export default function PostEtapasTab({ empresaId, membros = [], onUpdate }) {
     { name: 'Slate', value: '#64748b' },
   ];
 
-  if (isLoading) return <div className="p-8 text-center animate-pulse">Carregando esteira...</div>;
+  if (isLoading) return <div className="p-8 text-center animate-pulse">Carregando painel de etapas...</div>;
 
   return (
     <div className="space-y-8">
@@ -197,17 +196,16 @@ export default function PostEtapasTab({ empresaId, membros = [], onUpdate }) {
         <CardHeader className="p-8 pb-4">
           <div className="flex justify-between items-center">
             <CardTitle className="text-2xl font-black text-foreground flex items-center gap-3">
-              <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 flex items-center justify-center border border-indigo-500/20">
-                <Settings2 className="w-6 h-6 text-indigo-500" />
+              <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center border border-primary/20">
+                <Settings2 className="w-6 h-6 text-primary" />
               </div>
-              Configuração da Esteira de Produção
+              Configuração do Funil de Vendas
             </CardTitle>
           </div>
-          <p className="text-muted-foreground mt-2">Personalize as etapas do seu Kanban e defina automações de responsáveis e tarefas.</p>
+          <p className="text-muted-foreground mt-2">Personalize as etapas do seu Funil de CRM, defina cores e tempos de SLA.</p>
         </CardHeader>
         
         <CardContent className="p-8 space-y-8">
-          {/* Formulário de Nova Etapa */}
           <div className="bg-muted/30 p-6 rounded-[2rem] border border-border/20 space-y-4">
             <h4 className="font-bold text-sm uppercase tracking-widest text-muted-foreground flex items-center gap-2">
               <Plus className="w-4 h-4" />
@@ -218,7 +216,7 @@ export default function PostEtapasTab({ empresaId, membros = [], onUpdate }) {
                 <Label htmlFor="nome">Nome da Etapa</Label>
                 <Input 
                   id="nome" 
-                  placeholder="Ex: Edição de Vídeo" 
+                  placeholder="Ex: Em Espera" 
                   value={newEtapa.nome} 
                   onChange={e => setNewEtapa({...newEtapa, nome: e.target.value})}
                   className="rounded-xl border-border/40"
@@ -239,7 +237,7 @@ export default function PostEtapasTab({ empresaId, membros = [], onUpdate }) {
                 </div>
               </div>
               <div className="space-y-2">
-                <Label>Responsável Padrão</Label>
+                <Label>Responsável Automático</Label>
                 <Select value={newEtapa.responsavel_id} onValueChange={val => setNewEtapa({...newEtapa, responsavel_id: val})}>
                   <SelectTrigger className="rounded-xl border-border/40">
                     <SelectValue placeholder="Selecione..." />
@@ -272,16 +270,15 @@ export default function PostEtapasTab({ empresaId, membros = [], onUpdate }) {
                     onChange={e => setNewEtapa({...newEtapa, is_final: e.target.checked})}
                     className="w-4 h-4 rounded border-border"
                   />
-                  <Label htmlFor="is_final" className="text-xs cursor-pointer">Etapa Final (Postado)</Label>
+                  <Label htmlFor="is_final" className="text-xs cursor-pointer">Etapa Final (Ex: Fechado)</Label>
                 </div>
-                <Button onClick={handleCreateEtapa} className="bg-primary hover:bg-primary/90 rounded-xl px-6 font-bold flex-1">
+                <Button onClick={handleCreateEtapa} className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl px-6 font-bold flex-1">
                   Adicionar
                 </Button>
               </div>
             </div>
           </div>
 
-          {/* Lista de Etapas Reordenável */}
           <DragDropContext onDragEnd={onDragEnd}>
             <Droppable droppableId="etapas">
               {(provided) => (
@@ -362,7 +359,7 @@ export default function PostEtapasTab({ empresaId, membros = [], onUpdate }) {
                                 </div>
                                 <div className="flex items-center gap-2 pt-6">
                                   <Button size="sm" variant="ghost" onClick={cancelEditing} className="rounded-xl font-bold">Cancelar</Button>
-                                  <Button size="sm" onClick={saveEdit} className="rounded-xl font-bold px-6 bg-primary shadow-lg shadow-primary/20">Salvar</Button>
+                                  <Button size="sm" onClick={saveEdit} className="rounded-xl font-bold px-6 bg-primary text-primary-foreground shadow-lg shadow-primary/20">Salvar</Button>
                                 </div>
                               </div>
                             </div>
@@ -393,7 +390,7 @@ export default function PostEtapasTab({ empresaId, membros = [], onUpdate }) {
                                     {etapa.is_final && (
                                       <Badge className="bg-emerald-500/10 text-emerald-500 border-none text-[8px] h-4 font-black uppercase tracking-tighter">
                                         <CheckCircle2 className="w-2 h-2 mr-1" />
-                                        Etapa de Conclusão
+                                        Etapa Final
                                       </Badge>
                                     )}
                                   </div>
@@ -442,33 +439,11 @@ export default function PostEtapasTab({ empresaId, membros = [], onUpdate }) {
             <div className="text-center py-12 bg-muted/20 rounded-[2rem] border-2 border-dashed border-border/40">
               <AlertTriangle className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
               <p className="text-muted-foreground font-medium">Nenhuma etapa configurada.</p>
-              <p className="text-sm text-muted-foreground/60">Adicione etapas acima para começar sua esteira de produção.</p>
+              <p className="text-sm text-muted-foreground/60">Adicione etapas acima para começar o seu Funil de Vendas.</p>
             </div>
           )}
         </CardContent>
       </Card>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card className="border border-border/40 bg-blue-500/5 rounded-3xl p-6">
-          <h4 className="font-bold flex items-center gap-2 text-blue-700 mb-2">
-            <User className="w-4 h-4" />
-            Responsabilidade Automática
-          </h4>
-          <p className="text-sm text-blue-600/80 leading-relaxed">
-            Ao mover um post para uma etapa que possui um responsável padrão, o sistema alterará automaticamente o responsável do post.
-          </p>
-        </Card>
-        
-        <Card className="border border-border/40 bg-emerald-500/5 rounded-3xl p-6">
-          <h4 className="font-bold flex items-center gap-2 text-emerald-700 mb-2">
-            <CheckCircle2 className="w-4 h-4" />
-            Atividades Geradas
-          </h4>
-          <p className="text-sm text-emerald-600/80 leading-relaxed">
-            Sempre que um post entrar em uma nova etapa, uma atividade correspondente será criada para o responsável na aba de Agendas e Atividades.
-          </p>
-        </Card>
-      </div>
     </div>
   );
 }

@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { Cliente, Produto, Fatura, UsuarioEmpresa, User, Membro, FunilDeVendas } from "@/api/entities";
+import { Cliente, Produto, Fatura, UsuarioEmpresa, User, Membro, FunilDeVendas, CrmEtapa } from "@/api/entities";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Users, Package, Plus, TrendingUp, Target } from "lucide-react";
@@ -12,6 +12,7 @@ import ProdutoModal from "../components/crm/ProdutoModal";
 import ClienteDetalhes from "../components/crm/ClienteDetalhes";
 import ListaClientes from "../components/crm/ListaClientes";
 import FunilVendasTab from "../components/crm/FunilVendasTab";
+import CrmEtapasTab from "../components/crm/CrmEtapasTab";
 import { createPageUrl } from "@/utils";
 
 import { useNavigate } from "react-router-dom";
@@ -32,6 +33,7 @@ export default function ClientesProdutos() {
   const [responsaveis, setResponsaveis] = useState([]);
   const [membros, setMembros] = useState([]);
   const [funisDeVendas, setFunisDeVendas] = useState([]);
+  const [crmEtapas, setCrmEtapas] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   
   // Modals
@@ -47,12 +49,13 @@ export default function ClientesProdutos() {
     if (!silent) setIsLoading(true);
     try {
       // Use .list() as fallback due to RLS issues, then filter client-side
-      const [clientesData, produtosData, usuariosEmpresaData, membrosData, funisData] = await Promise.all([
+      const [clientesData, produtosData, usuariosEmpresaData, membrosData, funisData, etapasData] = await Promise.all([
         Cliente.list("-created_date").catch(() => []),
         Produto.list("-created_date").catch(() => []),
         UsuarioEmpresa.filter({ empresa_id: empresaId, ativo: true }).catch(() => []),
         Membro.list().catch(() => []),
-        FunilDeVendas.list("-created_date").catch(() => [])
+        FunilDeVendas.list("-created_date").catch(() => []),
+        CrmEtapa.filter({ empresa_id: empresaId }, "ordem").catch(() => [])
       ]);
       
       // Filter data by empresa_id on client side for security
@@ -65,6 +68,7 @@ export default function ClientesProdutos() {
       setProdutos(filteredProdutos);
       setMembros(filteredMembros);
       setFunisDeVendas(filteredFunis);
+      setCrmEtapas(etapasData || []);
 
       if (Array.isArray(usuariosEmpresaData) && usuariosEmpresaData.length > 0) {
         const userEmails = usuariosEmpresaData.map(ue => ue.usuario_email).filter(Boolean);
@@ -108,7 +112,7 @@ export default function ClientesProdutos() {
       // Optimistic update
       setClientes(prev => prev.map(c => c.id === cliente.id ? { ...c, status_funil: newStatus } : c));
 
-      await Cliente.update(cliente.id, { status_funil: newStatus });
+      await Cliente.update(cliente.id, { status_funil: newStatus, status_updated_at: new Date().toISOString() });
       loadData(true);
     } catch (error) {
       console.error("Erro ao atualizar status do cliente:", error);
@@ -284,7 +288,17 @@ export default function ClientesProdutos() {
               onClienteClick={handleClienteClick}
               responsaveis={responsaveis}
               membros={membros}
+              etapas={crmEtapas}
             />
+            {canEdit && (
+              <div className="mt-8">
+                <CrmEtapasTab 
+                  empresaId={empresaId} 
+                  membros={membros} 
+                  onUpdate={() => loadData(true)} 
+                />
+              </div>
+            )}
           </TabsContent>
 
           {/* Nova Aba Funil de Vendas */}

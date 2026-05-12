@@ -5,17 +5,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { PostEtapa, Membro, Post } from "@/api/entities";
-import { Plus, Trash2, GripVertical, Settings2, User, CheckCircle2, AlertTriangle, Save, Edit } from "lucide-react";
+import { TarefaEtapa, Membro, Tarefa } from "@/api/entities";
+import { Plus, Trash2, GripVertical, Settings2, User, CheckCircle2, AlertTriangle, Edit } from "lucide-react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 
-export default function PostEtapasTab({ empresaId, membros = [], onUpdate }) {
+export default function TarefaEtapasTab({ empresaId, membros = [], onUpdate }) {
   const [etapas, setEtapas] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isEditing, setIsEditing] = useState(false);
   const [newEtapa, setNewEtapa] = useState({
     nome: '',
-    cor: '#6366f1',
+    cor: '#3b82f6',
     responsavel_id: '',
     is_final: false,
     tempo_maximo_horas: ''
@@ -27,42 +26,38 @@ export default function PostEtapasTab({ empresaId, membros = [], onUpdate }) {
     if (!empresaId) return;
     setIsLoading(true);
     try {
-      let data = await PostEtapa.filter({ empresa_id: empresaId }, "ordem");
+      let data = await TarefaEtapa.filter({ empresa_id: empresaId }, "ordem");
       
       if (!data || data.length === 0) {
-        // Criar etapas padrão
+        // Criar etapas padrão para manter compatibilidade com o sistema antigo
         const defaultEtapas = [
-          { nome: 'Ideias/Pauta', cor: '#64748b', is_final: false, tempo_maximo_horas: null },
-          { nome: 'Produção', cor: '#3b82f6', is_final: false, tempo_maximo_horas: null },
-          { nome: 'Revisão', cor: '#eab308', is_final: false, tempo_maximo_horas: null },
-          { nome: 'Agendado', cor: '#10b981', is_final: false, tempo_maximo_horas: null },
-          { nome: 'Publicado', cor: '#a855f7', is_final: true, tempo_maximo_horas: null }
+          { nome: 'A Fazer', cor: '#3b82f6', is_final: false, tempo_maximo_horas: null },
+          { nome: 'Em Andamento', cor: '#f59e0b', is_final: false, tempo_maximo_horas: null },
+          { nome: 'Concluído', cor: '#10b981', is_final: true, tempo_maximo_horas: null }
         ];
 
         for (let i = 0; i < defaultEtapas.length; i++) {
-          await PostEtapa.create({
+          await TarefaEtapa.create({
             ...defaultEtapas[i],
             empresa_id: empresaId,
             ordem: i
           });
         }
         
-        data = await PostEtapa.filter({ empresa_id: empresaId }, "ordem");
+        data = await TarefaEtapa.filter({ empresa_id: empresaId }, "ordem");
 
-        // Migrar os posts existentes que usavam as strings de status antigas
+        // Migrar as tarefas existentes que usavam as strings de status antigas
         try {
-          const postsToUpdate = await Post.filter({ empresa_id: empresaId });
+          const tarefasToUpdate = await Tarefa.filter({ empresa_id: empresaId });
           const statusMap = {
-            'ideia': data.find(e => e.nome === 'Ideias/Pauta')?.id,
-            'producao': data.find(e => e.nome === 'Produção')?.id,
-            'revisao': data.find(e => e.nome === 'Revisão')?.id,
-            'agendado': data.find(e => e.nome === 'Agendado')?.id,
-            'publicado': data.find(e => e.nome === 'Publicado')?.id,
+            'a_fazer': data.find(e => e.nome === 'A Fazer')?.id,
+            'em_andamento': data.find(e => e.nome === 'Em Andamento')?.id,
+            'concluido': data.find(e => e.nome === 'Concluído')?.id,
           };
 
-          const updatePromises = (postsToUpdate || []).map(post => {
-            if (statusMap[post.status]) {
-               return Post.update(post.id, { status: statusMap[post.status] });
+          const updatePromises = (tarefasToUpdate || []).map(tarefa => {
+            if (statusMap[tarefa.status]) {
+               return Tarefa.update(tarefa.id, { status: statusMap[tarefa.status] });
             }
             return Promise.resolve();
           });
@@ -70,8 +65,8 @@ export default function PostEtapasTab({ empresaId, membros = [], onUpdate }) {
           if (updatePromises.length > 0) {
             await Promise.all(updatePromises);
           }
-        } catch (postError) {
-          console.error("Erro ao migrar posts para novas etapas:", postError);
+        } catch (tarefaError) {
+          console.error("Erro ao migrar tarefas para novas etapas:", tarefaError);
         }
         
         if (onUpdate) onUpdate();
@@ -79,7 +74,7 @@ export default function PostEtapasTab({ empresaId, membros = [], onUpdate }) {
 
       setEtapas(data || []);
     } catch (error) {
-      console.error("Erro ao carregar etapas:", error);
+      console.error("Erro ao carregar etapas de tarefas:", error);
     } finally {
       setIsLoading(false);
     }
@@ -92,13 +87,13 @@ export default function PostEtapasTab({ empresaId, membros = [], onUpdate }) {
   const handleCreateEtapa = async () => {
     if (!newEtapa.nome) return;
     try {
-      await PostEtapa.create({
+      await TarefaEtapa.create({
         ...newEtapa,
         tempo_maximo_horas: newEtapa.tempo_maximo_horas ? parseInt(newEtapa.tempo_maximo_horas) : null,
         empresa_id: empresaId,
         ordem: etapas.length
       });
-      setNewEtapa({ nome: '', cor: '#6366f1', responsavel_id: '', is_final: false, tempo_maximo_horas: '' });
+      setNewEtapa({ nome: '', cor: '#3b82f6', responsavel_id: '', is_final: false, tempo_maximo_horas: '' });
       loadEtapas();
       if (onUpdate) onUpdate();
     } catch (error) {
@@ -107,9 +102,9 @@ export default function PostEtapasTab({ empresaId, membros = [], onUpdate }) {
   };
 
   const handleDeleteEtapa = async (id) => {
-    if (!window.confirm("Tem certeza que deseja excluir esta etapa? Posts nesta etapa ficarão sem status.")) return;
+    if (!window.confirm("Tem certeza que deseja excluir esta etapa? Tarefas nesta etapa ficarão sem status e poderão não aparecer no Kanban.")) return;
     try {
-      await PostEtapa.delete(id);
+      await TarefaEtapa.delete(id);
       loadEtapas();
       if (onUpdate) onUpdate();
     } catch (error) {
@@ -119,7 +114,7 @@ export default function PostEtapasTab({ empresaId, membros = [], onUpdate }) {
 
   const handleUpdateEtapa = async (id, data) => {
     try {
-      await PostEtapa.update(id, data);
+      await TarefaEtapa.update(id, data);
       loadEtapas();
       if (onUpdate) onUpdate();
     } catch (error) {
@@ -142,9 +137,8 @@ export default function PostEtapasTab({ empresaId, membros = [], onUpdate }) {
     setEtapas(updatedItems);
 
     try {
-      // Atualiza as ordens no banco
       await Promise.all(updatedItems.map(item => 
-        PostEtapa.update(item.id, { ordem: item.ordem })
+        TarefaEtapa.update(item.id, { ordem: item.ordem })
       ));
       if (onUpdate) onUpdate();
     } catch (error) {
@@ -189,7 +183,7 @@ export default function PostEtapasTab({ empresaId, membros = [], onUpdate }) {
     { name: 'Slate', value: '#64748b' },
   ];
 
-  if (isLoading) return <div className="p-8 text-center animate-pulse">Carregando esteira...</div>;
+  if (isLoading) return <div className="p-8 text-center animate-pulse">Carregando painel de etapas...</div>;
 
   return (
     <div className="space-y-8">
@@ -197,17 +191,16 @@ export default function PostEtapasTab({ empresaId, membros = [], onUpdate }) {
         <CardHeader className="p-8 pb-4">
           <div className="flex justify-between items-center">
             <CardTitle className="text-2xl font-black text-foreground flex items-center gap-3">
-              <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 flex items-center justify-center border border-indigo-500/20">
-                <Settings2 className="w-6 h-6 text-indigo-500" />
+              <div className="w-12 h-12 rounded-2xl bg-orange-500/10 flex items-center justify-center border border-orange-500/20">
+                <Settings2 className="w-6 h-6 text-orange-500" />
               </div>
-              Configuração da Esteira de Produção
+              Configuração do Kanban de Tarefas
             </CardTitle>
           </div>
-          <p className="text-muted-foreground mt-2">Personalize as etapas do seu Kanban e defina automações de responsáveis e tarefas.</p>
+          <p className="text-muted-foreground mt-2">Personalize as colunas do seu Kanban de atividades, defina cores e limites de tempo (SLA).</p>
         </CardHeader>
         
         <CardContent className="p-8 space-y-8">
-          {/* Formulário de Nova Etapa */}
           <div className="bg-muted/30 p-6 rounded-[2rem] border border-border/20 space-y-4">
             <h4 className="font-bold text-sm uppercase tracking-widest text-muted-foreground flex items-center gap-2">
               <Plus className="w-4 h-4" />
@@ -218,7 +211,7 @@ export default function PostEtapasTab({ empresaId, membros = [], onUpdate }) {
                 <Label htmlFor="nome">Nome da Etapa</Label>
                 <Input 
                   id="nome" 
-                  placeholder="Ex: Edição de Vídeo" 
+                  placeholder="Ex: Em Espera" 
                   value={newEtapa.nome} 
                   onChange={e => setNewEtapa({...newEtapa, nome: e.target.value})}
                   className="rounded-xl border-border/40"
@@ -239,7 +232,7 @@ export default function PostEtapasTab({ empresaId, membros = [], onUpdate }) {
                 </div>
               </div>
               <div className="space-y-2">
-                <Label>Responsável Padrão</Label>
+                <Label>Responsável Automático</Label>
                 <Select value={newEtapa.responsavel_id} onValueChange={val => setNewEtapa({...newEtapa, responsavel_id: val})}>
                   <SelectTrigger className="rounded-xl border-border/40">
                     <SelectValue placeholder="Selecione..." />
@@ -272,16 +265,15 @@ export default function PostEtapasTab({ empresaId, membros = [], onUpdate }) {
                     onChange={e => setNewEtapa({...newEtapa, is_final: e.target.checked})}
                     className="w-4 h-4 rounded border-border"
                   />
-                  <Label htmlFor="is_final" className="text-xs cursor-pointer">Etapa Final (Postado)</Label>
+                  <Label htmlFor="is_final" className="text-xs cursor-pointer">Etapa Final (Concluído)</Label>
                 </div>
-                <Button onClick={handleCreateEtapa} className="bg-primary hover:bg-primary/90 rounded-xl px-6 font-bold flex-1">
+                <Button onClick={handleCreateEtapa} className="bg-orange-600 hover:bg-orange-700 text-white rounded-xl px-6 font-bold flex-1">
                   Adicionar
                 </Button>
               </div>
             </div>
           </div>
 
-          {/* Lista de Etapas Reordenável */}
           <DragDropContext onDragEnd={onDragEnd}>
             <Droppable droppableId="etapas">
               {(provided) => (
@@ -292,7 +284,7 @@ export default function PostEtapasTab({ empresaId, membros = [], onUpdate }) {
                         <div
                           ref={provided.innerRef}
                           {...provided.draggableProps}
-                          className={`group flex flex-col p-2 rounded-3xl border transition-all ${snapshot.isDragging ? 'bg-card shadow-2xl border-primary/40' : 'bg-card/40 border-border/20 hover:border-primary/20'}`}
+                          className={`group flex flex-col p-2 rounded-3xl border transition-all ${snapshot.isDragging ? 'bg-card shadow-2xl border-orange-500/40' : 'bg-card/40 border-border/20 hover:border-orange-500/20'}`}
                         >
                           {editingId === etapa.id ? (
                             <div className="p-4 space-y-4">
@@ -362,7 +354,7 @@ export default function PostEtapasTab({ empresaId, membros = [], onUpdate }) {
                                 </div>
                                 <div className="flex items-center gap-2 pt-6">
                                   <Button size="sm" variant="ghost" onClick={cancelEditing} className="rounded-xl font-bold">Cancelar</Button>
-                                  <Button size="sm" onClick={saveEdit} className="rounded-xl font-bold px-6 bg-primary shadow-lg shadow-primary/20">Salvar</Button>
+                                  <Button size="sm" onClick={saveEdit} className="rounded-xl font-bold px-6 bg-orange-600 hover:bg-orange-700 text-white shadow-lg shadow-orange-500/20">Salvar</Button>
                                 </div>
                               </div>
                             </div>
@@ -379,7 +371,7 @@ export default function PostEtapasTab({ empresaId, membros = [], onUpdate }) {
                                 <div className="w-4 h-4 rounded-full shadow-sm" style={{ backgroundColor: etapa.cor }} />
                                 
                                 <div className="flex-1 min-w-0">
-                                  <h5 className="font-bold text-foreground truncate group-hover:text-primary transition-colors">{etapa.nome}</h5>
+                                  <h5 className="font-bold text-foreground truncate group-hover:text-orange-500 transition-colors">{etapa.nome}</h5>
                                   <div className="flex items-center gap-4 mt-1">
                                     {etapa.responsavel_id ? (
                                       <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground font-bold uppercase tracking-widest">
@@ -412,7 +404,7 @@ export default function PostEtapasTab({ empresaId, membros = [], onUpdate }) {
                                 <Button 
                                   variant="ghost" 
                                   size="icon" 
-                                  className="text-muted-foreground hover:text-primary rounded-xl w-10 h-10"
+                                  className="text-muted-foreground hover:text-orange-500 rounded-xl w-10 h-10"
                                   onClick={() => startEditing(etapa)}
                                 >
                                   <Edit className="w-4 h-4" />
@@ -442,33 +434,11 @@ export default function PostEtapasTab({ empresaId, membros = [], onUpdate }) {
             <div className="text-center py-12 bg-muted/20 rounded-[2rem] border-2 border-dashed border-border/40">
               <AlertTriangle className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
               <p className="text-muted-foreground font-medium">Nenhuma etapa configurada.</p>
-              <p className="text-sm text-muted-foreground/60">Adicione etapas acima para começar sua esteira de produção.</p>
+              <p className="text-sm text-muted-foreground/60">Adicione etapas acima para começar o seu Kanban.</p>
             </div>
           )}
         </CardContent>
       </Card>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card className="border border-border/40 bg-blue-500/5 rounded-3xl p-6">
-          <h4 className="font-bold flex items-center gap-2 text-blue-700 mb-2">
-            <User className="w-4 h-4" />
-            Responsabilidade Automática
-          </h4>
-          <p className="text-sm text-blue-600/80 leading-relaxed">
-            Ao mover um post para uma etapa que possui um responsável padrão, o sistema alterará automaticamente o responsável do post.
-          </p>
-        </Card>
-        
-        <Card className="border border-border/40 bg-emerald-500/5 rounded-3xl p-6">
-          <h4 className="font-bold flex items-center gap-2 text-emerald-700 mb-2">
-            <CheckCircle2 className="w-4 h-4" />
-            Atividades Geradas
-          </h4>
-          <p className="text-sm text-emerald-600/80 leading-relaxed">
-            Sempre que um post entrar em uma nova etapa, uma atividade correspondente será criada para o responsável na aba de Agendas e Atividades.
-          </p>
-        </Card>
-      </div>
     </div>
   );
 }

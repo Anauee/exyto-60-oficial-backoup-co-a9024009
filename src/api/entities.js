@@ -382,6 +382,8 @@ export const SocialToken = createEntity('social_tokens');
 export const AIConversa = createEntity('ai_conversas');
 export const AIMensagem = createEntity('ai_mensagens');
 export const PostEtapa = createEntity('post_etapa');
+export const TarefaEtapa = createEntity('tarefa_etapa');
+export const CrmEtapa = createEntity('crm_etapa');
 
 export const Trash = {
   ...createEntity('lixeira', { skipTrash: true }),

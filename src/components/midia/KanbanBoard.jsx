@@ -30,16 +30,41 @@ function PostCard({ post, onClick, plataformas = [], contas = [], etapas = [], m
   const conta = contas.find(c => c.id === post.conta_social_id);
   const plataforma = plataformas.find(p => p.id === conta?.plataforma_id);
   
-  const isDelayed = React.useMemo(() => {
+  const slaStatus = React.useMemo(() => {
     const etapaAtual = etapas.find(e => e.id === post.status);
-    // Não está atrasado se for a etapa final (legado 'publicado' ou flag is_final)
+    if (etapaAtual?.is_final || !etapaAtual?.tempo_maximo_horas || !post.status_updated_at) return 'normal';
+    
+    const horasPassadas = (new Date() - new Date(post.status_updated_at)) / (1000 * 60 * 60);
+    const limite = etapaAtual.tempo_maximo_horas;
+    
+    if (horasPassadas >= limite) return 'delayed';
+    if (horasPassadas >= limite * 0.75) return 'warning';
+    return 'normal';
+  }, [post.status, post.status_updated_at, etapas]);
+
+  const isAgendamentoAtrasado = React.useMemo(() => {
+    const etapaAtual = etapas.find(e => e.id === post.status);
     if (post.status === 'publicado' || etapaAtual?.is_final || !post.data_agendamento) return false;
     return new Date(post.data_agendamento) < new Date();
   }, [post.status, post.data_agendamento, etapas]);
 
+  const isDelayed = slaStatus === 'delayed' || isAgendamentoAtrasado;
+  const isWarning = slaStatus === 'warning';
+
+  let cardBorderClass = 'border-border/40';
+  let ringClass = '';
+  
+  if (isDelayed) {
+    cardBorderClass = 'border-destructive/40';
+    ringClass = 'ring-1 ring-destructive/20';
+  } else if (isWarning) {
+    cardBorderClass = 'border-orange-500/40';
+    ringClass = 'ring-1 ring-orange-500/20';
+  }
+
   return (
     <Card
-      className={`bg-card/80 backdrop-blur-md cursor-pointer hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-border/40 rounded-2xl group shadow-sm ${isDelayed ? 'border-destructive/40 ring-1 ring-destructive/20' : ''}`}
+      className={`bg-card/80 backdrop-blur-md cursor-pointer hover:shadow-xl hover:-translate-y-1 transition-all duration-300 rounded-2xl group shadow-sm ${cardBorderClass} ${ringClass}`}
       onClick={() => onClick(post)}
     >
       <CardContent className="p-5 space-y-4">
@@ -49,8 +74,13 @@ function PostCard({ post, onClick, plataformas = [], contas = [], etapas = [], m
               {post.titulo}
             </p>
             {isDelayed && (
-              <Badge variant="destructive" className="text-[8px] font-black uppercase px-1 py-0 h-4 animate-pulse">
-                Atrasado
+              <Badge variant="destructive" className="text-[8px] font-black uppercase px-1 py-0 h-4 animate-pulse mr-1">
+                Atrasado {slaStatus === 'delayed' && '(SLA)'}
+              </Badge>
+            )}
+            {!isDelayed && isWarning && (
+              <Badge variant="outline" className="text-[8px] font-black uppercase px-1 py-0 h-4 bg-orange-500/10 text-orange-500 border-orange-500/20 animate-pulse mr-1">
+                Atenção (SLA)
               </Badge>
             )}
           </div>

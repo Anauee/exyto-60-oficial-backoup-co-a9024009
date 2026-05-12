@@ -326,6 +326,7 @@ export default function MidiaSocial() {
       setPosts(prev => prev.map(p => p.id === post.id ? { ...p, status: newStatus } : p));
 
       const updateData = await processPostAutomation(post, newStatus);
+      updateData.status_updated_at = new Date().toISOString();
       await Post.update(post.id, updateData);
       loadData(true);
     } catch (error) {

@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { Tarefa, Compromisso, Projeto, User, Membro } from "@/api/entities";
+import { Tarefa, Compromisso, Projeto, User, Membro, TarefaEtapa } from "@/api/entities";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar, CheckSquare, Plus, List, FolderOpen } from "lucide-react";
@@ -10,6 +10,7 @@ import CalendarioAgendas from "../components/agendas/CalendarioAgendas";
 import KanbanTarefas from "../components/agendas/KanbanTarefas";
 import TabelaAtividades from "../components/agendas/TabelaAtividades";
 import ProjetosTab from "../components/agendas/ProjetosTab";
+import TarefaEtapasTab from "../components/agendas/TarefaEtapasTab";
 import TaskModal from "../components/agendas/TaskModal";
 import AppointmentModal from "../components/agendas/AppointmentModal";
 import TaskViewModal from "../components/agendas/TaskViewModal";
@@ -73,6 +74,7 @@ export default function Agendas() {
   const canDelete = hasPermission('agendas-e-atividades:delete');
 
   const [tarefas, setTarefas] = useState([]);
+  const [tarefaEtapas, setTarefaEtapas] = useState([]);
   const [compromissos, setCompromissos] = useState([]);
   const [projetos, setProjetos] = useState([]);
   const [membros, setMembros] = useState([]);
@@ -114,11 +116,12 @@ export default function Agendas() {
     if (!empresaId) return;
     if (!silent) setIsLoading(true);
     try {
-      const [tarefasData, compromissosData, projetosData, membrosData] = await Promise.all([
+      const [tarefasData, compromissosData, projetosData, membrosData, etapasData] = await Promise.all([
         Tarefa.list("-created_date").catch(() => []),
         Compromisso.list("-created_date").catch(() => [], ),
         Projeto.list("-created_date").catch(() => []),
-        Membro.list().catch(() => [])
+        Membro.list().catch(() => []),
+        TarefaEtapa.filter({ empresa_id: empresaId }, "ordem").catch(() => [])
       ]);
       
       // Filter data by empresa_id on client side for security
@@ -131,6 +134,7 @@ export default function Agendas() {
       setCompromissos(filteredCompromissos);
       setProjetos(filteredProjetos);
       setMembros(filteredMembros); 
+      setTarefaEtapas(etapasData || []);
 
     } catch (error) {
       console.error("Erro ao carregar dados das agendas:", error);
@@ -265,7 +269,7 @@ export default function Agendas() {
       // Optimistic update
       setTarefas(prev => prev.map(t => t.id === task.id ? { ...t, status: newStatus } : t));
 
-      await Tarefa.update(task.id, { status: newStatus });
+      await Tarefa.update(task.id, { status: newStatus, status_updated_at: new Date().toISOString() });
       loadScheduleData(true);
     } catch (error) {
       console.error("Erro ao atualizar status da tarefa:", error);
@@ -580,7 +584,17 @@ export default function Agendas() {
               onTaskMove={handleTaskMove}
               onTaskClick={handleTaskClick}
               membros={membros}
+              etapas={tarefaEtapas}
             />
+            {canEdit && (
+              <div className="mt-8">
+                <TarefaEtapasTab 
+                  empresaId={empresaId} 
+                  membros={membros} 
+                  onUpdate={() => loadScheduleData(true)} 
+                />
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="projetos" className="space-y-6">
