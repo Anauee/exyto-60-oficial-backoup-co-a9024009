@@ -23,11 +23,11 @@ export default function PermissionsModal({
 
   useEffect(() => {
     if (isOpen && selectedUser) {
-      const initialPermissionsState = empresas.reduce((acc, empresa) => {
+      const initialPermissionsState = (empresas || []).reduce((acc, empresa) => {
         const existingPerm = initialPermissions[empresa.id];
         acc[empresa.id] = {
           ativo: existingPerm ? existingPerm.ativo : false,
-          permissoes: existingPerm ? existingPerm.permissoes : []
+          permissoes: (existingPerm && existingPerm.permissoes) ? existingPerm.permissoes : []
         };
         return acc;
       }, {});
@@ -91,7 +91,7 @@ export default function PermissionsModal({
 
         <ScrollArea className="flex-1 p-8">
           <div className="space-y-6">
-            {empresas.map(empresa => (
+            {(empresas || []).map(empresa => (
               <div key={empresa.id} className="p-6 border border-border/20 rounded-[2rem] bg-background/40 backdrop-blur-sm transition-all hover:border-primary/20">
                 <div className="flex items-center justify-between mb-6 pb-6 border-b border-border/10">
                   <div className="flex items-center gap-4">
@@ -133,7 +133,7 @@ export default function PermissionsModal({
                             <TableRow key={feature.id} className="hover:bg-primary/5 transition-colors">
                               <TableCell className="font-bold text-slate-700 text-xs p-3">{feature.label}</TableCell>
                               {ACTIONS.map(action => {
-                                const isChecked = permissions[empresa.id]?.permissoes.includes(`${feature.id}:${action.id}`);
+                                const isChecked = (permissions[empresa.id]?.permissoes || []).includes(`${feature.id}:${action.id}`);
                                 return (
                                   <TableCell key={action.id} className="text-center p-3">
                                     <Checkbox
