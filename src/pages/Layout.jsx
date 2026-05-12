@@ -87,7 +87,7 @@ const navigationItems = [
     url: "/analytics",
     icon: TrendingUp,
     color: "text-emerald-600",
-    permission: "midia-social"
+    permission: "analytics"
   },
   {
     title: "Clientes e Produtos",

@@ -46,8 +46,8 @@ export default function AdminPanel({ isOpen, onClose, onEmpresasUpdate }) {
       setIsLoading(true);
       const existingPermissions = await UsuarioEmpresa.filter({ usuario_id: user.id });
       
-      const permissionsMap = existingPermissions.reduce((acc, perm) => {
-        acc[perm.empresa_id] = { id: perm.id, permissoes: perm.permissoes, ativo: perm.ativo };
+      const permissionsMap = (existingPermissions || []).reduce((acc, perm) => {
+        acc[perm.empresa_id] = { id: perm.id, permissoes: perm.permissoes_adicionais || perm.permissoes || [], ativo: perm.ativo };
         return acc;
       }, {});
 
