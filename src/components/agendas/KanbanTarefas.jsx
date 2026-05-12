@@ -8,6 +8,16 @@ import { format, isBefore, isToday } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { parseDateLocal } from "@/components/utils/dateUtils";
 
+const getPriorityClass = (priority) => {
+  const colors = {
+    baixa: 'border-blue-500/50 shadow-[0_0_10px_rgba(59,130,246,0.1)]',
+    media: 'border-yellow-500/50 shadow-[0_0_10px_rgba(234,179,8,0.1)]',
+    alta: 'border-orange-500/50 shadow-[0_0_10px_rgba(249,115,22,0.1)]',
+    urgente: 'border-red-500/50 shadow-[0_0_15px_rgba(239,68,68,0.2)]'
+  };
+  return colors[priority] || 'border-border/40';
+};
+
 export default function KanbanTarefas({ tarefas, onTaskMove, onTaskClick, membros, etapas = [] }) { 
   const defaultColumns = [
     { id: 'a_fazer', title: 'A Fazer', color: 'bg-blue-500/10 border-blue-500/20 text-blue-500' },
