@@ -44,6 +44,19 @@ export default function HomeDaEmpresa() {
   // HomeDaEmpresa is now accessible to all members of the company
   const hasAccess = true; 
   const canEdit = hasPermission('home-da-empresa:edit');
+  
+  const canViewSistemas = hasPermission('home-sistemas:view');
+  const canViewRecados = hasPermission('home-recados:view');
+  const canViewMovimento = hasPermission('home-movimento:view');
+  const canViewEquipe = hasPermission('home-equipe:view');
+
+  const defaultTab = React.useMemo(() => {
+    if (canViewSistemas) return "sistemas";
+    if (canViewRecados) return "recados";
+    if (canViewMovimento) return "movimento";
+    if (canViewEquipe) return "equipe";
+    return "sistemas"; // fallback
+  }, [canViewSistemas, canViewRecados, canViewMovimento, canViewEquipe]);
 
   const [sistemas, setSistemas] = useState([]);
   const [membros, setMembros] = useState([]);
@@ -395,88 +408,112 @@ export default function HomeDaEmpresa() {
           </div>
 
 
-          <Tabs defaultValue="sistemas" className="w-full">
+          <Tabs defaultValue={defaultTab} className="w-full">
             <div className="flex justify-center mb-10">
               <TabsList className="bg-muted/50 p-1.5 rounded-[1.5rem] h-auto gap-1 border border-border/40 backdrop-blur-md">
-                <TabsTrigger 
-                  value="sistemas" 
-                  className="flex items-center gap-3 px-8 py-3.5 rounded-2xl data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-xl data-[state=active]:shadow-primary/10 transition-all duration-300"
-                >
-                  <MonitorSmartphone className="w-5 h-5" />
-                  <span className="font-bold tracking-tight">Sistemas</span>
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="recados" 
-                  className="flex items-center gap-3 px-8 py-3.5 rounded-2xl data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-xl data-[state=active]:shadow-primary/10 transition-all duration-300"
-                >
-                  <Newspaper className="w-5 h-5" />
-                  <span className="font-bold tracking-tight">Recados</span>
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="movimento" 
-                  className="flex items-center gap-3 px-8 py-3.5 rounded-2xl data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-xl data-[state=active]:shadow-primary/10 transition-all duration-300"
-                >
-                  <TrendingUp className="w-5 h-5" />
-                  <span className="font-bold tracking-tight">Movimento</span>
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="equipe" 
-                  className="flex items-center gap-3 px-8 py-3.5 rounded-2xl data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-xl data-[state=active]:shadow-primary/10 transition-all duration-300"
-                >
-                  <Users className="w-5 h-5" />
-                  <span className="font-bold tracking-tight">Equipe</span>
-                </TabsTrigger>
+                {canViewSistemas && (
+                  <TabsTrigger 
+                    value="sistemas" 
+                    className="flex items-center gap-3 px-8 py-3.5 rounded-2xl data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-xl data-[state=active]:shadow-primary/10 transition-all duration-300"
+                  >
+                    <MonitorSmartphone className="w-5 h-5" />
+                    <span className="font-bold tracking-tight">Sistemas</span>
+                  </TabsTrigger>
+                )}
+                {canViewRecados && (
+                  <TabsTrigger 
+                    value="recados" 
+                    className="flex items-center gap-3 px-8 py-3.5 rounded-2xl data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-xl data-[state=active]:shadow-primary/10 transition-all duration-300"
+                  >
+                    <Newspaper className="w-5 h-5" />
+                    <span className="font-bold tracking-tight">Recados</span>
+                  </TabsTrigger>
+                )}
+                {canViewMovimento && (
+                  <TabsTrigger 
+                    value="movimento" 
+                    className="flex items-center gap-3 px-8 py-3.5 rounded-2xl data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-xl data-[state=active]:shadow-primary/10 transition-all duration-300"
+                  >
+                    <TrendingUp className="w-5 h-5" />
+                    <span className="font-bold tracking-tight">Movimento</span>
+                  </TabsTrigger>
+                )}
+                {canViewEquipe && (
+                  <TabsTrigger 
+                    value="equipe" 
+                    className="flex items-center gap-3 px-8 py-3.5 rounded-2xl data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-xl data-[state=active]:shadow-primary/10 transition-all duration-300"
+                  >
+                    <Users className="w-5 h-5" />
+                    <span className="font-bold tracking-tight">Equipe</span>
+                  </TabsTrigger>
+                )}
               </TabsList>
             </div>
             
-            <TabsContent value="sistemas">
-              {canEdit && (
-                <div className="flex justify-end mb-8">
-                  <Button 
-                    onClick={() => openSistemaModal()} 
-                    className="bg-primary text-primary-foreground hover:bg-primary/90 h-12 rounded-2xl px-6 font-bold shadow-lg shadow-primary/20 transition-all"
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Adicionar Sistema
-                  </Button>
-                </div>
-              )}
-              {sistemas.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {(sistemas || []).map((sistema) => (
-                    <SistemaCard key={sistema.id} sistema={sistema} onEdit={openSistemaModal} canEdit={canEdit} />
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-24 border-2 border-dashed border-border rounded-2xl bg-card transition-all">
-                  <Layers className="w-16 h-16 mx-auto text-muted-foreground/30 mb-6" />
-                  <h2 className="text-xl font-bold text-foreground mb-2">Nenhum sistema adicionado</h2>
-                  <p className="text-muted-foreground mb-8 max-w-sm mx-auto">Centralize todas as ferramentas da sua empresa em um único lugar.</p>
-                  {canEdit && (
-                    <Button onClick={() => openSistemaModal()} className="rounded-xl px-8">
+            {canViewSistemas && (
+              <TabsContent value="sistemas">
+                {canEdit && (
+                  <div className="flex justify-end mb-8">
+                    <Button 
+                      onClick={() => openSistemaModal()} 
+                      className="bg-primary text-primary-foreground hover:bg-primary/90 h-12 rounded-2xl px-6 font-bold shadow-lg shadow-primary/20 transition-all"
+                    >
                       <Plus className="w-4 h-4 mr-2" />
-                      Adicionar Primeiro Sistema
+                      Adicionar Sistema
                     </Button>
-                  )}
-                </div>
-              )}
-            </TabsContent>
+                  </div>
+                )}
+                {sistemas.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {(sistemas || []).map((sistema) => (
+                      <SistemaCard key={sistema.id} sistema={sistema} onEdit={openSistemaModal} canEdit={canEdit} />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-24 border-2 border-dashed border-border rounded-2xl bg-card transition-all">
+                    <Layers className="w-16 h-16 mx-auto text-muted-foreground/30 mb-6" />
+                    <h2 className="text-xl font-bold text-foreground mb-2">Nenhum sistema adicionado</h2>
+                    <p className="text-muted-foreground mb-8 max-w-sm mx-auto">Centralize todas as ferramentas da sua empresa em um único lugar.</p>
+                    {canEdit && (
+                      <Button onClick={() => openSistemaModal()} className="rounded-xl px-8">
+                        <Plus className="w-4 h-4 mr-2" />
+                        Adicionar Primeiro Sistema
+                      </Button>
+                    )}
+                  </div>
+                )}
+              </TabsContent>
+            )}
 
-            <TabsContent value="recados">
-              <CardBoard entityType="Recado" empresaId={empresa.id} />
-            </TabsContent>
+            {canViewRecados && (
+              <TabsContent value="recados">
+                <CardBoard entityType="Recado" empresaId={empresa.id} />
+              </TabsContent>
+            )}
             
-            <TabsContent value="movimento">
-              <CardBoard entityType="Movimento" empresaId={empresa.id} />
-            </TabsContent>
+            {canViewMovimento && (
+              <TabsContent value="movimento">
+                <CardBoard entityType="Movimento" empresaId={empresa.id} />
+              </TabsContent>
+            )}
 
-            <TabsContent value="equipe">
-              <MembrosTab 
-                membros={membros} 
-                cargos={cargos} 
-                setores={setores} 
-              />
-            </TabsContent>
+            {canViewEquipe && (
+              <TabsContent value="equipe">
+                <MembrosTab 
+                  membros={membros} 
+                  cargos={cargos} 
+                  setores={setores} 
+                />
+              </TabsContent>
+            )}
+
+            {!canViewSistemas && !canViewRecados && !canViewMovimento && !canViewEquipe && (
+              <div className="text-center py-24 border-2 border-dashed border-border rounded-2xl bg-card/40 backdrop-blur-md">
+                <Shield className="w-16 h-16 mx-auto text-muted-foreground/30 mb-6" />
+                <h2 className="text-xl font-bold text-foreground mb-2">Sem acesso às abas da Home</h2>
+                <p className="text-muted-foreground max-w-sm mx-auto">Você não possui permissão para visualizar nenhuma seção desta página. Entre em contato com o administrador.</p>
+              </div>
+            )}
           </Tabs>
         </div>
       </div>

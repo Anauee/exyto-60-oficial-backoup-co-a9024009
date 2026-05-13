@@ -2,7 +2,11 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase-client';
 
 export const FEATURES = [
-  { id: 'home-da-empresa', label: 'Home da Empresa' },
+  { id: 'home-da-empresa', label: 'Home: Geral' },
+  { id: 'home-sistemas', label: 'Home: Sistemas' },
+  { id: 'home-recados', label: 'Home: Recados' },
+  { id: 'home-movimento', label: 'Home: Movimento' },
+  { id: 'home-equipe', label: 'Home: Equipe' },
   { id: 'dashboard', label: 'Dashboard' },
   { id: 'midia-social', label: 'Mídia Social' },
   { id: 'analytics', label: 'Analytics' },
