@@ -16,6 +16,7 @@ import SistemaCard from "../components/home_empresa/SistemaCard";
 import SistemaModal from "../components/home_empresa/SistemaModal";
 import MembrosTab from "../components/home_empresa/MembrosTab";
 import CardBoard from "../components/card_board/CardBoard";
+import ImageCropModal from "../components/shared/ImageCropModal";
 import { createPageUrl } from "@/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase-client";
@@ -80,6 +81,14 @@ export default function HomeDaEmpresa() {
   const [showClienteModal, setShowClienteModal] = useState(false);
   const [showTaskModal, setShowTaskModal] = useState(false);
   const [showPostModal, setShowPostModal] = useState(false);
+
+  // Crop configuration state
+  const [cropConfig, setCropConfig] = useState({
+    isOpen: false,
+    imageSrc: null,
+    type: null,
+    aspectRatio: 1
+  });
 
   const loadData = useCallback(async () => {
     setIsLoading(true);
@@ -214,18 +223,35 @@ export default function HomeDaEmpresa() {
     }
   };
 
-  const handleFileUpload = async (e, type) => {
-    try {
+  const handleFileSelect = (e, type) => {
+    if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];
-      if (!file) return;
-
-      if (file.size > 2 * 1024 * 1024) {
-        toast.error("O arquivo deve ter no máximo 2MB");
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error("O arquivo original deve ter no máximo 5MB");
         return;
       }
+      const reader = new FileReader();
+      reader.addEventListener('load', () => {
+        setCropConfig({
+          isOpen: true,
+          imageSrc: reader.result?.toString() || '',
+          type,
+          aspectRatio: type === 'logo' ? 1 : 3, // Banner ratio 3:1
+        });
+      });
+      reader.readAsDataURL(file);
+      e.target.value = null; // Reset input
+    }
+  };
+
+  const handleCropComplete = async (file) => {
+    try {
+      setCropConfig(prev => ({ ...prev, isOpen: false }));
+      if (!file) return;
 
       setUploading(true);
-      const fileExt = file.name.split('.').pop();
+      const type = cropConfig.type;
+      const fileExt = file.name.split('.').pop() || 'jpg';
       const fileName = `${type}_${Date.now()}.${fileExt}`;
       const filePath = `company-assets/${fileName}`;
 
@@ -264,6 +290,7 @@ export default function HomeDaEmpresa() {
       toast.error("Erro ao fazer upload da imagem.");
     } finally {
       setUploading(false);
+      setCropConfig({ isOpen: false, imageSrc: null, type: null, aspectRatio: 1 });
     }
   };
 
@@ -518,8 +545,8 @@ export default function HomeDaEmpresa() {
       </div>
       
       {/* Hidden inputs for uploads */}
-      <input id="logo-upload" type="file" className="hidden" accept="image/*" onChange={(e) => handleFileUpload(e, 'logo')} />
-      <input id="banner-upload" type="file" className="hidden" accept="image/*" onChange={(e) => handleFileUpload(e, 'banner')} />
+      <input id="logo-upload" type="file" className="hidden" accept="image/*" onChange={(e) => handleFileSelect(e, 'logo')} />
+      <input id="banner-upload" type="file" className="hidden" accept="image/*" onChange={(e) => handleFileSelect(e, 'banner')} />
 
       {showSistemaModal && (
         <SistemaModal
@@ -582,6 +609,17 @@ export default function HomeDaEmpresa() {
           plataformas={plataformas}
           membros={membros}
           empresaId={empresa.id}
+        />
+      )}
+
+      {cropConfig.isOpen && (
+        <ImageCropModal
+          isOpen={cropConfig.isOpen}
+          onClose={() => setCropConfig(prev => ({ ...prev, isOpen: false }))}
+          imageSrc={cropConfig.imageSrc}
+          aspectRatio={cropConfig.aspectRatio}
+          onCropComplete={handleCropComplete}
+          title={cropConfig.type === 'logo' ? 'Ajustar Logo da Empresa' : 'Ajustar Banner da Empresa'}
         />
       )}
     </>
