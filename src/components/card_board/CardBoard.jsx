@@ -45,7 +45,7 @@ const getLayoutNumber = (layoutType) => {
   }
 };
 
-export default function CardBoard({ entityType, empresaId }) {
+export default function CardBoard({ entityType, empresaId, canDelete = true }) {
   const [sections, setSections] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showCardModal, setShowCardModal] = useState(false);
@@ -297,14 +297,16 @@ export default function CardBoard({ entityType, empresaId }) {
                             <Plus className="w-4 h-4 mr-2" />
                             Adicionar Card (x{getLayoutNumber(section.layout_type)})
                           </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            onClick={() => { setSectionToDelete(section.id); setShowDeleteSectionModal(true); }}
-                            className="h-10 w-10 rounded-xl text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
+                          {canDelete && (
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              onClick={() => { setSectionToDelete(section.id); setShowDeleteSectionModal(true); }}
+                              className="h-10 w-10 rounded-xl text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          )}
                         </div>
                       </div>
 
@@ -385,6 +387,7 @@ export default function CardBoard({ entityType, empresaId }) {
         item={selectedCard}
         entityType={entityType}
         sectionId={activeSectionId}
+        canDelete={canDelete}
       />
       
       <ConfirmDeleteModal

@@ -9,7 +9,7 @@ import { Upload, Image, X, Trash2 } from "lucide-react";
 import { UploadFile } from "@/api/integrations";
 import ConfirmDeleteModal from "../shared/ConfirmDeleteModal";
 
-export default function SistemaModal({ isOpen, onClose, onSave, onDelete, sistema }) {
+export default function SistemaModal({ isOpen, onClose, onSave, onDelete, sistema, canDelete = true }) {
   const isEditing = !!sistema;
   const [formData, setFormData] = useState({
     nome: '',
@@ -154,7 +154,7 @@ export default function SistemaModal({ isOpen, onClose, onSave, onDelete, sistem
             </div>
             <DialogFooter className="pt-6 border-t flex justify-between">
               <div>
-                {isEditing && (
+                {isEditing && canDelete && (
                   <Button type="button" variant="destructive" onClick={() => setShowDeleteModal(true)}>
                     <Trash2 className="w-4 h-4 mr-2" />
                     Excluir

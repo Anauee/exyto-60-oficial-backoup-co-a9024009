@@ -8,6 +8,7 @@ export const FEATURES = [
     customActions: [
       { id: 'view', label: 'Ver Home' },
       { id: 'edit', label: 'Editar Visual' },
+      { id: 'delete', label: 'Excluir Itens' },
       { id: 'tab-sistemas', label: 'Sistemas' },
       { id: 'tab-recados', label: 'Recados' },
       { id: 'tab-movimento', label: 'Movimento' },

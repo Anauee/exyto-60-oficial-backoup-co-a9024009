@@ -44,6 +44,7 @@ export default function HomeDaEmpresa() {
   
   const hasAccess = hasPermission('home-da-empresa:view'); 
   const canEdit = hasPermission('home-da-empresa:edit');
+  const canDelete = hasPermission('home-da-empresa:delete');
   
   const canViewSistemas = hasPermission('home-da-empresa:tab-sistemas');
   const canViewRecados = hasPermission('home-da-empresa:tab-recados');
@@ -513,13 +514,13 @@ export default function HomeDaEmpresa() {
 
             {canViewRecados && (
               <TabsContent value="recados">
-                <CardBoard entityType="Recado" empresaId={empresa.id} />
+                <CardBoard entityType="Recado" empresaId={empresa.id} canDelete={canDelete} />
               </TabsContent>
             )}
             
             {canViewMovimento && (
               <TabsContent value="movimento">
-                <CardBoard entityType="Movimento" empresaId={empresa.id} />
+                <CardBoard entityType="Movimento" empresaId={empresa.id} canDelete={canDelete} />
               </TabsContent>
             )}
 
@@ -555,6 +556,7 @@ export default function HomeDaEmpresa() {
           onSave={handleSaveSistema}
           onDelete={handleDeleteSistema}
           sistema={selectedSistema}
+          canDelete={canDelete}
         />
       )}
 

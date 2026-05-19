@@ -9,7 +9,7 @@ import { Upload, Image, X, Trash2, Loader2 } from "lucide-react";
 import { UploadFile } from "@/api/integrations";
 import ConfirmDeleteModal from "../shared/ConfirmDeleteModal";
 
-export default function CardModal({ isOpen, onClose, onSave, onDelete, item, entityType, sectionId }) {
+export default function CardModal({ isOpen, onClose, onSave, onDelete, item, entityType, sectionId, canDelete = true }) {
   const isEditing = !!item;
   const [formData, setFormData] = useState({
     nome: '',
@@ -178,7 +178,7 @@ export default function CardModal({ isOpen, onClose, onSave, onDelete, item, ent
             </div>
             <DialogFooter className="pt-6 border-t flex justify-between">
               <div>
-                {isEditing && (
+                {isEditing && canDelete && (
                   <Button type="button" variant="destructive" onClick={() => setShowDeleteModal(true)}>
                     <Trash2 className="w-4 h-4 mr-2" />
                     Excluir
