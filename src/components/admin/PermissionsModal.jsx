@@ -117,13 +117,13 @@ export default function PermissionsModal({
 
                 {permissions[empresa.id]?.ativo && (
                   <div className="space-y-4">
-                    <div className="rounded-2xl border border-border/10 overflow-hidden">
+                    <div className="rounded-3xl border border-border/20 overflow-hidden bg-background/30">
                       <Table>
                         <TableHeader>
-                          <TableRow className="bg-muted/20 hover:bg-muted/20">
-                            <TableHead className="w-[200px] font-black uppercase text-[10px] tracking-widest p-3">Módulo</TableHead>
+                          <TableRow className="bg-muted/30 hover:bg-muted/30">
+                            <TableHead className="w-[250px] font-black uppercase text-[10px] tracking-widest p-4">Módulo</TableHead>
                             {ACTIONS.map(action => (
-                              <TableHead key={action.id} className="text-center font-black uppercase text-[10px] tracking-widest p-3">
+                              <TableHead key={action.id} className="text-center font-black uppercase text-[10px] tracking-widest p-4">
                                 {action.label}
                               </TableHead>
                             ))}
@@ -132,20 +132,20 @@ export default function PermissionsModal({
                         <TableBody>
                           {FEATURES.map(feature => (
                             <TableRow key={feature.id} className="hover:bg-primary/5 transition-colors">
-                              <TableCell className="font-bold text-slate-700 text-xs p-3">{feature.label}</TableCell>
+                              <TableCell className="font-bold text-slate-700 p-4">{feature.label}</TableCell>
                               {feature.customActions ? (
-                                <TableCell colSpan={4} className="p-3">
-                                  <div className="flex flex-wrap gap-2">
+                                <TableCell colSpan={4} className="p-4">
+                                  <div className="flex flex-wrap gap-3">
                                     {feature.customActions.map(action => {
                                       const isChecked = (permissions[empresa.id]?.permissoes || []).includes(`${feature.id}:${action.id}`);
                                       return (
-                                        <label key={action.id} className="flex items-center gap-2 cursor-pointer bg-background/50 border border-border/40 px-2 py-1.5 rounded-lg hover:border-primary/40 transition-colors">
+                                        <label key={action.id} className="flex items-center gap-2 cursor-pointer bg-background/50 border border-border/40 px-3 py-2 rounded-xl hover:border-primary/40 transition-colors">
                                           <Checkbox
                                             checked={isChecked}
                                             onCheckedChange={() => togglePermission(empresa.id, feature.id, action.id)}
-                                            className="w-3.5 h-3.5 rounded border-muted-foreground/30 data-[state=checked]:bg-primary"
+                                            className="w-4 h-4 rounded-md border-muted-foreground/30 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                                           />
-                                          <span className="text-[9px] font-black uppercase tracking-widest text-slate-600">{action.label}</span>
+                                          <span className="text-[10px] font-black uppercase tracking-widest text-slate-600">{action.label}</span>
                                         </label>
                                       );
                                     })}
@@ -155,11 +155,11 @@ export default function PermissionsModal({
                                 ACTIONS.map(action => {
                                   const isChecked = (permissions[empresa.id]?.permissoes || []).includes(`${feature.id}:${action.id}`);
                                   return (
-                                    <TableCell key={action.id} className="text-center p-3">
+                                    <TableCell key={action.id} className="text-center p-4">
                                       <Checkbox
                                         checked={isChecked}
                                         onCheckedChange={() => togglePermission(empresa.id, feature.id, action.id)}
-                                        className="w-4 h-4 rounded border-muted-foreground/30 data-[state=checked]:bg-primary"
+                                        className="w-5 h-5 rounded-md border-muted-foreground/30 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                                       />
                                     </TableCell>
                                   );
