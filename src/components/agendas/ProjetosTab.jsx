@@ -138,7 +138,7 @@ export default function ProjetosTab({ projetos, tarefas, onUpdate, empresaId, me
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {projetos.map((projeto) => (
+        {projetos.filter(p => !p.projeto_pai_id).map((projeto) => (
           <ProjetoCard 
             key={projeto.id} 
             projeto={projeto} 
@@ -190,6 +190,7 @@ export default function ProjetosTab({ projetos, tarefas, onUpdate, empresaId, me
             setSelectedProjeto(null);
           }}
           projeto={selectedProjeto}
+          projetos={projetos}
           tarefas={tarefas.filter(t => t.projeto_id === selectedProjeto?.id)}
           onEdit={handleEdit}
           onUpdate={onUpdate}

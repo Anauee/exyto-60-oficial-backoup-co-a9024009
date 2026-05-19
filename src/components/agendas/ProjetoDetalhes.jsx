@@ -10,6 +10,7 @@ import { ptBR } from "date-fns/locale";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import DocumentosVinculados from '../documentos/DocumentosVinculados';
 import DocumentoModal from '../documentos/DocumentoModal';
+import ProjetoModal from './ProjetoModal';
 
 import TaskModal from './TaskModal'; // Assuming this exists
 import { Projeto, Tarefa, Documento } from '@/api/entities';
@@ -34,6 +35,7 @@ export default function ProjetoDetalhes({
   isOpen,
   onClose,
   projeto,
+  projetos = [], // All projects
   tarefas,
   onEdit,
   onUpdate,
@@ -42,8 +44,11 @@ export default function ProjetoDetalhes({
 }) {
   const [showTaskModal, setShowTaskModal] = useState(false);
   const [showDocumentModal, setShowDocumentModal] = useState(false);
+  const [showSubprojetoModal, setShowSubprojetoModal] = useState(false);
 
   if (!projeto) return null;
+
+  const subprojetos = projetos.filter(p => p.projeto_pai_id === projeto.id);
 
   const totalTarefas = tarefas.length;
   const tarefasConcluidas = tarefas.filter(t => t.status === 'concluido').length;
@@ -134,8 +139,9 @@ export default function ProjetoDetalhes({
             </div>
           </DialogHeader>
           <Tabs defaultValue="detalhes" className="w-full mt-6">
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="detalhes">Detalhes do Projeto</TabsTrigger>
+              <TabsTrigger value="subprojetos">Subprojetos ({subprojetos.length})</TabsTrigger>
               <TabsTrigger value="documentos">Documentos</TabsTrigger>
             </TabsList>
             <TabsContent value="detalhes" className="mt-6 space-y-6">
@@ -201,6 +207,34 @@ export default function ProjetoDetalhes({
                 </div>
               </div>
             </TabsContent>
+            <TabsContent value="subprojetos" className="mt-6 space-y-4">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="font-semibold text-lg">Subprojetos</h3>
+                <Button variant="outline" size="sm" onClick={() => setShowSubprojetoModal(true)}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Adicionar Subprojeto
+                </Button>
+              </div>
+              <div className="space-y-3 max-h-[50vh] overflow-y-auto pr-2">
+                {subprojetos.map(sub => (
+                  <div key={sub.id} className="p-4 border rounded-lg bg-card hover:bg-slate-50 transition-colors flex justify-between items-center cursor-pointer" onClick={() => onEdit(sub)}>
+                    <div>
+                      <h4 className="font-semibold text-slate-900">{sub.titulo}</h4>
+                      <p className="text-sm text-slate-500 line-clamp-1">{sub.descricao}</p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      {getStatusBadge(sub.status)}
+                      <Badge variant="secondary">{membros.find(m => m.id === sub.responsavel_id)?.nome || 'Sem resp.'}</Badge>
+                    </div>
+                  </div>
+                ))}
+                {subprojetos.length === 0 && (
+                  <div className="text-center py-8 text-slate-500 border-2 border-dashed rounded-lg">
+                    Nenhum subprojeto criado.
+                  </div>
+                )}
+              </div>
+            </TabsContent>
             <TabsContent value="documentos" className="mt-6 space-y-4">
               <div className="flex justify-between items-center">
                 <h3 className="text-lg font-semibold">Documentos do Projeto</h3>
@@ -229,6 +263,21 @@ export default function ProjetoDetalhes({
         membros={membros}
         empresaId={empresaId}
       />
+      
+      {showSubprojetoModal && (
+        <ProjetoModal
+          isOpen={showSubprojetoModal}
+          onClose={() => setShowSubprojetoModal(false)}
+          onSave={() => {
+            setShowSubprojetoModal(false);
+            onUpdate();
+          }}
+          empresaId={empresaId}
+          membros={membros}
+          projetoPaiId={projeto.id}
+        />
+      )}
+
       <DocumentoModal
         isOpen={showDocumentModal}
         onClose={() => setShowDocumentModal(false)}

@@ -44,6 +44,7 @@ export default function HomeDaEmpresa() {
   
   const hasAccess = hasPermission('home-da-empresa:view'); 
   const canEdit = hasPermission('home-da-empresa:edit');
+  const canCreate = hasPermission('home-da-empresa:create');
   const canDelete = hasPermission('home-da-empresa:delete');
   
   const canViewSistemas = hasPermission('home-da-empresa:tab-sistemas');
@@ -479,7 +480,7 @@ export default function HomeDaEmpresa() {
             
             {canViewSistemas && (
               <TabsContent value="sistemas">
-                {canEdit && (
+                {canCreate && (
                   <div className="flex justify-end mb-8">
                     <Button 
                       onClick={() => openSistemaModal()} 
@@ -501,7 +502,7 @@ export default function HomeDaEmpresa() {
                     <Layers className="w-16 h-16 mx-auto text-muted-foreground/30 mb-6" />
                     <h2 className="text-xl font-bold text-foreground mb-2">Nenhum sistema adicionado</h2>
                     <p className="text-muted-foreground mb-8 max-w-sm mx-auto">Centralize todas as ferramentas da sua empresa em um único lugar.</p>
-                    {canEdit && (
+                    {canCreate && (
                       <Button onClick={() => openSistemaModal()} className="rounded-xl px-8">
                         <Plus className="w-4 h-4 mr-2" />
                         Adicionar Primeiro Sistema
@@ -514,13 +515,13 @@ export default function HomeDaEmpresa() {
 
             {canViewRecados && (
               <TabsContent value="recados">
-                <CardBoard entityType="Recado" empresaId={empresa.id} canDelete={canDelete} />
+                <CardBoard entityType="Recado" empresaId={empresa.id} canDelete={canDelete} canCreate={canCreate} />
               </TabsContent>
             )}
             
             {canViewMovimento && (
               <TabsContent value="movimento">
-                <CardBoard entityType="Movimento" empresaId={empresa.id} canDelete={canDelete} />
+                <CardBoard entityType="Movimento" empresaId={empresa.id} canDelete={canDelete} canCreate={canCreate} />
               </TabsContent>
             )}
 

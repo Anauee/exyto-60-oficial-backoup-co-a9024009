@@ -26,7 +26,8 @@ export default function ProjetoModal({
   onSave, 
   projeto = null, 
   empresaId,
-  membros = [] // Added members prop with default empty array
+  membros = [], // Added members prop with default empty array
+  projetoPaiId = null
 }) {
   const isEditing = !!projeto;
 
@@ -35,8 +36,9 @@ export default function ProjetoModal({
     descricao: '',
     responsavel_id: '',
     data_vencimento: '',
-    status: 'planejamento'
-  }), []);
+    status: 'planejamento',
+    projeto_pai_id: projetoPaiId || null
+  }), [projetoPaiId]);
 
   const [projetoData, setProjetoData] = useState(getInitialState());
   const [selectedDate, setSelectedDate] = useState(null);
@@ -49,7 +51,8 @@ export default function ProjetoModal({
           descricao: projeto.descricao || '',
           responsavel_id: projeto.responsavel_id || '',
           data_vencimento: projeto.data_vencimento || '',
-          status: projeto.status || 'planejamento'
+          status: projeto.status || 'planejamento',
+          projeto_pai_id: projeto.projeto_pai_id || null
         });
         if (projeto.data_vencimento) {
           setSelectedDate(parseISO(projeto.data_vencimento));

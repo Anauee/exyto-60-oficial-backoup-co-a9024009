@@ -7,6 +7,7 @@ export const FEATURES = [
     label: 'Home da Empresa',
     customActions: [
       { id: 'view', label: 'Ver Home' },
+      { id: 'create', label: 'Criar Itens' },
       { id: 'edit', label: 'Editar Visual' },
       { id: 'delete', label: 'Excluir Itens' },
       { id: 'tab-sistemas', label: 'Sistemas' },

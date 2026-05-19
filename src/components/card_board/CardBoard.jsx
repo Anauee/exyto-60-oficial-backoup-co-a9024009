@@ -45,7 +45,7 @@ const getLayoutNumber = (layoutType) => {
   }
 };
 
-export default function CardBoard({ entityType, empresaId, canDelete = true }) {
+export default function CardBoard({ entityType, empresaId, canDelete = true, canCreate = true }) {
   const [sections, setSections] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showCardModal, setShowCardModal] = useState(false);
@@ -235,28 +235,30 @@ export default function CardBoard({ entityType, empresaId, canDelete = true }) {
   return (
     <>
       <div className="flex justify-end mb-10">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button className="h-12 bg-primary text-primary-foreground hover:bg-primary/90 rounded-2xl px-6 font-bold shadow-lg shadow-primary/20 transition-all active:scale-95">
-              <Plus className="w-5 h-5 mr-2" />
-              Adicionar Seção de Layout
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent className="rounded-2xl border-border/40 shadow-2xl backdrop-blur-xl bg-card/80 p-2">
-            <DropdownMenuItem onClick={() => handleAddSection('100')} className="rounded-xl py-3 cursor-pointer">
-              <Columns className="w-4 h-4 mr-3 text-primary" /> 
-              <span className="font-semibold">Layout de 1 Card (100%)</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => handleAddSection('50')} className="rounded-xl py-3 cursor-pointer">
-              <Columns className="w-4 h-4 mr-3 text-primary" /> 
-              <span className="font-semibold">Layout de 2 Cards (50%)</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => handleAddSection('33')} className="rounded-xl py-3 cursor-pointer">
-              <Columns className="w-4 h-4 mr-3 text-primary" /> 
-              <span className="font-semibold">Layout de 3 Cards (33%)</span>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        {canCreate && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button className="h-12 bg-primary text-primary-foreground hover:bg-primary/90 rounded-2xl px-6 font-bold shadow-lg shadow-primary/20 transition-all active:scale-95">
+                <Plus className="w-5 h-5 mr-2" />
+                Adicionar Seção de Layout
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="rounded-2xl border-border/40 shadow-2xl backdrop-blur-xl bg-card/80 p-2">
+              <DropdownMenuItem onClick={() => handleAddSection('100')} className="rounded-xl py-3 cursor-pointer">
+                <Columns className="w-4 h-4 mr-3 text-primary" /> 
+                <span className="font-semibold">Layout de 1 Card (100%)</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleAddSection('50')} className="rounded-xl py-3 cursor-pointer">
+                <Columns className="w-4 h-4 mr-3 text-primary" /> 
+                <span className="font-semibold">Layout de 2 Cards (50%)</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleAddSection('33')} className="rounded-xl py-3 cursor-pointer">
+                <Columns className="w-4 h-4 mr-3 text-primary" /> 
+                <span className="font-semibold">Layout de 3 Cards (33%)</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
       </div>
 
       <DragDropContext onDragEnd={onDragEnd}>
@@ -288,15 +290,17 @@ export default function CardBoard({ entityType, empresaId, canDelete = true }) {
 
                       <div className="flex justify-end items-center mb-8">
                         <div className='flex gap-3'>
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            onClick={() => openCardModal(null, section.id)}
-                            className="h-10 rounded-xl border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 font-bold"
-                          >
-                            <Plus className="w-4 h-4 mr-2" />
-                            Adicionar Card (x{getLayoutNumber(section.layout_type)})
-                          </Button>
+                          {canCreate && (
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              onClick={() => openCardModal(null, section.id)}
+                              className="h-10 rounded-xl border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 font-bold"
+                            >
+                              <Plus className="w-4 h-4 mr-2" />
+                              Adicionar Card (x{getLayoutNumber(section.layout_type)})
+                            </Button>
+                          )}
                           {canDelete && (
                             <Button 
                               variant="ghost" 
