@@ -41,14 +41,13 @@ export default function HomeDaEmpresa() {
   const navigate = useNavigate();
   const { hasPermission, refreshAuth } = useAuth();
   
-  // HomeDaEmpresa is now accessible to all members of the company
-  const hasAccess = true; 
+  const hasAccess = hasPermission('home-da-empresa:view'); 
   const canEdit = hasPermission('home-da-empresa:edit');
   
-  const canViewSistemas = hasPermission('home-sistemas:view');
-  const canViewRecados = hasPermission('home-recados:view');
-  const canViewMovimento = hasPermission('home-movimento:view');
-  const canViewEquipe = hasPermission('home-equipe:view');
+  const canViewSistemas = hasPermission('home-da-empresa:tab-sistemas');
+  const canViewRecados = hasPermission('home-da-empresa:tab-recados');
+  const canViewMovimento = hasPermission('home-da-empresa:tab-movimento');
+  const canViewEquipe = hasPermission('home-da-empresa:tab-equipe');
 
   const defaultTab = React.useMemo(() => {
     if (canViewSistemas) return "sistemas";

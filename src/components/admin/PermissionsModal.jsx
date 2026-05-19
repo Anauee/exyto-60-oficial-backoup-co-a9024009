@@ -133,18 +133,38 @@ export default function PermissionsModal({
                           {FEATURES.map(feature => (
                             <TableRow key={feature.id} className="hover:bg-primary/5 transition-colors">
                               <TableCell className="font-bold text-slate-700 text-xs p-3">{feature.label}</TableCell>
-                              {ACTIONS.map(action => {
-                                const isChecked = (permissions[empresa.id]?.permissoes || []).includes(`${feature.id}:${action.id}`);
-                                return (
-                                  <TableCell key={action.id} className="text-center p-3">
-                                    <Checkbox
-                                      checked={isChecked}
-                                      onCheckedChange={() => togglePermission(empresa.id, feature.id, action.id)}
-                                      className="w-4 h-4 rounded border-muted-foreground/30 data-[state=checked]:bg-primary"
-                                    />
-                                  </TableCell>
-                                );
-                              })}
+                              {feature.customActions ? (
+                                <TableCell colSpan={4} className="p-3">
+                                  <div className="flex flex-wrap gap-2">
+                                    {feature.customActions.map(action => {
+                                      const isChecked = (permissions[empresa.id]?.permissoes || []).includes(`${feature.id}:${action.id}`);
+                                      return (
+                                        <label key={action.id} className="flex items-center gap-2 cursor-pointer bg-background/50 border border-border/40 px-2 py-1.5 rounded-lg hover:border-primary/40 transition-colors">
+                                          <Checkbox
+                                            checked={isChecked}
+                                            onCheckedChange={() => togglePermission(empresa.id, feature.id, action.id)}
+                                            className="w-3.5 h-3.5 rounded border-muted-foreground/30 data-[state=checked]:bg-primary"
+                                          />
+                                          <span className="text-[9px] font-black uppercase tracking-widest text-slate-600">{action.label}</span>
+                                        </label>
+                                      );
+                                    })}
+                                  </div>
+                                </TableCell>
+                              ) : (
+                                ACTIONS.map(action => {
+                                  const isChecked = (permissions[empresa.id]?.permissoes || []).includes(`${feature.id}:${action.id}`);
+                                  return (
+                                    <TableCell key={action.id} className="text-center p-3">
+                                      <Checkbox
+                                        checked={isChecked}
+                                        onCheckedChange={() => togglePermission(empresa.id, feature.id, action.id)}
+                                        className="w-4 h-4 rounded border-muted-foreground/30 data-[state=checked]:bg-primary"
+                                      />
+                                    </TableCell>
+                                  );
+                                })
+                              )}
                             </TableRow>
                           ))}
                         </TableBody>

@@ -248,18 +248,38 @@ export default function PermissoesTab({ empresaId, currentUserRole }) {
                     {FEATURES.map(feature => (
                       <TableRow key={feature.id} className="hover:bg-primary/5 transition-colors">
                         <TableCell className="font-bold text-slate-700 p-4">{feature.label}</TableCell>
-                        {ACTIONS.map(action => {
-                          const isChecked = selectedUsuario?.permissoes?.includes(`${feature.id}:${action.id}`);
-                          return (
-                            <TableCell key={action.id} className="text-center p-4">
-                              <Checkbox 
-                                checked={isChecked}
-                                onCheckedChange={() => togglePermission(feature.id, action.id)}
-                                className="w-5 h-5 rounded-md border-muted-foreground/30 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                              />
-                            </TableCell>
-                          );
-                        })}
+                        {feature.customActions ? (
+                          <TableCell colSpan={4} className="p-4">
+                            <div className="flex flex-wrap gap-3">
+                              {feature.customActions.map(action => {
+                                const isChecked = selectedUsuario?.permissoes?.includes(`${feature.id}:${action.id}`);
+                                return (
+                                  <label key={action.id} className="flex items-center gap-2 cursor-pointer bg-background/50 border border-border/40 px-3 py-2 rounded-xl hover:border-primary/40 transition-colors">
+                                    <Checkbox 
+                                      checked={isChecked}
+                                      onCheckedChange={() => togglePermission(feature.id, action.id)}
+                                      className="w-4 h-4 rounded-md border-muted-foreground/30 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                                    />
+                                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-600">{action.label}</span>
+                                  </label>
+                                );
+                              })}
+                            </div>
+                          </TableCell>
+                        ) : (
+                          ACTIONS.map(action => {
+                            const isChecked = selectedUsuario?.permissoes?.includes(`${feature.id}:${action.id}`);
+                            return (
+                              <TableCell key={action.id} className="text-center p-4">
+                                <Checkbox 
+                                  checked={isChecked}
+                                  onCheckedChange={() => togglePermission(feature.id, action.id)}
+                                  className="w-5 h-5 rounded-md border-muted-foreground/30 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                                />
+                              </TableCell>
+                            );
+                          })
+                        )}
                       </TableRow>
                     ))}
                   </TableBody>

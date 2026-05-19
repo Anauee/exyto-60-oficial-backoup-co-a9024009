@@ -2,11 +2,18 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase-client';
 
 export const FEATURES = [
-  { id: 'home-da-empresa', label: 'Home: Geral' },
-  { id: 'home-sistemas', label: 'Home: Sistemas' },
-  { id: 'home-recados', label: 'Home: Recados' },
-  { id: 'home-movimento', label: 'Home: Movimento' },
-  { id: 'home-equipe', label: 'Home: Equipe' },
+  { 
+    id: 'home-da-empresa', 
+    label: 'Home da Empresa',
+    customActions: [
+      { id: 'view', label: 'Ver Home' },
+      { id: 'edit', label: 'Editar Visual' },
+      { id: 'tab-sistemas', label: 'Sistemas' },
+      { id: 'tab-recados', label: 'Recados' },
+      { id: 'tab-movimento', label: 'Movimento' },
+      { id: 'tab-equipe', label: 'Equipe' }
+    ]
+  },
   { id: 'dashboard', label: 'Dashboard' },
   { id: 'midia-social', label: 'Mídia Social' },
   { id: 'analytics', label: 'Analytics' },
@@ -30,9 +37,15 @@ export const ACTIONS = [
 const getAllPermissions = () => {
   const perms = [];
   FEATURES.forEach(f => {
-    ACTIONS.forEach(a => {
-      perms.push(`${f.id}:${a.id}`);
-    });
+    if (f.customActions) {
+      f.customActions.forEach(ca => {
+        perms.push(`${f.id}:${ca.id}`);
+      });
+    } else {
+      ACTIONS.forEach(a => {
+        perms.push(`${f.id}:${a.id}`);
+      });
+    }
   });
   return perms;
 };
